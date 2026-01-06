@@ -1,84 +1,39 @@
+import 'dart:ui';
 import 'package:flutter/material.dart';
+import '../widgets/gradient_scaffold.dart';
 
 class AboutMentalHealthPage extends StatelessWidget {
   const AboutMentalHealthPage({super.key});
 
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final isDark = theme.brightness == Brightness.dark;
-
-    const double lh = 1.6;
-    final Color bodyColor = isDark
-        ? Colors.white.withOpacity(0.92)
-        : const Color(0xFF2F1654);
-    final Color headerColor = isDark ? Colors.white : const Color(0xFF2F1654);
-
-    TextStyle h1 = TextStyle(
-      fontFamily: 'Cinzel',
-      fontSize: 26,
-      fontWeight: FontWeight.w800,
-      letterSpacing: 0.2,
-      color: headerColor,
-    );
-    TextStyle h2 = TextStyle(
-      fontFamily: 'Cinzel',
-      fontSize: 22,
-      fontWeight: FontWeight.w700,
-      letterSpacing: 0.2,
-      color: headerColor,
-    );
-    TextStyle body = TextStyle(
-      fontFamily: 'Cinzel',
-      fontSize: 16,
-      fontWeight: FontWeight.w400,
-      height: lh,
-      color: bodyColor,
-    );
-    TextStyle small = body.copyWith(
-      fontSize: 14,
-      color: bodyColor.withOpacity(0.9),
-    );
-
-    final cardBg = isDark
-        ? const Color(0xFF1F1A2B).withOpacity(0.85)
-        : theme.colorScheme.surface.withOpacity(0.92);
-
-    final List<BoxShadow> cardShadow = [
-      if (isDark)
-        BoxShadow(
-          color: Colors.black.withOpacity(0.35),
-          blurRadius: 18,
-          spreadRadius: 1,
-          offset: const Offset(0, 10),
-        )
-      else
-        BoxShadow(
-          color: const Color(0xFF6A41A1).withOpacity(0.08),
-          blurRadius: 20,
-          spreadRadius: 2,
-          offset: const Offset(0, 10),
-        ),
-    ];
-
-    Widget card(Widget child) => Container(
-      width: double.infinity,
-      padding: const EdgeInsets.fromLTRB(18, 16, 18, 18),
-      margin: const EdgeInsets.only(bottom: 18),
-      decoration: BoxDecoration(
-        color: cardBg,
-        borderRadius: BorderRadius.circular(18),
-        boxShadow: cardShadow,
-        border: Border.all(
-          color: isDark
-              ? Colors.white.withOpacity(0.05)
-              : const Color(0xFF2F1654).withOpacity(0.06),
+  Widget _glassCard(BuildContext context, Widget child) {
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(22),
+      child: BackdropFilter(
+        filter: ImageFilter.blur(sigmaX: 14, sigmaY: 14),
+        child: Container(
+          width: double.infinity,
+          padding: const EdgeInsets.fromLTRB(18, 16, 18, 18),
+          margin: const EdgeInsets.only(bottom: 16),
+          decoration: BoxDecoration(
+            color: Colors.white.withOpacity(0.12),
+            borderRadius: BorderRadius.circular(22),
+            border: Border.all(color: Colors.white.withOpacity(0.25), width: 1),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.12),
+                blurRadius: 12,
+                offset: const Offset(0, 5),
+              ),
+            ],
+          ),
+          child: child,
         ),
       ),
-      child: child,
     );
+  }
 
-    Widget bullets(List<String> items) => Column(
+  Widget _bullets(TextStyle body, List<String> items) {
+    return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: items
           .map(
@@ -95,20 +50,56 @@ class AboutMentalHealthPage extends StatelessWidget {
           )
           .toList(),
     );
+  }
 
-    return Scaffold(
-      backgroundColor: theme.scaffoldBackgroundColor,
+  @override
+  Widget build(BuildContext context) {
+    const double lh = 1.55;
+
+    final TextStyle h1 = TextStyle(
+      fontFamily: 'Cinzel',
+      fontSize: 24,
+      fontWeight: FontWeight.w800,
+      color: Colors.white.withOpacity(0.95),
+    );
+
+    final TextStyle h2 = TextStyle(
+      fontFamily: 'Cinzel',
+      fontSize: 19,
+      fontWeight: FontWeight.w700,
+      color: Colors.white.withOpacity(0.92),
+    );
+
+    final TextStyle body = TextStyle(
+      fontFamily: 'Poppins',
+      fontSize: 14.5,
+      height: lh,
+      color: Colors.white.withOpacity(0.78),
+    );
+
+    final TextStyle small = body.copyWith(
+      fontSize: 13,
+      color: Colors.white.withOpacity(0.70),
+    );
+
+    return GradientScaffold(
       appBar: AppBar(
-        title: Text('About Mental Health', style: h1.copyWith(fontSize: 24)),
+        title: const Text(
+          'About Mental Health',
+          style: TextStyle(fontFamily: 'Cinzel'),
+        ),
         centerTitle: true,
+        backgroundColor: Colors.white.withOpacity(0.04),
+        elevation: 0,
       ),
       body: SafeArea(
         child: SingleChildScrollView(
-          padding: const EdgeInsets.fromLTRB(20, 8, 20, 28),
+          padding: const EdgeInsets.fromLTRB(20, 12, 20, 28),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              card(
+              _glassCard(
+                context,
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -120,7 +111,7 @@ class AboutMentalHealthPage extends StatelessWidget {
                       style: body,
                     ),
                     const SizedBox(height: 12),
-                    bullets([
+                    _bullets(body, [
                       "It changes over time — and that’s okay. 🌖",
                       "Everyone struggles sometimes; you’re not alone. 🤝",
                       "Small steps can make a big difference. 🍃",
@@ -129,13 +120,14 @@ class AboutMentalHealthPage extends StatelessWidget {
                 ),
               ),
 
-              card(
+              _glassCard(
+                context,
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text('Why It Matters', style: h1),
                     const SizedBox(height: 8),
-                    bullets([
+                    _bullets(body, [
                       "Better focus and decision-making 🧠",
                       "Healthier relationships and communication 🫶",
                       "More energy and motivation ⚡",
@@ -145,36 +137,40 @@ class AboutMentalHealthPage extends StatelessWidget {
                 ),
               ),
 
-              card(
+              _glassCard(
+                context,
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text('Common Challenges (In Our Stories)', style: h1),
-                    const SizedBox(height: 8),
-                    Text('Anxiety 😮‍💨', style: h2),
+                    const SizedBox(height: 10),
+
+                    Text('Grief 🕊️', style: h2),
                     const SizedBox(height: 6),
-                    bullets([
-                      "Racing thoughts, restlessness, and overthinking",
-                      "Tight chest or fast heartbeat during stress",
-                      "Avoiding situations that feel overwhelming",
+                    _bullets(body, [
+                      "Waves of sadness, numbness, or longing",
+                      "Feeling disconnected or unusually tired",
+                      "Thinking often about memories or unfinished conversations",
                     ]),
                     const SizedBox(height: 10),
+
                     Text('Depression 🌧️', style: h2),
                     const SizedBox(height: 6),
-                    bullets([
+                    _bullets(body, [
                       "Low mood or numbness most of the day",
                       "Loss of interest in things you used to enjoy",
                       "Changes in sleep or appetite; low energy",
                     ]),
                     const SizedBox(height: 10),
+
                     Text('Loneliness 🫥', style: h2),
                     const SizedBox(height: 6),
-                    bullets([
+                    _bullets(body, [
                       "Feeling disconnected — even around people",
                       "Withdrawing from friends or routines",
                       "Longing to be seen, heard, or understood",
                     ]),
-                    const SizedBox(height: 8),
+                    const SizedBox(height: 10),
                     Text(
                       "Storium isn’t a medical tool — it’s a gentle, interactive space to notice patterns, feelings, and choices.",
                       style: small,
@@ -183,15 +179,16 @@ class AboutMentalHealthPage extends StatelessWidget {
                 ),
               ),
 
-              card(
+              _glassCard(
+                context,
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text('How Storium Helps 🎮', style: h1),
                     const SizedBox(height: 8),
-                    bullets([
+                    _bullets(body, [
                       "Play through everyday scenarios in a safe space",
-                      "Reflect on choices — notice what soothes vs. what spikes anxiety",
+                      "Reflect on choices — notice what soothes vs. what spikes stress",
                       "Build small skills: breathing, reframing, reaching out",
                       "Finish with a warm summary — no judgment, just insight",
                     ]),
@@ -199,15 +196,16 @@ class AboutMentalHealthPage extends StatelessWidget {
                 ),
               ),
 
-              card(
+              _glassCard(
+                context,
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text('Gentle Skills You Can Try 🌿', style: h1),
                     const SizedBox(height: 8),
-                    bullets([
+                    _bullets(body, [
                       "🫁 4-7-8 Breathing: inhale 4, hold 7, exhale 8 — repeat x4",
-                      "📝 Label It: “I’m feeling anxious; it will pass.” Naming helps",
+                      "📝 Label It: “I’m feeling a lot right now.” Naming helps",
                       "🔁 Reframe: “I failed” → “I learned something I can use”",
                       "📅 Micro-steps: 10-minute walk, 1 page read, 1 message to a friend",
                       "🤗 Reach Out: share with someone you trust",
@@ -216,11 +214,12 @@ class AboutMentalHealthPage extends StatelessWidget {
                 ),
               ),
 
-              card(
+              _glassCard(
+                context,
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text('🆘 When To Seek Extra Support 🆘', style: h1),
+                    Text('🆘 When To Seek Extra Support', style: h1),
                     const SizedBox(height: 8),
                     Text(
                       "If intense feelings last for weeks, disrupt daily life, or you feel unsafe, consider professional help. "
@@ -228,12 +227,12 @@ class AboutMentalHealthPage extends StatelessWidget {
                       style: body,
                     ),
                     const SizedBox(height: 10),
-                    bullets([
+                    _bullets(body, [
                       "Emergency: contact your local emergency number 🚑",
                       "Helplines / talk lines in your region ☎️",
                       "Campus or community counseling services 🧾",
                     ]),
-                    const SizedBox(height: 6),
+                    const SizedBox(height: 8),
                     Text(
                       "Storium doesn’t diagnose or treat conditions. It’s a supportive companion — not a substitute for care.",
                       style: small.copyWith(fontStyle: FontStyle.italic),
@@ -242,7 +241,8 @@ class AboutMentalHealthPage extends StatelessWidget {
                 ),
               ),
 
-              card(
+              _glassCard(
+                context,
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [

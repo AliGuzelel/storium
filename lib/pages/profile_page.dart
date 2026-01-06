@@ -12,6 +12,7 @@ class _ProfilePageState extends State<ProfilePage> {
   String? selectedGender;
   DateTime? dateOfBirth;
   bool isEditing = false;
+
   final TextEditingController _usernameController = TextEditingController(
     text: "Username",
   );
@@ -22,6 +23,92 @@ class _ProfilePageState extends State<ProfilePage> {
     super.dispose();
   }
 
+  Widget _glass({
+    required Widget child,
+    double radius = 22,
+    EdgeInsets padding = const EdgeInsets.all(16),
+  }) {
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(radius),
+      child: BackdropFilter(
+        filter: ImageFilter.blur(sigmaX: 14, sigmaY: 14),
+        child: Container(
+          padding: padding,
+          decoration: BoxDecoration(
+            color: Colors.white.withOpacity(0.12),
+            borderRadius: BorderRadius.circular(radius),
+            border: Border.all(color: Colors.white.withOpacity(0.25), width: 1),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.10),
+                blurRadius: 12,
+                offset: const Offset(0, 5),
+              ),
+            ],
+          ),
+          child: child,
+        ),
+      ),
+    );
+  }
+
+  Widget _glassPill({
+    required Widget child,
+    VoidCallback? onTap,
+    double height = 48,
+  }) {
+    final pill = ClipRRect(
+      borderRadius: BorderRadius.circular(999),
+      child: BackdropFilter(
+        filter: ImageFilter.blur(sigmaX: 14, sigmaY: 14),
+        child: Container(
+          height: height,
+          padding: const EdgeInsets.symmetric(horizontal: 14),
+          decoration: BoxDecoration(
+            color: Colors.white.withOpacity(0.12),
+            borderRadius: BorderRadius.circular(999),
+            border: Border.all(color: Colors.white.withOpacity(0.25), width: 1),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.10),
+                blurRadius: 12,
+                offset: const Offset(0, 5),
+              ),
+            ],
+          ),
+          child: child,
+        ),
+      ),
+    );
+
+    if (onTap == null) return pill;
+    return InkWell(
+      borderRadius: BorderRadius.circular(999),
+      onTap: onTap,
+      child: pill,
+    );
+  }
+
+  TextStyle get _titleStyle => TextStyle(
+    fontFamily: 'Cinzel',
+    fontSize: 18,
+    fontWeight: FontWeight.w700,
+    color: Colors.white.withOpacity(0.92),
+  );
+
+  TextStyle get _labelStyle => TextStyle(
+    fontFamily: 'Poppins',
+    fontSize: 13,
+    color: Colors.white.withOpacity(0.70),
+  );
+
+  TextStyle get _valueStyle => TextStyle(
+    fontFamily: 'Poppins',
+    fontSize: 15,
+    fontWeight: FontWeight.w600,
+    color: Colors.white.withOpacity(0.92),
+  );
+
   @override
   Widget build(BuildContext context) {
     return GradientScaffold(
@@ -30,152 +117,234 @@ class _ProfilePageState extends State<ProfilePage> {
           "Profile",
           style: TextStyle(fontFamily: 'Cinzel', fontSize: 24),
         ),
+        backgroundColor: Colors.white.withOpacity(0.04),
+        elevation: 0,
       ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.symmetric(horizontal: 25, vertical: 10),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                const CircleAvatar(
-                  radius: 38,
-                  backgroundColor: Color(0xFF451B80),
-                  child: Icon(Icons.person, color: Colors.white, size: 40),
-                ),
-                const SizedBox(width: 15),
-                Expanded(
-                  child: TextField(
-                    controller: _usernameController,
-                    enabled: isEditing,
-                    decoration: const InputDecoration(
-                      border: InputBorder.none,
-                      isDense: true,
-                      contentPadding: EdgeInsets.zero,
+      body: SafeArea(
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.fromLTRB(18, 18, 18, 24),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // ===================== HEADER CARD =====================
+              _glass(
+                radius: 26,
+                padding: const EdgeInsets.fromLTRB(16, 14, 16, 14),
+                child: Row(
+                  children: [
+                    Container(
+                      width: 72,
+                      height: 72,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        color: Colors.white.withOpacity(0.12),
+                        border: Border.all(
+                          color: Colors.white.withOpacity(0.25),
+                          width: 1,
+                        ),
+                      ),
+                      child: const Icon(
+                        Icons.person_rounded,
+                        color: Colors.white,
+                        size: 40,
+                      ),
                     ),
-                    style: const TextStyle(
-                      fontFamily: 'Cinzel',
-                      fontSize: 22,
-                      fontWeight: FontWeight.w600,
-                      color: Color(0xFF2F1654),
+                    const SizedBox(width: 14),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text("Username", style: _labelStyle),
+                          const SizedBox(height: 6),
+                          TextField(
+                            controller: _usernameController,
+                            enabled: isEditing,
+                            decoration: InputDecoration(
+                              isDense: true,
+                              border: InputBorder.none,
+                              hintText: "Enter name",
+                              hintStyle: _valueStyle.copyWith(
+                                color: Colors.white.withOpacity(0.45),
+                                fontWeight: FontWeight.w500,
+                              ),
+                              contentPadding: EdgeInsets.zero,
+                            ),
+                            style: TextStyle(
+                              fontFamily: 'Cinzel',
+                              fontSize: 22,
+                              fontWeight: FontWeight.w700,
+                              color: Colors.white.withOpacity(0.95),
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 25),
-            const Text(
-              "Gender",
-              style: TextStyle(
-                fontFamily: 'Cinzel',
-                fontSize: 18,
-                color: Color(0xFF2F1654),
-              ),
-            ),
-            const SizedBox(height: 8),
-            _buildDropdown(),
-            const SizedBox(height: 20),
-            const Text(
-              "Date of Birth",
-              style: TextStyle(
-                fontFamily: 'Cinzel',
-                fontSize: 18,
-                color: Color(0xFF2F1654),
-              ),
-            ),
-            const SizedBox(height: 8),
-            _buildCalendar(),
-            const SizedBox(height: 20),
-            const Text(
-              "Mood",
-              style: TextStyle(
-                fontFamily: 'Cinzel',
-                fontSize: 18,
-                color: Color(0xFF2F1654),
-              ),
-            ),
-            const SizedBox(height: 8),
-            _buildMoodButton(),
-            const SizedBox(height: 25),
-            Center(
-              child: ElevatedButton.icon(
-                onPressed: () => setState(() => isEditing = !isEditing),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFF451B80),
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 18,
-                    vertical: 10,
-                  ),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(20),
-                  ),
-                ),
-                icon: const Icon(Icons.edit, color: Colors.white, size: 18),
-                label: Text(
-                  isEditing ? "Save" : "Edit Profile",
-                  style: const TextStyle(
-                    fontFamily: 'Poppins',
-                    color: Colors.white,
-                    fontSize: 14,
-                  ),
+                    const SizedBox(width: 10),
+                    _glassPill(
+                      height: 44,
+                      onTap: () => setState(() => isEditing = !isEditing),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(
+                            isEditing
+                                ? Icons.check_rounded
+                                : Icons.edit_rounded,
+                            color: Colors.white.withOpacity(0.95),
+                            size: 18,
+                          ),
+                          const SizedBox(width: 8),
+                          Text(
+                            isEditing ? "Save" : "Edit",
+                            style: const TextStyle(
+                              fontFamily: 'Poppins',
+                              fontSize: 14,
+                              fontWeight: FontWeight.w600,
+                              color: Colors.white,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
                 ),
               ),
-            ),
-            const SizedBox(height: 30),
-            const Text(
-              "Achievements",
-              style: TextStyle(
-                fontFamily: 'Cinzel',
-                fontSize: 20,
-                fontWeight: FontWeight.w600,
-                color: Color(0xFF2F1654),
+
+              const SizedBox(height: 16),
+              _glass(
+                radius: 26,
+                padding: const EdgeInsets.fromLTRB(16, 16, 16, 16),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text("Details", style: _titleStyle),
+                    const SizedBox(height: 12),
+
+                    // Gender row
+                    Row(
+                      children: [
+                        Icon(
+                          Icons.wc_rounded,
+                          color: Colors.white.withOpacity(0.8),
+                          size: 20,
+                        ),
+                        const SizedBox(width: 10),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text("Gender", style: _labelStyle),
+                              const SizedBox(height: 6),
+                              _buildGenderDropdown(),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+
+                    const SizedBox(height: 14),
+                    Row(
+                      children: [
+                        Icon(
+                          Icons.cake_rounded,
+                          color: Colors.white.withOpacity(0.8),
+                          size: 20,
+                        ),
+                        const SizedBox(width: 10),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text("Date of Birth", style: _labelStyle),
+                              const SizedBox(height: 6),
+                              _buildCalendar(),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+
+                    const SizedBox(height: 14),
+
+                    Row(
+                      children: [
+                        Icon(
+                          Icons.emoji_emotions_rounded,
+                          color: Colors.white.withOpacity(0.8),
+                          size: 20,
+                        ),
+                        const SizedBox(width: 10),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text("Mood", style: _labelStyle),
+                              const SizedBox(height: 6),
+                              _buildMoodChip(),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
               ),
-            ),
-            const SizedBox(height: 20),
-            _buildBadgesGrid(),
-          ],
+
+              const SizedBox(height: 18),
+
+              Text(
+                "Achievements",
+                style: TextStyle(
+                  fontFamily: 'Cinzel',
+                  fontSize: 20,
+                  fontWeight: FontWeight.w700,
+                  color: Colors.white.withOpacity(0.92),
+                ),
+              ),
+              const SizedBox(height: 12),
+              _buildBadgesGrid(),
+            ],
+          ),
         ),
       ),
     );
   }
 
-  Widget _buildDropdown() {
+  Widget _buildGenderDropdown() {
     return IgnorePointer(
       ignoring: !isEditing,
       child: Opacity(
-        opacity: isEditing ? 1 : 0.7,
-        child: Container(
-          width: 180,
-          padding: const EdgeInsets.symmetric(horizontal: 16),
-          decoration: BoxDecoration(
-            color: const Color(0xFF451B80),
-            borderRadius: BorderRadius.circular(25),
-          ),
-          child: DropdownButton<String>(
-            value: selectedGender,
-            hint: const Text(
-              "Select Gender",
-              style: TextStyle(color: Colors.white, fontFamily: 'Poppins'),
+        opacity: isEditing ? 1 : 0.78,
+        child: _glassPill(
+          height: 46,
+          child: DropdownButtonHideUnderline(
+            child: DropdownButton<String>(
+              value: selectedGender,
+              isExpanded: true,
+              dropdownColor: const Color(0xFF2A2140),
+              icon: Icon(
+                Icons.arrow_drop_down_rounded,
+                color: Colors.white.withOpacity(0.9),
+              ),
+              hint: Text(
+                "Select gender",
+                style: _valueStyle.copyWith(
+                  color: Colors.white.withOpacity(0.65),
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+              style: _valueStyle,
+              onChanged: (String? newValue) =>
+                  setState(() => selectedGender = newValue),
+              items: ['Male', 'Female', 'Other']
+                  .map(
+                    (value) => DropdownMenuItem<String>(
+                      value: value,
+                      child: Text(value, style: _valueStyle),
+                    ),
+                  )
+                  .toList(),
             ),
-            isExpanded: true,
-            dropdownColor: const Color(0xFF6A41A1),
-            icon: const Icon(Icons.arrow_drop_down, color: Colors.white),
-            underline: const SizedBox(),
-            style: const TextStyle(
-              color: Colors.white,
-              fontFamily: 'Poppins',
-              fontSize: 16,
-            ),
-            onChanged: (String? newValue) =>
-                setState(() => selectedGender = newValue),
-            items: ['Male', 'Female', 'Other']
-                .map<DropdownMenuItem<String>>(
-                  (String value) => DropdownMenuItem<String>(
-                    value: value,
-                    child: Text(value),
-                  ),
-                )
-                .toList(),
           ),
         ),
       ),
@@ -183,66 +352,81 @@ class _ProfilePageState extends State<ProfilePage> {
   }
 
   Widget _buildCalendar() {
-    return GestureDetector(
-      onTap: isEditing
-          ? () async {
-              final DateTime? picked = await showDatePicker(
-                context: context,
-                initialDate: dateOfBirth ?? DateTime(2000),
-                firstDate: DateTime(1900),
-                lastDate: DateTime.now(),
-                builder: (context, child) => Theme(
-                  data: Theme.of(context).copyWith(
-                    colorScheme: const ColorScheme.light(
-                      primary: Color(0xFF451B80),
-                      onPrimary: Colors.white,
-                      onSurface: Color(0xFF2F1654),
+    String text;
+    if (dateOfBirth == null) {
+      text = "Pick a date";
+    } else {
+      text = "${dateOfBirth!.day}/${dateOfBirth!.month}/${dateOfBirth!.year}";
+    }
+
+    return IgnorePointer(
+      ignoring: !isEditing,
+      child: Opacity(
+        opacity: isEditing ? 1 : 0.78,
+        child: _glassPill(
+          height: 46,
+          onTap: !isEditing
+              ? null
+              : () async {
+                  final DateTime? picked = await showDatePicker(
+                    context: context,
+                    initialDate: dateOfBirth ?? DateTime(2000),
+                    firstDate: DateTime(1900),
+                    lastDate: DateTime.now(),
+                    builder: (context, child) => Theme(
+                      data: Theme.of(context).copyWith(
+                        colorScheme: const ColorScheme.light(
+                          primary: Color(0xFF451B80),
+                          onPrimary: Colors.white,
+                          onSurface: Color(0xFF2F1654),
+                        ),
+                      ),
+                      child: child!,
                     ),
-                  ),
-                  child: child!,
+                  );
+                  if (picked != null) setState(() => dateOfBirth = picked);
+                },
+          child: Row(
+            children: [
+              Expanded(
+                child: Text(
+                  text,
+                  style: dateOfBirth == null
+                      ? _valueStyle.copyWith(
+                          color: Colors.white.withOpacity(0.65),
+                          fontWeight: FontWeight.w500,
+                        )
+                      : _valueStyle,
                 ),
-              );
-              if (picked != null) setState(() => dateOfBirth = picked);
-            }
-          : null,
-      child: Container(
-        alignment: Alignment.center,
-        width: 180,
-        padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 10),
-        decoration: BoxDecoration(
-          color: const Color(0xFF451B80),
-          borderRadius: BorderRadius.circular(20),
-        ),
-        child: Text(
-          dateOfBirth == null
-              ? "Calendar"
-              : "${dateOfBirth!.day}/${dateOfBirth!.month}/${dateOfBirth!.year}",
-          style: const TextStyle(
-            color: Colors.white,
-            fontFamily: 'Poppins',
-            fontSize: 14,
+              ),
+              Icon(
+                Icons.calendar_month_rounded,
+                size: 18,
+                color: Colors.white.withOpacity(0.9),
+              ),
+            ],
           ),
         ),
       ),
     );
   }
 
-  Widget _buildMoodButton() {
-    return Container(
-      alignment: Alignment.center,
-      width: 180,
-      padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 10),
-      decoration: BoxDecoration(
-        color: const Color(0xFF451B80),
-        borderRadius: BorderRadius.circular(20),
-      ),
-      child: const Text(
-        "Based on last story",
-        style: TextStyle(
-          color: Colors.white,
-          fontFamily: 'Poppins',
-          fontSize: 14,
-        ),
+  Widget _buildMoodChip() {
+    return _glassPill(
+      height: 46,
+      child: Row(
+        children: [
+          Expanded(
+            child: Text(
+              "Based on last story",
+              style: _valueStyle.copyWith(
+                color: Colors.white.withOpacity(0.85),
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ),
+          Text("😐", style: const TextStyle(fontSize: 18)),
+        ],
       ),
     );
   }
@@ -258,66 +442,87 @@ class _ProfilePageState extends State<ProfilePage> {
       {'title': 'Empathic Soul', 'unlocked': false},
       {'title': 'King of Emotions', 'unlocked': false},
     ];
+
     return GridView.count(
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
       crossAxisCount: 3,
-      mainAxisSpacing: 25,
-      crossAxisSpacing: 25,
-      childAspectRatio: 0.9,
+      mainAxisSpacing: 18,
+      crossAxisSpacing: 18,
+      childAspectRatio: 0.92,
       children: badges.map((badge) {
         final unlocked = badge['unlocked'] as bool;
+
         return GestureDetector(
           onTap: () => _showBadgeDialog(badge['title'] as String, unlocked),
-          child: Column(
-            children: [
-              Stack(
-                children: [
-                  Container(
-                    width: 70,
-                    height: 70,
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      color: unlocked
-                          ? const Color(0xFFF8E9A1)
-                          : const Color(0xFF6A41A1),
-                      boxShadow: unlocked
-                          ? [
-                              BoxShadow(
-                                color: const Color(0xFFFFD700).withOpacity(0.7),
-                                blurRadius: 15,
-                                spreadRadius: 2,
-                              ),
-                            ]
-                          : [],
+          child: _glass(
+            radius: 20,
+            padding: const EdgeInsets.fromLTRB(10, 10, 10, 10),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Stack(
+                  children: [
+                    Container(
+                      width: 62,
+                      height: 62,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        color: unlocked
+                            ? Colors.white.withOpacity(0.20)
+                            : Colors.white.withOpacity(0.12),
+                        border: Border.all(
+                          color: unlocked
+                              ? Colors.white.withOpacity(0.35)
+                              : Colors.white.withOpacity(0.22),
+                          width: 1,
+                        ),
+                        boxShadow: unlocked
+                            ? [
+                                BoxShadow(
+                                  color: Colors.white.withOpacity(0.22),
+                                  blurRadius: 18,
+                                  spreadRadius: 1,
+                                ),
+                              ]
+                            : [],
+                      ),
+                      child: Icon(
+                        Icons.emoji_events_rounded,
+                        color: unlocked
+                            ? Colors.white.withOpacity(0.95)
+                            : Colors.white.withOpacity(0.70),
+                        size: 30,
+                      ),
                     ),
-                    child: const Icon(
-                      Icons.emoji_events,
-                      color: Colors.white,
-                      size: 32,
-                    ),
-                  ),
-                  if (!unlocked)
-                    const Positioned(
-                      right: 6,
-                      top: 6,
-                      child: Icon(Icons.lock, color: Colors.white70, size: 14),
-                    ),
-                ],
-              ),
-              const SizedBox(height: 6),
-              Text(
-                badge['title'] as String,
-                textAlign: TextAlign.center,
-                style: TextStyle(
-                  fontFamily: 'Poppins',
-                  fontSize: 11,
-                  color: unlocked
-                      ? const Color(0xFFFFC300)
-                      : const Color(0xFF2F1654),
+                    if (!unlocked)
+                      Positioned(
+                        right: 2,
+                        top: 2,
+                        child: Icon(
+                          Icons.lock_rounded,
+                          color: Colors.white.withOpacity(0.75),
+                          size: 14,
+                        ),
+                      ),
+                  ],
                 ),
-              ),
-            ],
+                const SizedBox(height: 8),
+                Text(
+                  badge['title'] as String,
+                  textAlign: TextAlign.center,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    fontFamily: 'Poppins',
+                    fontSize: 11,
+                    height: 1.15,
+                    color: Colors.white.withOpacity(unlocked ? 0.92 : 0.78),
+                    fontWeight: unlocked ? FontWeight.w700 : FontWeight.w600,
+                  ),
+                ),
+              ],
+            ),
           ),
         );
       }).toList(),
@@ -334,33 +539,27 @@ class _ProfilePageState extends State<ProfilePage> {
           child: ClipRRect(
             borderRadius: BorderRadius.circular(20),
             child: BackdropFilter(
-              filter: ImageFilter.blur(sigmaX: 8, sigmaY: 8),
+              filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
               child: Container(
                 padding: const EdgeInsets.all(20),
                 decoration: BoxDecoration(
-                  color: isUnlocked
-                      ? const Color(0xFFF8E9A1).withOpacity(0.85)
-                      : const Color(0xFFC8B7F2).withOpacity(0.8),
+                  color: Colors.white.withOpacity(0.18),
                   borderRadius: BorderRadius.circular(20),
-                  boxShadow: [
-                    if (isUnlocked)
-                      BoxShadow(
-                        color: const Color(0xFFFFD700).withOpacity(0.5),
-                        blurRadius: 20,
-                        spreadRadius: 4,
-                      ),
-                  ],
+                  border: Border.all(
+                    color: Colors.white.withOpacity(0.25),
+                    width: 1,
+                  ),
                 ),
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     Text(
                       isUnlocked ? "🏅 Achieved!" : "🔒 Locked",
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontFamily: 'Cinzel',
                         fontSize: 20,
-                        fontWeight: FontWeight.w700,
-                        color: Color(0xFF451B80),
+                        fontWeight: FontWeight.w800,
+                        color: Colors.white.withOpacity(0.95),
                       ),
                     ),
                     const SizedBox(height: 10),
@@ -369,10 +568,11 @@ class _ProfilePageState extends State<ProfilePage> {
                           ? "You earned the $title badge!\nYou didn’t just tell stories — you *became* one 👑📖"
                           : "This badge is still locked.\nKeep playing and discovering stories to unlock it 💫",
                       textAlign: TextAlign.center,
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontFamily: 'Poppins',
-                        color: Color(0xFF2F1654),
+                        color: Colors.white.withOpacity(0.85),
                         fontSize: 14,
+                        height: 1.35,
                       ),
                     ),
                   ],

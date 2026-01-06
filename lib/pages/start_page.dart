@@ -194,26 +194,41 @@ class _StartPageState extends State<StartPage>
   }
 
   Widget _menuButton({required String text, required VoidCallback onPressed}) {
-    return SizedBox(
-      width: double.infinity,
-      child: ElevatedButton(
-        onPressed: onPressed,
-        style: ElevatedButton.styleFrom(
-          backgroundColor: const Color(0xFF9E7CC1),
-          minimumSize: const Size.fromHeight(52),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(30),
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(26),
+      child: BackdropFilter(
+        filter: ImageFilter.blur(sigmaX: 14, sigmaY: 14),
+        child: Container(
+          width: double.infinity,
+          height: 52,
+          decoration: BoxDecoration(
+            color: Colors.white.withOpacity(0.12),
+            borderRadius: BorderRadius.circular(26),
+            border: Border.all(color: Colors.white.withOpacity(0.25), width: 1),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.12),
+                blurRadius: 12,
+                offset: const Offset(0, 5),
+              ),
+            ],
           ),
-          padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 40),
-          elevation: 0,
-        ),
-        child: Text(
-          text,
-          textAlign: TextAlign.center,
-          style: const TextStyle(
-            color: Colors.black87,
-            fontFamily: 'Poppins',
-            fontSize: 16,
+          child: InkWell(
+            borderRadius: BorderRadius.circular(26),
+            onTap: onPressed,
+            splashColor: Colors.white.withOpacity(0.10),
+            highlightColor: Colors.white.withOpacity(0.06),
+            child: Center(
+              child: Text(
+                text,
+                style: const TextStyle(
+                  fontFamily: 'Poppins',
+                  fontSize: 16,
+                  color: Colors.white,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ),
           ),
         ),
       ),

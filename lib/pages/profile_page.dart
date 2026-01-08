@@ -126,7 +126,6 @@ class _ProfilePageState extends State<ProfilePage> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // ===================== HEADER CARD =====================
               _glass(
                 radius: 26,
                 padding: const EdgeInsets.fromLTRB(16, 14, 16, 14),
@@ -219,8 +218,6 @@ class _ProfilePageState extends State<ProfilePage> {
                   children: [
                     Text("Details", style: _titleStyle),
                     const SizedBox(height: 12),
-
-                    // Gender row
                     Row(
                       children: [
                         Icon(
@@ -437,10 +434,10 @@ class _ProfilePageState extends State<ProfilePage> {
       {'title': 'Anxiety Navigator', 'unlocked': false},
       {'title': 'Isolation Survivor', 'unlocked': false},
       {'title': 'King of Stories', 'unlocked': true},
-      {'title': 'Calm Mind', 'unlocked': true},
+      {'title': 'Calm Mind', 'unlocked': false},
       {'title': 'Resilient Heart', 'unlocked': false},
       {'title': 'Empathic Soul', 'unlocked': false},
-      {'title': 'King of Emotions', 'unlocked': false},
+      {'title': 'King of Emotions', 'unlocked': true},
     ];
 
     return GridView.count(

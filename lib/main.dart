@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'utils/theme_manager.dart';
-import 'pages/start_page.dart';
+import 'pages/sign_in_page.dart';
 
 void main() {
   runApp(MyApp());
@@ -35,7 +35,7 @@ class _MyAppState extends State<MyApp> {
           darkTheme: ThemeData.dark().copyWith(
             scaffoldBackgroundColor: Colors.transparent,
           ),
-          home: StartPage(themeManager: _themeManager),
+          home: SignInPage(themeManager: _themeManager),
         );
       },
     );

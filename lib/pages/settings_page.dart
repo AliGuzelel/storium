@@ -245,8 +245,6 @@ class _SettingsPageState extends State<SettingsPage> {
                           ],
                         ),
                       ),
-
-                      // ✅ This pushes content to fill height when there’s extra space
                       const Spacer(),
                     ],
                   ),

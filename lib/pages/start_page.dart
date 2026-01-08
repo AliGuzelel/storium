@@ -150,15 +150,12 @@ class _StartPageState extends State<StartPage>
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
               _menuButton(
-                text: 'Settings',
+                text: 'Profile',
                 onPressed: () {
                   Navigator.pop(context);
                   Navigator.push(
                     context,
-                    MaterialPageRoute(
-                      builder: (_) =>
-                          SettingsPage(themeManager: widget.themeManager),
-                    ),
+                    MaterialPageRoute(builder: (_) => const ProfilePage()),
                   );
                 },
               ),
@@ -177,12 +174,15 @@ class _StartPageState extends State<StartPage>
               ),
               const SizedBox(height: 20),
               _menuButton(
-                text: 'Profile',
+                text: 'Settings',
                 onPressed: () {
                   Navigator.pop(context);
                   Navigator.push(
                     context,
-                    MaterialPageRoute(builder: (_) => const ProfilePage()),
+                    MaterialPageRoute(
+                      builder: (_) =>
+                          SettingsPage(themeManager: widget.themeManager),
+                    ),
                   );
                 },
               ),

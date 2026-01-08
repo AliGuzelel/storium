@@ -61,7 +61,6 @@ class _StorySelectionPageState extends State<StorySelectionPage>
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  // ✅ Hero header (adds soul instantly)
                   _glassPanel(
                     padding: const EdgeInsets.symmetric(
                       horizontal: 18,
@@ -94,8 +93,6 @@ class _StorySelectionPageState extends State<StorySelectionPage>
                   ),
 
                   const SizedBox(height: 18),
-
-                  // ✅ Story cards (glass + identity)
                   _storyCard(
                     context,
                     title: 'The Day After',
@@ -108,11 +105,11 @@ class _StorySelectionPageState extends State<StorySelectionPage>
 
                   _storyCard(
                     context,
-                    title: 'A Walk Through Yesterday',
+                    title: 'What Still Remains',
                     topic: 'Depression',
                     emoji: '🌙',
-                    desc: 'Small steps when everything feels heavy.',
-                    chips: const ['Slow', 'Grounding'],
+                    desc: 'Between messages, memories, and the quiet ache.',
+                    chips: const ['Emotional', 'Heavy'],
                   ),
                   const SizedBox(height: 14),
 
@@ -188,7 +185,6 @@ class _StorySelectionPageState extends State<StorySelectionPage>
         },
         child: Row(
           children: [
-            // emoji badge
             Container(
               width: 46,
               height: 46,
@@ -206,7 +202,6 @@ class _StorySelectionPageState extends State<StorySelectionPage>
 
             const SizedBox(width: 14),
 
-            // text area
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -232,7 +227,6 @@ class _StorySelectionPageState extends State<StorySelectionPage>
                   ),
                   const SizedBox(height: 10),
 
-                  // chips
                   Wrap(
                     spacing: 8,
                     runSpacing: 8,

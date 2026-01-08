@@ -21,6 +21,7 @@ class SummaryPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
+
     final face = score >= 66 ? '😊' : (score >= 40 ? '😐' : '😟');
 
     return GradientScaffold(
@@ -51,6 +52,7 @@ class SummaryPage extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(height: 10),
+
                 Text(
                   _autoSummary(mood, score, topic),
                   textAlign: TextAlign.center,
@@ -61,21 +63,42 @@ class SummaryPage extends StatelessWidget {
                     color: Colors.white.withOpacity(0.92),
                   ),
                 ),
-                const SizedBox(height: 18),
+                const SizedBox(height: 22),
 
+                // ---------------- Row With Emoji Inside Emotion Column ----------------
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     _kv('Mood', mood),
-                    _kv('Emotion', emotion),
+
+                    // Emotion Column WITH Emoji under the label
+                    Column(
+                      children: [
+                        const Text(
+                          'Emotion',
+                          style: TextStyle(
+                            fontFamily: 'Cinzel',
+                            fontSize: 13,
+                            color: Colors.white70,
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          face,
+                          style: const TextStyle(
+                            fontSize: 52, // bigger emoji
+                          ),
+                        ),
+                      ],
+                    ),
+
                     _kv('Score', '$score%'),
                   ],
                 ),
+                const SizedBox(height: 20),
 
-                const SizedBox(height: 16),
-                Text(face, style: const TextStyle(fontSize: 40)),
-                const SizedBox(height: 16),
-
+                // ---------------- Buttons ----------------
                 Row(
                   children: [
                     Expanded(
@@ -125,6 +148,31 @@ class SummaryPage extends StatelessWidget {
                     ),
                   ],
                 ),
+
+                // 📍 PASTE THE DISCLAIMER RIGHT HERE
+                const SizedBox(height: 10),
+
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text(
+                      "ℹ️  ",
+                      style: TextStyle(fontSize: 13, color: Colors.white70),
+                    ),
+                    Flexible(
+                      child: Text(
+                        "Storium reflects fictional emotional patterns and is not a diagnostic tool.",
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                          fontFamily: 'Poppins',
+                          fontSize: 11,
+                          color: Colors.white70,
+                          height: 1.4,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
               ],
             ),
           ),
@@ -132,6 +180,8 @@ class SummaryPage extends StatelessWidget {
       ),
     );
   }
+
+  // ---------------- SUMMARY TEXT GENERATION ----------------
 
   String _autoSummary(String mood, int score, String topic) {
     if (mood == 'Calm') {
@@ -146,6 +196,8 @@ class SummaryPage extends StatelessWidget {
       return "You balanced both caution and composure. With a few calmer steps, the ending may feel even lighter.";
     }
   }
+
+  // ---------------- SMALL UI COMPONENT ----------------
 
   Widget _kv(String k, String v) => Column(
     children: [
@@ -168,6 +220,8 @@ class SummaryPage extends StatelessWidget {
       ),
     ],
   );
+
+  // ---------------- NAVIGATION ----------------
 
   void _replay(BuildContext context) {
     Navigator.pushReplacement(

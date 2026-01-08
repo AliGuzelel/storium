@@ -26,15 +26,15 @@ class _StoryPageState extends State<StoryPage> {
         storyScenes = _griefScenes;
         break;
       case 'Depression':
-      case 'Loneliness':
         storyScenes = _depressionScenes;
+        break;
+      case 'Loneliness':
+        storyScenes = _lonelinessScenes;
         break;
       default:
         storyScenes = _griefScenes;
     }
   }
-
-  // ===================== GRIEF =====================
 
   final Map<int, Map<String, dynamic>> _griefScenes = {
     1: {
@@ -148,156 +148,417 @@ class _StoryPageState extends State<StoryPage> {
     },
   };
 
-  // ===================== DEPRESSION / LONELINESS =====================
-
   final Map<int, Map<String, dynamic>> _depressionScenes = {
     1: {
-      'image': 'assets/images/stories/depression_1.jpg',
+      'image': 'assets/images/stories/depression_1.png',
       'text':
-          "Morning light leaks through the curtains. Your body feels heavy, like the day is already asking too much.",
+          "Your alarm buzzes. You check your phone. At the top of your notifications is a message from Alex.\n\n\"You okay?\"\n\nSeeing their name still hits you in the chest.",
       'choices': [
         {
-          'text': "Sit up and place feet on the floor",
+          'text': "Open the message, then close it without replying",
+          'nextScene': 2,
+          'stat': 'anxiety',
+        },
+        {
+          'text': "Put the phone face-down and sit up",
           'nextScene': 2,
           'stat': 'calm',
         },
+      ],
+    },
+
+    2: {
+      'image': 'assets/images/stories/depression_2.png',
+      'text':
+          "You sit on the edge of the bed. Their old hoodie is still hanging over your chair — a reminder you never quite dealt with.",
+      'choices': [
         {
-          'text': "Stay under the covers a little longer",
+          'text': "Fold the hoodie and put it away",
+          'nextScene': 3,
+          'stat': 'calm',
+        },
+        {
+          'text': "Hold it for a while and let the memories flood in",
           'nextScene': 3,
           'stat': 'anxiety',
         },
       ],
     },
-    2: {
-      'image': 'assets/images/stories/depression_2.jpg',
+
+    3: {
+      'image': 'assets/images/stories/depression_3.png',
       'text':
-          "You sit up. The room is quiet. A glass of water on the nightstand reminds you to start small.",
+          "Your phone buzzes again.\n\n\"Not trying to push. Just checking. — Alex\"\n\nYour throat tightens. Part of you wants to answer. Part of you doesn’t want to feel anything at all.",
       'choices': [
-        {'text': "Drink the water slowly", 'nextScene': 4, 'stat': 'calm'},
         {
-          'text': "Ignore it and stare at your phone",
-          'nextScene': 5,
+          'text': "Text back \"I'm fine\" even though you’re not",
+          'nextScene': 4,
           'stat': 'anxiety',
         },
-      ],
-    },
-    3: {
-      'image': 'assets/images/stories/depression_3.jpg',
-      'text':
-          "You turn your face to the pillow. “Not today,” your mind says — but the world waits outside.",
-      'choices': [
         {
-          'text': "Take one deep breath and sit up",
+          'text': "Don’t reply. Take one slow breath instead",
           'nextScene': 4,
           'stat': 'calm',
         },
+      ],
+    },
+
+    4: {
+      'image': 'assets/images/stories/depression_4.png',
+      'text':
+          "You head to the kitchen for water. On the fridge, there’s still a photo of you and Alex — hair messy, sun in your eyes, both of you laughing.\n\nThe memory hits harder than you expect.",
+      'choices': [
         {
-          'text': "Scroll aimlessly a bit more",
+          'text': "Take the photo down gently and put it away",
+          'nextScene': 5,
+          'stat': 'calm',
+        },
+        {
+          'text': "Keep staring at it until your chest tightens",
           'nextScene': 5,
           'stat': 'anxiety',
         },
       ],
     },
-    4: {
-      'image': 'assets/images/stories/depression_4.jpg',
-      'text':
-          "You drink. Cool water softens your throat. The sky looks pale and quiet.",
-      'choices': [
-        {
-          'text': "Open the window for fresh air",
-          'nextScene': 6,
-          'stat': 'calm',
-        },
-        {'text': "Close the curtains again", 'nextScene': 5, 'stat': 'anxiety'},
-      ],
-    },
+
     5: {
-      'image': 'assets/images/stories/depression_5.jpg',
+      'image': 'assets/images/stories/depression_5.png',
       'text':
-          "Minutes pass. The feed keeps moving, but you don’t. The room grows smaller when you do nothing.",
+          "Back on the bed, your thoughts start to spiral.\n\nWhat went wrong. What you should’ve said. Why they’re checking on you now. Why everything feels heavier than it should.",
       'choices': [
         {
-          'text': "Wash your face — two minutes",
+          'text':
+              "Stand up, plant your feet on the floor, and take a full, deliberate breath",
           'nextScene': 6,
           'stat': 'calm',
         },
         {
-          'text': "Lie back down and mute notifications",
-          'nextScene': 7,
+          'text': "Replay the breakup in your head until it hurts",
+          'nextScene': 6,
           'stat': 'anxiety',
         },
       ],
     },
+
     6: {
-      'image': 'assets/images/stories/depression_6.jpg',
+      'image': 'assets/images/stories/depression_6.png',
       'text':
-          "Cold water meets skin. It’s not joy, but it’s movement — a quiet kind of progress.",
+          "You open the window. Cold air rushes in, brushing against your skin. For a moment, it helps.\n\nThen you notice a couple walking below, laughing about something only they understand.",
       'choices': [
         {
-          'text': "Step out for a 5-minute walk",
-          'nextScene': 8,
+          'text': "Focus on the cold air and slow your breathing",
+          'nextScene': 7,
           'stat': 'calm',
         },
         {
-          'text': "Sit on the bed and do nothing",
+          'text': "Shut the window quickly and pull the curtains closed",
           'nextScene': 7,
           'stat': 'anxiety',
         },
       ],
     },
+
     7: {
-      'image': 'assets/images/stories/depression_7.jpg',
+      'image': 'assets/images/stories/depression_7.png',
       'text':
-          "You pause. Silence presses in. A softer voice asks for a tiny step.",
+          "Your phone starts to ring.\n\nAlex is calling.\n\nYour stomach twists. You weren’t ready for this.",
       'choices': [
         {
-          'text': "Message a friend: “Hey, how are you?”",
+          'text': "Answer the call with a quiet \"hey\"",
           'nextScene': 8,
-          'stat': 'calm',
+          'stat': 'anxiety',
         },
         {
-          'text': "Turn on a show to drown thoughts",
+          'text': "Let it ring out and watch the screen until it stops",
           'nextScene': 9,
           'stat': 'anxiety',
         },
       ],
     },
+
     8: {
-      'image': 'assets/images/stories/depression_8.jpg',
+      'image': 'assets/images/stories/depression_8.png',
       'text':
-          "Fresh air or a small connection — something shifts. The day feels less sharp.",
-      'choices': [
-        {'text': "Make a simple meal or snack", 'nextScene': 9, 'stat': 'calm'},
-        {
-          'text': "Go back inside and lie down",
-          'nextScene': 7,
-          'stat': 'anxiety',
-        },
-      ],
-    },
-    9: {
-      'image': 'assets/images/stories/depression_9.jpg',
-      'text':
-          "Energy is limited, but you moved. Evening approaches. How do you want it to end?",
+          "Their voice is softer than you remembered.\n\n\"Hey… I just wanted to hear your voice,\" they say. No accusations. Just concern.\n\nIt hurts in a familiar way.",
       'choices': [
         {
-          'text': "Prepare for sleep: water, journal, lights low",
+          'text': "Tell them it’s been hard lately",
           'nextScene': 10,
           'stat': 'calm',
         },
         {
-          'text': "Stay up late and keep scrolling",
+          'text': "Say \"I’m okay\" even though your voice shakes",
           'nextScene': 10,
           'stat': 'anxiety',
         },
       ],
     },
-    10: {
-      'image': 'assets/images/stories/depression_10.jpg',
+
+    9: {
+      'image': 'assets/images/stories/depression_9.png',
       'text':
-          "Night settles. Today wasn’t perfect. But it wasn’t nothing. Small steps counted — the kind that add up.",
+          "The call ends. A voicemail appears a moment later.\n\n\"I won’t push. Just… please don’t disappear,\" Alex says.\n\nHearing their voice without answering aches in your chest.",
       'choices': [
-        {'text': "Let the day end", 'nextScene': -1, 'stat': 'calm'},
+        {
+          'text': "Sit with the feeling and take a slow breath",
+          'nextScene': 11,
+          'stat': 'calm',
+        },
+        {
+          'text': "Open your old chat and reread the arguments",
+          'nextScene': 11,
+          'stat': 'anxiety',
+        },
+      ],
+    },
+
+    10: {
+      'image': 'assets/images/stories/depression_10.png',
+      'text':
+          "You talk for a little while. Nothing big, just small pieces of life.\n\nAlex admits, \"I’m not calling to reopen everything. I just… still worry about you.\"",
+      'choices': [
+        {
+          'text': "Tell them you appreciate that they still care",
+          'nextScene': 12,
+          'stat': 'calm',
+        },
+        {
+          'text': "Change the subject because it’s too much",
+          'nextScene': 12,
+          'stat': 'anxiety',
+        },
+      ],
+    },
+
+    11: {
+      'image': 'assets/images/stories/depression_11.png',
+      'text':
+          "You stay sitting in the quiet room. The voicemail replays in your head.\n\nGuilt mixes with loneliness until you’re not sure which one is heavier.",
+      'choices': [
+        {
+          'text': "Get up, drink some water, and breathe",
+          'nextScene': 13,
+          'stat': 'calm',
+        },
+        {
+          'text': "Stay frozen on the bed, staring at nothing",
+          'nextScene': 13,
+          'stat': 'anxiety',
+        },
+      ],
+    },
+
+    12: {
+      'image': 'assets/images/stories/depression_12.png',
+      'text':
+          "The call winds down. Alex's voice is gentle.\n\n\"Try to rest tonight, okay?\" they say.\n\nYou can hear that they mean it.",
+      'choices': [
+        {
+          'text': "Say a quiet \"goodnight\" before hanging up",
+          'nextScene': 14,
+          'stat': 'calm',
+        },
+        {
+          'text': "Let the silence stretch until they end the call",
+          'nextScene': 14,
+          'stat': 'anxiety',
+        },
+      ],
+    },
+
+    13: {
+      'image': 'assets/images/stories/depression_13.png',
+      'text':
+          "The room feels heavier than before. Alex doesn’t send anything else.\n\nYou’re alone with the unread messages and the weight in your chest.",
+      'choices': [
+        {
+          'text': "Put your phone away and dim the lights",
+          'nextScene': 14,
+          'stat': 'calm',
+        },
+        {
+          'text': "Keep staring at the screen until your eyes burn",
+          'nextScene': 14,
+          'stat': 'anxiety',
+        },
+      ],
+    },
+
+    14: {
+      'image': 'assets/images/stories/depression_14.png',
+      'text':
+          "You lie down, staring at the ceiling. Today wasn’t easy. It wasn’t simple. But you are still here.\n\nBetween the messages, the memories, and the quiet, you made it through another day.",
+      'choices': [
+        {
+          'text': "Let the day end and close your eyes slowly",
+          'nextScene': -1,
+          'stat': 'calm',
+        },
+        {
+          'text': "Cry quietly until sleep finally pulls you under",
+          'nextScene': -1,
+          'stat': 'anxiety',
+        },
+      ],
+    },
+  };
+
+  final Map<int, Map<String, dynamic>> _lonelinessScenes = {
+    1: {
+      'image': 'assets/images/stories/loneliness_1.png',
+      'text':
+          "The city lights flicker against the window. Messages sit on 'seen', group chats move without you. The room feels louder in its silence.",
+      'choices': [
+        {
+          'text': "Put on your shoes and step outside",
+          'nextScene': 2,
+          'stat': 'calm',
+        },
+        {
+          'text': "Stay in bed and scroll one more time",
+          'nextScene': 3,
+          'stat': 'overwhelmed',
+        },
+      ],
+    },
+    2: {
+      'image': 'assets/images/stories/loneliness_2.png',
+      'text':
+          "Cold air meets your face. Streets glow softly. Cars pass, people walk in pairs and small groups, their laughter trailing behind them.",
+      'choices': [
+        {
+          'text': "Walk with no destination, just moving",
+          'nextScene': 4,
+          'stat': 'uncertain',
+        },
+        {'text': "Head toward a familiar café", 'nextScene': 5, 'stat': 'calm'},
+      ],
+    },
+    3: {
+      'image': 'assets/images/stories/loneliness_3.png',
+      'text':
+          "The screen lights your face. Everyone seems surrounded by friends, plans, lives. You feel like you’re pressing your face to the glass from outside.",
+      'choices': [
+        {
+          'text': "Mute notifications and drop the phone beside you",
+          'nextScene': 4,
+          'stat': 'uncertain',
+        },
+        {
+          'text': "Keep tapping through stories you’re not in",
+          'nextScene': 6,
+          'stat': 'hurt',
+        },
+      ],
+    },
+    4: {
+      'image': 'assets/images/stories/loneliness_4.png',
+      'text':
+          "Your footsteps become a slow rhythm. Buildings, signs, small details you never noticed before appear when you finally look up.",
+      'choices': [
+        {
+          'text': "Observe the details: windows, trees, small lights",
+          'nextScene': 7,
+          'stat': 'calm',
+        },
+        {
+          'text': "Walk faster to get this over with",
+          'nextScene': 6,
+          'stat': 'overwhelmed',
+        },
+      ],
+    },
+    5: {
+      'image': 'assets/images/stories/loneliness_5.png',
+      'text':
+          "The café door opens with a soft chime. Warm light, low music, the quiet comfort of strangers sharing the same space.",
+      'choices': [
+        {
+          'text': "Order something small and sit by the window",
+          'nextScene': 7,
+          'stat': 'calm',
+        },
+        {
+          'text': "Take your drink to go and leave quickly",
+          'nextScene': 6,
+          'stat': 'uncertain',
+        },
+      ],
+    },
+    6: {
+      'image': 'assets/images/stories/loneliness_6.png',
+      'text':
+          "You move through the city like a ghost. Present, but not quite belonging to anything around you. A familiar ache settles in your chest.",
+      'choices': [
+        {
+          'text': "Send a simple message: “Hey, are you free?”",
+          'nextScene': 8,
+          'stat': 'hurt',
+        },
+        {
+          'text': "Decide to just walk until your mind softens",
+          'nextScene': 7,
+          'stat': 'uncertain',
+        },
+      ],
+    },
+    7: {
+      'image': 'assets/images/stories/loneliness_7.png',
+      'text':
+          "You sit. Maybe on a bench, maybe by a window. People pass by, living small pieces of their lives. You’re not part of their stories, but you are still here.",
+      'choices': [
+        {
+          'text': "Breathe slowly and notice you’re not the only one alone",
+          'nextScene': 8,
+          'stat': 'calm',
+        },
+        {
+          'text': "Tell yourself no one would notice if you disappeared",
+          'nextScene': 9,
+          'stat': 'hurt',
+        },
+      ],
+    },
+    8: {
+      'image': 'assets/images/stories/loneliness_8.png',
+      'text':
+          "Your phone buzzes — a reply, a small heart, a “sorry, I was busy”. Not everything is fixed, but the emptiness feels less sharp.",
+      'choices': [
+        {
+          'text': "Walk home slowly, letting the night hold you gently",
+          'nextScene': 10,
+          'stat': 'calm',
+        },
+        {
+          'text': "Head home quickly, unsure how you feel",
+          'nextScene': 10,
+          'stat': 'uncertain',
+        },
+      ],
+    },
+    9: {
+      'image': 'assets/images/stories/loneliness_9.png',
+      'text':
+          "The thought lingers: maybe you’re easy to forget. It hurts more than you want to admit. You hold that pain quietly, like a fragile glass.",
+      'choices': [
+        {
+          'text': "Acknowledge the pain instead of arguing with it",
+          'nextScene': 8,
+          'stat': 'hurt',
+        },
+        {
+          'text': "Shut everything down and go straight home",
+          'nextScene': 10,
+          'stat': 'overwhelmed',
+        },
+      ],
+    },
+    10: {
+      'image': 'assets/images/stories/loneliness_10.png',
+      'text':
+          "Back in your room, the same four walls greet you. But you’re not quite the same as when you left. The streets were quiet, but they reminded you: you do exist here.",
+      'choices': [
+        {'text': "Let the night end", 'nextScene': -1, 'stat': 'calm'},
       ],
     },
   };
@@ -458,7 +719,6 @@ class _StoryPageState extends State<StoryPage> {
       ),
       body: Column(
         children: [
-          // Top image
           Expanded(
             flex: 5,
             child: Stack(
@@ -489,8 +749,6 @@ class _StoryPageState extends State<StoryPage> {
               ],
             ),
           ),
-
-          // Bottom content
           Expanded(
             flex: 4,
             child: SingleChildScrollView(

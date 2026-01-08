@@ -115,8 +115,6 @@ class _DefinitionPageState extends State<DefinitionPage>
                           ),
 
                           const SizedBox(height: 16),
-
-                          // ================= SYMPTOMS =================
                           _glassPanel(
                             radius: 26,
                             padding: const EdgeInsets.symmetric(
@@ -172,11 +170,7 @@ class _DefinitionPageState extends State<DefinitionPage>
                               ],
                             ),
                           ),
-
-                          // ================= PUSH CONTENT UP =================
                           const Spacer(),
-
-                          // ================= START BUTTON =================
                           Padding(
                             padding: const EdgeInsets.only(
                               bottom: 40,
@@ -223,8 +217,6 @@ class _DefinitionPageState extends State<DefinitionPage>
       ),
     );
   }
-
-  // ================= UI HELPERS =================
 
   Widget _glassPanel({
     required Widget child,

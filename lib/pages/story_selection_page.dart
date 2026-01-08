@@ -115,11 +115,11 @@ class _StorySelectionPageState extends State<StorySelectionPage>
 
                   _storyCard(
                     context,
-                    title: 'Quiet Streets',
+                    title: 'Alone, Again',
                     topic: 'Loneliness',
                     emoji: '🌫️',
-                    desc: 'When the world is loud, but you feel alone.',
-                    chips: const ['Soft', 'Warm'],
+                    desc: 'A quiet ache you carry through the night.',
+                    chips: const ['Soft', 'Dark'],
                   ),
                 ],
               ),

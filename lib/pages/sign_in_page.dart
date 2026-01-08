@@ -24,7 +24,7 @@ class _SignInPageState extends State<SignInPage> {
   final _passwordController = TextEditingController();
 
   String? _selectedGender;
-  bool _isLogin = true; // true = Sign In, false = Create Account
+  bool _isLogin = true;
   bool _isLoading = false;
   String? _error;
 

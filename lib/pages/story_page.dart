@@ -407,158 +407,230 @@ class _StoryPageState extends State<StoryPage> {
     1: {
       'image': 'assets/images/stories/loneliness_1.png',
       'text':
-          "The city lights flicker against the window. Messages sit on 'seen', group chats move without you. The room feels louder in its silence.",
+          "You walk home slower than usual tonight. Your phone is in your hand, but there’s nothing new.\nThe street looks ordinary, but you feel strangely out of place in it.",
       'choices': [
         {
-          'text': "Put on your shoes and step outside",
+          'text': "Put your phone away and keep walking",
           'nextScene': 2,
           'stat': 'calm',
         },
         {
-          'text': "Stay in bed and scroll one more time",
+          'text': "Check your notifications again anyway",
           'nextScene': 3,
-          'stat': 'overwhelmed',
+          'stat': 'anxiety',
         },
       ],
     },
+
     2: {
       'image': 'assets/images/stories/loneliness_2.png',
       'text':
-          "Cold air meets your face. Streets glow softly. Cars pass, people walk in pairs and small groups, their laughter trailing behind them.",
+          "You slip your phone into your pocket. For a few steps, it feels like a small act of control.\nWithout the screen, you notice the sounds more clearly — cars in the distance, a door closing, someone laughing far away.",
       'choices': [
         {
-          'text': "Walk with no destination, just moving",
+          'text': "Focus on your footsteps and breathing",
           'nextScene': 4,
-          'stat': 'uncertain',
+          'stat': 'calm',
         },
-        {'text': "Head toward a familiar café", 'nextScene': 5, 'stat': 'calm'},
+        {
+          'text': "Reach for your phone again without thinking",
+          'nextScene': 3,
+          'stat': 'anxiety',
+        },
       ],
     },
+
     3: {
       'image': 'assets/images/stories/loneliness_3.png',
       'text':
-          "The screen lights your face. Everyone seems surrounded by friends, plans, lives. You feel like you’re pressing your face to the glass from outside.",
+          "Your screen lights up with the group chat.\nThey’re making plans for tomorrow — memes, voice notes, inside jokes. No one asks if you’re coming. It’s like the conversation knows how to move without you.",
       'choices': [
         {
-          'text': "Mute notifications and drop the phone beside you",
-          'nextScene': 4,
-          'stat': 'uncertain',
+          'text': "Type something, then erase it before sending",
+          'nextScene': 5,
+          'stat': 'anxiety',
         },
         {
-          'text': "Keep tapping through stories you’re not in",
-          'nextScene': 6,
-          'stat': 'hurt',
+          'text': "Mute the chat and lock your phone",
+          'nextScene': 4,
+          'stat': 'calm',
         },
       ],
     },
+
     4: {
       'image': 'assets/images/stories/loneliness_4.png',
       'text':
-          "Your footsteps become a slow rhythm. Buildings, signs, small details you never noticed before appear when you finally look up.",
+          "You keep walking. The city feels like background noise.\nYou watch a couple pass you, talking quietly. A group of friends cross the street together, sharing a joke you can’t hear.\nYou feel like a ghost moving through someone else’s evening.",
       'choices': [
         {
-          'text': "Observe the details: windows, trees, small lights",
-          'nextScene': 7,
+          'text': "Slow your pace and just observe",
+          'nextScene': 6,
           'stat': 'calm',
         },
         {
-          'text': "Walk faster to get this over with",
-          'nextScene': 6,
-          'stat': 'overwhelmed',
+          'text': "Walk faster like you’re trying to catch up to something",
+          'nextScene': 5,
+          'stat': 'anxiety',
         },
       ],
     },
+
     5: {
       'image': 'assets/images/stories/loneliness_5.png',
       'text':
-          "The café door opens with a soft chime. Warm light, low music, the quiet comfort of strangers sharing the same space.",
+          "You open another app out of habit — social media this time.\nStories flash by: dinner tables, crowded rooms, people pressed together in group photos.\nYou spot a place you recognize, with people you know. No one told you they were going.",
       'choices': [
         {
-          'text': "Order something small and sit by the window",
-          'nextScene': 7,
-          'stat': 'calm',
+          'text': "Keep watching their stories in silence",
+          'nextScene': 6,
+          'stat': 'anxiety',
         },
         {
-          'text': "Take your drink to go and leave quickly",
+          'text': "Exit the app before you reach the end",
           'nextScene': 6,
-          'stat': 'uncertain',
+          'stat': 'calm',
         },
       ],
     },
+
     6: {
       'image': 'assets/images/stories/loneliness_6.png',
       'text':
-          "You move through the city like a ghost. Present, but not quite belonging to anything around you. A familiar ache settles in your chest.",
+          "You tuck your phone away again. The screen goes dark, but the feeling it left behind doesn’t.\nA thought appears quietly: when did you start becoming someone people forgot to invite?",
       'choices': [
         {
-          'text': "Send a simple message: “Hey, are you free?”",
-          'nextScene': 8,
-          'stat': 'hurt',
+          'text': "Tell yourself people are just busy",
+          'nextScene': 7,
+          'stat': 'calm',
         },
         {
-          'text': "Decide to just walk until your mind softens",
+          'text': "Blame yourself for drifting away",
           'nextScene': 7,
-          'stat': 'uncertain',
+          'stat': 'anxiety',
         },
       ],
     },
+
     7: {
       'image': 'assets/images/stories/loneliness_7.png',
       'text':
-          "You sit. Maybe on a bench, maybe by a window. People pass by, living small pieces of their lives. You’re not part of their stories, but you are still here.",
+          "You scroll through your recent calls.\nYour mom’s name sits near the top — a missed call from days ago. You remember seeing it and thinking, \"I’ll call her when I feel better.\"\nThat moment never came.",
       'choices': [
         {
-          'text': "Breathe slowly and notice you’re not the only one alone",
+          'text': "Think seriously about calling her tonight",
           'nextScene': 8,
           'stat': 'calm',
         },
         {
-          'text': "Tell yourself no one would notice if you disappeared",
-          'nextScene': 9,
-          'stat': 'hurt',
+          'text': "Swipe away from the call log and look at nothing",
+          'nextScene': 8,
+          'stat': 'anxiety',
         },
       ],
     },
+
     8: {
       'image': 'assets/images/stories/loneliness_8.png',
       'text':
-          "Your phone buzzes — a reply, a small heart, a “sorry, I was busy”. Not everything is fixed, but the emptiness feels less sharp.",
+          "You turn onto your street. Apartment windows glow above you.\nSome show silhouettes moving around, others just the flicker of a TV. Behind each window, there’s a life happening.\nYours feels like it’s paused on the loading screen.",
       'choices': [
         {
-          'text': "Walk home slowly, letting the night hold you gently",
+          'text': "Walk slowly and let your thoughts drift",
+          'nextScene': 9,
+          'stat': 'calm',
+        },
+        {
+          'text': "Keep your eyes on the ground and head to the door",
+          'nextScene': 10,
+          'stat': 'anxiety',
+        },
+      ],
+    },
+
+    9: {
+      'image': 'assets/images/stories/loneliness_9.png',
+      'text':
+          "You stop for a moment near the entrance.\nYou look up at the windows and wonder how many people up there feel just as disconnected — scrolling, overthinking, convincing themselves nobody would understand.",
+      'choices': [
+        {
+          'text': "Let yourself feel a little less alone in that thought",
           'nextScene': 10,
           'stat': 'calm',
         },
         {
-          'text': "Head home quickly, unsure how you feel",
+          'text': "Shake the thought off and go inside",
           'nextScene': 10,
-          'stat': 'uncertain',
+          'stat': 'anxiety',
         },
       ],
     },
-    9: {
-      'image': 'assets/images/stories/loneliness_9.png',
-      'text':
-          "The thought lingers: maybe you’re easy to forget. It hurts more than you want to admit. You hold that pain quietly, like a fragile glass.",
-      'choices': [
-        {
-          'text': "Acknowledge the pain instead of arguing with it",
-          'nextScene': 8,
-          'stat': 'hurt',
-        },
-        {
-          'text': "Shut everything down and go straight home",
-          'nextScene': 10,
-          'stat': 'overwhelmed',
-        },
-      ],
-    },
+
     10: {
       'image': 'assets/images/stories/loneliness_10.png',
       'text':
-          "Back in your room, the same four walls greet you. But you’re not quite the same as when you left. The streets were quiet, but they reminded you: you do exist here.",
+          "In the elevator, your reflection stares back at you in the metal doors.\n\nYou look like yourself, but more drained around the eyes. You realize you don’t remember the last time you felt fully present with someone.",
       'choices': [
-        {'text': "Let the night end", 'nextScene': -1, 'stat': 'calm'},
+        {
+          'text': "Hold your gaze and admit you’re not okay",
+          'nextScene': 11,
+          'stat': 'anxiety',
+        },
+        {
+          'text': "Look away and focus on the floor numbers changing",
+          'nextScene': 11,
+          'stat': 'calm',
+        },
+      ],
+    },
+
+    11: {
+      'image': 'assets/images/stories/loneliness_11.png',
+      'text':
+          "Your room greets you with the same familiar quiet.\nYou drop your things and sit on the edge of the bed. The day feels like it happened around you, not with you.\nYour phone rests beside you, face up, waiting for a notification that doesn’t come.",
+      'choices': [
+        {
+          'text': "Open your gallery and look at old photos",
+          'nextScene': 12,
+          'stat': 'anxiety',
+        },
+        {
+          'text': "Stay still and just stare at the floor",
+          'nextScene': 12,
+          'stat': 'calm',
+        },
+      ],
+    },
+
+    12: {
+      'image': 'assets/images/stories/loneliness_12.png',
+      'text':
+          "You lie back.\nWhether you looked at old pictures or just the ceiling, the same quiet weight settles in your chest — made of half-finished messages, almost-calls, and plans that didn’t have your name on them.",
+      'choices': [
+        {
+          'text': "Breathe slowly and let the feeling move through you",
+          'nextScene': 13,
+          'stat': 'calm',
+        },
+        {
+          'text': "Curl up on your side and stay very still",
+          'nextScene': 13,
+          'stat': 'anxiety',
+        },
+      ],
+    },
+
+    13: {
+      'image': 'assets/images/stories/loneliness_13.png',
+      'text':
+          "You’re still alone tonight.\nThe loneliness didn’t disappear, but you carried it from the street to your room and survived another day with it.\nFor now, that has to be enough — and quietly, it is.",
+      'choices': [
+        {'text': "End the night quietly", 'nextScene': -1, 'stat': 'calm'},
+        {
+          'text': "Stay awake a little longer with your thoughts",
+          'nextScene': -1,
+          'stat': 'anxiety',
+        },
       ],
     },
   };

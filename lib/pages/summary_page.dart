@@ -184,17 +184,30 @@ class SummaryPage extends StatelessWidget {
   // ---------------- SUMMARY TEXT GENERATION ----------------
 
   String _autoSummary(String mood, int score, String topic) {
-    if (mood == 'Calm') {
-      return topic == 'Anxiety'
-          ? "You grounded yourself and softened the echoes. Calm led your choices, and the room felt safer."
-          : "You made steady, gentle choices. Calm guided the path forward.";
-    } else if (mood == 'Anxious') {
-      return topic == 'Anxiety'
-          ? "Anxiety steered many choices; the echoes grew louder. Still, awareness is progress — you can choose differently next time."
-          : "The day felt heavy and reactive. Small, kind steps could shift tomorrow.";
-    } else {
-      return "You balanced both caution and composure. With a few calmer steps, the ending may feel even lighter.";
+    String topicLine;
+
+    switch (topic) {
+      case 'Grief':
+        topicLine =
+            "You moved through a day shaped by loss, memories, and moments that will never feel simple. This story wasn’t about ‘getting over’ anything — it was about making it through.";
+        break;
+      case 'Depression':
+        topicLine =
+            "You walked through a day touched by something that ended, and the heaviness it left behind. Some thoughts pulled you down, but you still stayed with the story.";
+        break;
+      case 'Loneliness':
+        topicLine =
+            "You moved through a world full of people and still felt apart from it. From streets to screens to your room, you carried a quiet ache most others never see.";
+        break;
+      default:
+        topicLine =
+            "You stayed with some difficult feelings instead of running away from them. That alone already says a lot about you.";
     }
+
+    const closingLine =
+        "However this story turned out, reaching the end means you stayed with your feelings for a little while. That’s a brave thing to do — and you deserve gentleness after it.";
+
+    return "$topicLine\n\n$closingLine";
   }
 
   // ---------------- SMALL UI COMPONENT ----------------
@@ -220,8 +233,6 @@ class SummaryPage extends StatelessWidget {
       ),
     ],
   );
-
-  // ---------------- NAVIGATION ----------------
 
   void _replay(BuildContext context) {
     Navigator.pushReplacement(

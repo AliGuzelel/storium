@@ -837,9 +837,9 @@ class _StoryPageState extends State<StoryPage> {
                       scene['text'],
                       textAlign: TextAlign.center,
                       style: TextStyle(
-                        fontFamily: 'Cinzel',
-                        fontSize: 18,
-                        height: 1.6,
+                        fontFamily: 'Poppins',
+                        fontSize: 17,
+                        height: 1.55,
                         color:
                             Theme.of(context).textTheme.bodyMedium?.color ??
                             Colors.white,

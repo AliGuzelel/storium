@@ -65,14 +65,12 @@ class SummaryPage extends StatelessWidget {
                 ),
                 const SizedBox(height: 22),
 
-                // ---------------- Row With Emoji Inside Emotion Column ----------------
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     _kv('Mood', mood),
 
-                    // Emotion Column WITH Emoji under the label
                     Column(
                       children: [
                         const Text(
@@ -98,7 +96,6 @@ class SummaryPage extends StatelessWidget {
                 ),
                 const SizedBox(height: 20),
 
-                // ---------------- Buttons ----------------
                 Row(
                   children: [
                     Expanded(
@@ -149,7 +146,6 @@ class SummaryPage extends StatelessWidget {
                   ],
                 ),
 
-                // 📍 PASTE THE DISCLAIMER RIGHT HERE
                 const SizedBox(height: 10),
 
                 Row(
@@ -181,8 +177,6 @@ class SummaryPage extends StatelessWidget {
     );
   }
 
-  // ---------------- SUMMARY TEXT GENERATION ----------------
-
   String _autoSummary(String mood, int score, String topic) {
     String topicLine;
 
@@ -209,8 +203,6 @@ class SummaryPage extends StatelessWidget {
 
     return "$topicLine\n\n$closingLine";
   }
-
-  // ---------------- SMALL UI COMPONENT ----------------
 
   Widget _kv(String k, String v) => Column(
     children: [

@@ -17,7 +17,6 @@ class SignInPage extends StatefulWidget {
 class _SignInPageState extends State<SignInPage> {
   final _formKey = GlobalKey<FormState>();
 
-  // Controllers
   final _nameController = TextEditingController();
   final _ageController = TextEditingController();
   final _emailController = TextEditingController();
@@ -45,13 +44,11 @@ class _SignInPageState extends State<SignInPage> {
       _error = null;
     });
 
-    // ⚠️ NO REAL BACKEND YET – just simulate a delay
     await Future.delayed(const Duration(milliseconds: 500));
 
     if (!mounted) return;
 
     if (!_isLogin) {
-      // Creating account → store in a simple session class for now
       final int? age = int.tryParse(_ageController.text.trim());
       UserSession.currentUser = UserProfile(
         name: _nameController.text.trim(),
@@ -59,16 +56,12 @@ class _SignInPageState extends State<SignInPage> {
         age: age ?? 0,
         email: _emailController.text.trim(),
       );
-    } else {
-      // Login mode – you could later load the profile here
-      // For now we leave it empty.
-    }
+    } else {}
 
     setState(() {
       _isLoading = false;
     });
 
-    // ✅ Go to StartPage after "sign in / sign up"
     Navigator.pushReplacement(
       context,
       MaterialPageRoute(
@@ -135,9 +128,7 @@ class _SignInPageState extends State<SignInPage> {
                       ),
                       const SizedBox(height: 18),
 
-                      // ---------------- SIGN UP EXTRA FIELDS ----------------
                       if (isSignup) ...[
-                        // Name
                         TextFormField(
                           controller: _nameController,
                           style: const TextStyle(color: Colors.white),
@@ -156,7 +147,6 @@ class _SignInPageState extends State<SignInPage> {
                         ),
                         const SizedBox(height: 12),
 
-                        // Gender
                         DropdownButtonFormField<String>(
                           value: _selectedGender,
                           dropdownColor: const Color(0xFF211835),
@@ -197,7 +187,6 @@ class _SignInPageState extends State<SignInPage> {
                         ),
                         const SizedBox(height: 12),
 
-                        // Age
                         TextFormField(
                           controller: _ageController,
                           keyboardType: TextInputType.number,
@@ -222,7 +211,6 @@ class _SignInPageState extends State<SignInPage> {
                         const SizedBox(height: 14),
                       ],
 
-                      // ---------------- EMAIL ----------------
                       TextFormField(
                         controller: _emailController,
                         keyboardType: TextInputType.emailAddress,
@@ -243,7 +231,6 @@ class _SignInPageState extends State<SignInPage> {
                       ),
                       const SizedBox(height: 14),
 
-                      // ---------------- PASSWORD ----------------
                       TextFormField(
                         controller: _passwordController,
                         obscureText: true,
@@ -280,7 +267,6 @@ class _SignInPageState extends State<SignInPage> {
 
                       const SizedBox(height: 10),
 
-                      // ---------------- SUBMIT BUTTON ----------------
                       SizedBox(
                         width: double.infinity,
                         height: 48,
@@ -316,7 +302,6 @@ class _SignInPageState extends State<SignInPage> {
 
                       const SizedBox(height: 10),
 
-                      // ---------------- TOGGLE LOGIN / SIGNUP ----------------
                       TextButton(
                         onPressed: _isLoading
                             ? null
@@ -394,8 +379,6 @@ class _SignInPageState extends State<SignInPage> {
     );
   }
 }
-
-// ---------------- SIMPLE SESSION & PROFILE MODEL ----------------
 
 class UserProfile {
   final String name;

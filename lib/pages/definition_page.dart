@@ -172,9 +172,7 @@ class _DefinitionPageState extends State<DefinitionPage>
                           ),
                           const Spacer(),
                           Padding(
-                            padding: const EdgeInsets.only(
-                              bottom: 40,
-                            ), // 👈 moved up
+                            padding: const EdgeInsets.only(bottom: 40),
                             child: Center(
                               child: SizedBox(
                                 width: 200,

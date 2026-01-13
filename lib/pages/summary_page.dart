@@ -82,12 +82,7 @@ class SummaryPage extends StatelessWidget {
                           ),
                         ),
                         const SizedBox(height: 4),
-                        Text(
-                          face,
-                          style: const TextStyle(
-                            fontSize: 52, // bigger emoji
-                          ),
-                        ),
+                        Text(face, style: const TextStyle(fontSize: 52)),
                       ],
                     ),
 

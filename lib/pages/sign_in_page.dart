@@ -1,7 +1,13 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
 
+import '../models/user_session.dart';
+import '../services/auth_service.dart';
+import '../services/story_progress_service.dart';
+import '../theme/ui_tokens.dart';
+import '../utils/app_strings.dart';
 import '../utils/theme_manager.dart';
+import '../widgets/app_button.dart';
 import '../widgets/gradient_scaffold.dart';
 import 'start_page.dart';
 
@@ -18,7 +24,7 @@ class _SignInPageState extends State<SignInPage> {
   final _formKey = GlobalKey<FormState>();
 
   final _nameController = TextEditingController();
-  final _ageController = TextEditingController();
+  DateTime? _dateOfBirth;
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
 
@@ -26,11 +32,12 @@ class _SignInPageState extends State<SignInPage> {
   bool _isLogin = true;
   bool _isLoading = false;
   String? _error;
+  final AuthService _authService = AuthService();
+  final StoryProgressService _storyProgressService = StoryProgressService();
 
   @override
   void dispose() {
     _nameController.dispose();
-    _ageController.dispose();
     _emailController.dispose();
     _passwordController.dispose();
     super.dispose();
@@ -44,30 +51,62 @@ class _SignInPageState extends State<SignInPage> {
       _error = null;
     });
 
-    await Future.delayed(const Duration(milliseconds: 500));
+    try {
+      final email = _emailController.text.trim();
+      final password = _passwordController.text.trim();
 
-    if (!mounted) return;
+      if (!_isLogin) {
+        if (_dateOfBirth == null) {
+          setState(() {
+            _isLoading = false;
+            _error = 'Please select your date of birth';
+          });
+          return;
+        }
 
-    if (!_isLogin) {
-      final int? age = int.tryParse(_ageController.text.trim());
-      UserSession.currentUser = UserProfile(
-        name: _nameController.text.trim(),
-        gender: _selectedGender ?? 'Not set',
-        age: age ?? 0,
-        email: _emailController.text.trim(),
+        final profile = await _authService.signUp(
+          name: _nameController.text.trim(),
+          gender: _selectedGender ?? 'Not set',
+          email: email,
+          dateOfBirth: _dateOfBirth,
+          password: password,
+        );
+        UserSession.currentUser = profile;
+      } else {
+        final profile = await _authService.signIn(
+          email: email,
+          password: password,
+        );
+        UserSession.currentUser = profile;
+      }
+
+      await UserSession.saveCurrentUser();
+      await _storyProgressService.seedAnnouncedWithCurrentlyUnlocked();
+      if (!mounted) return;
+
+      setState(() {
+        _isLoading = false;
+      });
+
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(
+          builder: (_) => StartPage(themeManager: widget.themeManager),
+        ),
       );
-    } else {}
-
-    setState(() {
-      _isLoading = false;
-    });
-
-    Navigator.pushReplacement(
-      context,
-      MaterialPageRoute(
-        builder: (_) => StartPage(themeManager: widget.themeManager),
-      ),
-    );
+    } on AuthServiceException catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _isLoading = false;
+        _error = e.message;
+      });
+    } catch (_) {
+      if (!mounted) return;
+      setState(() {
+        _isLoading = false;
+        _error = 'Something went wrong. Please try again.';
+      });
+    }
   }
 
   @override
@@ -83,7 +122,8 @@ class _SignInPageState extends State<SignInPage> {
       ),
       body: Center(
         child: SingleChildScrollView(
-          padding: const EdgeInsets.symmetric(horizontal: 24),
+          physics: const BouncingScrollPhysics(),
+          padding: const EdgeInsets.symmetric(horizontal: UiTokens.pagePadding),
           child: ClipRRect(
             borderRadius: BorderRadius.circular(26),
             child: BackdropFilter(
@@ -107,7 +147,7 @@ class _SignInPageState extends State<SignInPage> {
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       Text(
-                        isSignup ? 'Create Account' : 'Sign In',
+                        isSignup ? t(context, 'create_account') : t(context, 'sign_in'),
                         style: const TextStyle(
                           fontFamily: 'Cinzel',
                           fontSize: 22,
@@ -126,14 +166,14 @@ class _SignInPageState extends State<SignInPage> {
                           color: Colors.white70,
                         ),
                       ),
-                      const SizedBox(height: 18),
+                      const SizedBox(height: UiTokens.sectionGap),
 
                       if (isSignup) ...[
                         TextFormField(
                           controller: _nameController,
                           style: const TextStyle(color: Colors.white),
                           decoration: _inputDecoration(
-                            label: 'Name',
+                            label: t(context, 'name'),
                             icon: Icons.person_outline,
                           ),
                           validator: (value) {
@@ -145,7 +185,7 @@ class _SignInPageState extends State<SignInPage> {
                             return null;
                           },
                         ),
-                        const SizedBox(height: 12),
+                        const SizedBox(height: UiTokens.itemGap),
 
                         DropdownButtonFormField<String>(
                           value: _selectedGender,
@@ -156,7 +196,7 @@ class _SignInPageState extends State<SignInPage> {
                             fontSize: 13,
                           ),
                           decoration: _inputDecoration(
-                            label: 'Gender',
+                            label: t(context, 'gender'),
                             icon: Icons.wc,
                           ),
                           items: const [
@@ -185,30 +225,15 @@ class _SignInPageState extends State<SignInPage> {
                             return null;
                           },
                         ),
-                        const SizedBox(height: 12),
+                        const SizedBox(height: UiTokens.itemGap),
 
-                        TextFormField(
-                          controller: _ageController,
-                          keyboardType: TextInputType.number,
-                          style: const TextStyle(color: Colors.white),
-                          decoration: _inputDecoration(
-                            label: 'Age',
-                            icon: Icons.cake_outlined,
-                          ),
-                          validator: (value) {
-                            if (isSignup) {
-                              if (value == null || value.trim().isEmpty) {
-                                return 'Please enter your age';
-                              }
-                              final age = int.tryParse(value.trim());
-                              if (age == null || age <= 0 || age > 120) {
-                                return 'Please enter a valid age';
-                              }
-                            }
-                            return null;
-                          },
+                        _datePickerPill(
+                          label: t(context, 'date_of_birth'),
+                          icon: Icons.calendar_month_rounded,
+                          value: _dateOfBirth,
+                          onPick: _pickDateOfBirth,
                         ),
-                        const SizedBox(height: 14),
+                        const SizedBox(height: UiTokens.itemGap),
                       ],
 
                       TextFormField(
@@ -216,41 +241,43 @@ class _SignInPageState extends State<SignInPage> {
                         keyboardType: TextInputType.emailAddress,
                         style: const TextStyle(color: Colors.white),
                         decoration: _inputDecoration(
-                          label: 'Email',
+                          label: t(context, 'email'),
                           icon: Icons.mail_outline,
                         ),
                         validator: (value) {
-                          if (value == null || value.trim().isEmpty) {
+                          final v = value?.trim() ?? '';
+                          if (v.isEmpty) {
                             return 'Please enter your email';
                           }
-                          if (!value.contains('@')) {
+                          if (!v.contains('@') || !v.contains('.com')) {
                             return 'Please enter a valid email';
                           }
                           return null;
                         },
                       ),
-                      const SizedBox(height: 14),
+                      const SizedBox(height: UiTokens.itemGap),
 
                       TextFormField(
                         controller: _passwordController,
                         obscureText: true,
                         style: const TextStyle(color: Colors.white),
                         decoration: _inputDecoration(
-                          label: 'Password',
+                          label: t(context, 'password'),
                           icon: Icons.lock_outline,
                         ),
                         validator: (value) {
-                          if (value == null || value.isEmpty) {
+                          final v = value?.trim() ?? '';
+                          if (v.isEmpty) {
                             return 'Please enter your password';
                           }
-                          if (value.length < 6) {
+                          if (v.length < 6) {
                             return 'At least 6 characters';
                           }
                           return null;
                         },
                       ),
 
-                      const SizedBox(height: 10),
+                      const SizedBox(height: UiTokens.itemGap),
 
                       if (_error != null) ...[
                         Text(
@@ -265,21 +292,14 @@ class _SignInPageState extends State<SignInPage> {
                         const SizedBox(height: 6),
                       ],
 
-                      const SizedBox(height: 10),
+                      const SizedBox(height: UiTokens.itemGap),
 
-                      SizedBox(
-                        width: double.infinity,
-                        height: 48,
-                        child: ElevatedButton(
-                          onPressed: _isLoading ? null : _submit,
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: const Color(0xFF451B80),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(18),
-                            ),
-                          ),
-                          child: _isLoading
-                              ? const SizedBox(
+                      _isLoading
+                          ? const SizedBox(
+                              width: double.infinity,
+                              height: 48,
+                              child: Center(
+                                child: SizedBox(
                                   width: 22,
                                   height: 22,
                                   child: CircularProgressIndicator(
@@ -288,17 +308,15 @@ class _SignInPageState extends State<SignInPage> {
                                       Colors.white,
                                     ),
                                   ),
-                                )
-                              : Text(
-                                  isSignup ? 'Create Account' : 'Continue',
-                                  style: const TextStyle(
-                                    fontFamily: 'Poppins',
-                                    color: Colors.white,
-                                    fontSize: 15,
-                                  ),
                                 ),
-                        ),
-                      ),
+                              ),
+                            )
+                          : AppButton(
+                              label: isSignup
+                                  ? t(context, 'create_account')
+                                  : t(context, 'continue'),
+                              onTap: _submit,
+                            ),
 
                       const SizedBox(height: 10),
 
@@ -378,22 +396,103 @@ class _SignInPageState extends State<SignInPage> {
       filled: true,
     );
   }
-}
 
-class UserProfile {
-  final String name;
-  final String gender;
-  final int age;
-  final String email;
+  Widget _datePickerPill({
+    required String label,
+    required IconData icon,
+    required DateTime? value,
+    required VoidCallback onPick,
+  }) {
+    final text = value == null
+        ? 'Pick a date'
+        : '${value.day}/${value.month}/${value.year}';
 
-  UserProfile({
-    required this.name,
-    required this.gender,
-    required this.age,
-    required this.email,
-  });
-}
+    return GestureDetector(
+      onTap: onPick,
+      child: Container(
+        width: double.infinity,
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
+        decoration: BoxDecoration(
+          color: const Color(0xFF211835),
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: Colors.white.withOpacity(0.25), width: 1),
+        ),
+        child: Row(
+          children: [
+            Icon(icon, color: Colors.white.withOpacity(0.8)),
+            const SizedBox(width: 10),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(label,
+                      style: const TextStyle(
+                        fontFamily: 'Poppins',
+                        fontSize: 13,
+                        color: Colors.white70,
+                      )),
+                  const SizedBox(height: 6),
+                  Text(
+                    text,
+                    style: const TextStyle(
+                      fontFamily: 'Poppins',
+                      fontSize: 15,
+                      color: Colors.white,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
 
-class UserSession {
-  static UserProfile? currentUser;
+  Future<void> _pickDateOfBirth() async {
+    DateTime tempDate = _dateOfBirth ?? DateTime(2000);
+    final didSave = await showDialog<bool>(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          title: const Text(
+            'Select Date of Birth',
+            style: TextStyle(fontFamily: 'Poppins', fontSize: 16),
+          ),
+          content: SizedBox(
+            width: 320,
+            child: CalendarDatePicker(
+              initialDate: tempDate,
+              firstDate: DateTime(1900),
+              lastDate: DateTime.now(),
+              onDateChanged: (picked) {
+                tempDate = picked;
+              },
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(false),
+              child: const Text('Cancel'),
+            ),
+            ElevatedButton(
+              onPressed: () => Navigator.of(context).pop(true),
+              child: const Text('Save Date'),
+            ),
+          ],
+        );
+      },
+    );
+
+    if (didSave == true && mounted) {
+      setState(() {
+        _dateOfBirth = tempDate;
+        if (_error == 'Please select your date of birth') {
+          _error = null;
+        }
+      });
+    }
+  }
 }

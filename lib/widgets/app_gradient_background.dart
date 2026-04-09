@@ -1,6 +1,8 @@
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
-import '../theme/app_colors.dart';
+import 'package:provider/provider.dart';
+import '../providers/settings_manager.dart';
+import '../theme/app_themes.dart';
 
 class AppGradientBackground extends StatefulWidget {
   final Widget child;
@@ -57,51 +59,29 @@ class _AppGradientBackgroundState extends State<AppGradientBackground>
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final colors = isDark ? AppColors.darkGradient : AppColors.lightGradient;
+    final settings = context.watch<SettingsManager>();
+    final colors = isDark
+        ? AppThemes.darkGradient(settings.themeColor)
+        : AppThemes.lightGradient(settings.themeColor);
+    final smoothedColors = _smoothColors(colors);
+    const smoothedStops = [0.0, 0.14, 0.28, 0.46, 0.62, 0.8, 1.0];
 
-    Widget paint(Alignment begin, Alignment end, double radius, double alpha) {
-      return Container(
+    Widget paint(Alignment begin, Alignment end) {
+      return DecoratedBox(
         decoration: BoxDecoration(
           gradient: LinearGradient(
             begin: begin,
             end: end,
-            stops: const [0.0, 0.35, 0.75, 1.0],
-            colors: colors,
+            stops: smoothedStops,
+            colors: smoothedColors,
           ),
         ),
-        child: Stack(
-          children: [
-            if (widget.addVignette)
-              Positioned.fill(
-                child: IgnorePointer(
-                  child: DecoratedBox(
-                    decoration: BoxDecoration(
-                      gradient: RadialGradient(
-                        center: const Alignment(0.0, -0.15),
-                        radius: radius,
-                        colors: [
-                          Colors.transparent,
-                          Colors.black.withOpacity(alpha),
-                        ],
-                        stops: const [0.65, 1.0],
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-            widget.child,
-          ],
-        ),
+        child: widget.child,
       );
     }
 
     if (!widget.breathe) {
-      return paint(
-        const Alignment(0, -1),
-        const Alignment(1, 1),
-        1.1,
-        isDark ? 0.25 : 0.15,
-      );
+      return paint(const Alignment(0, -1), const Alignment(1, 1));
     }
 
     return AnimatedBuilder(
@@ -111,10 +91,21 @@ class _AppGradientBackgroundState extends State<AppGradientBackground>
         final a = widget.amplitude.clamp(0.0, 0.35);
         final begin = Alignment(0.0, -1.0 + a * 0.8 * t);
         final end = Alignment(1.0 - a * t, 1.0);
-        final radius = 1.08 + 0.08 * t;
-        final alpha = (isDark ? 0.25 : 0.15) + (isDark ? 0.05 : 0.03) * t;
-        return paint(begin, end, radius, alpha);
+        return paint(begin, end);
       },
     );
+  }
+
+  List<Color> _smoothColors(List<Color> source) {
+    if (source.length < 4) return source;
+    return [
+      source[0],
+      Color.lerp(source[0], source[1], 0.5)!,
+      source[1],
+      Color.lerp(source[1], source[2], 0.5)!,
+      source[2],
+      Color.lerp(source[2], source[3], 0.5)!,
+      source[3],
+    ];
   }
 }

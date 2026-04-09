@@ -1,9 +1,21 @@
+import 'dart:convert';
+import 'dart:typed_data';
 import 'dart:ui';
 import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
+import '../models/achievement_model.dart';
+import '../models/story_progress.dart';
+import '../models/user_session.dart';
+import '../services/auth_service.dart';
+import '../services/achievement_service.dart';
+import '../services/story_progress_service.dart';
+import '../utils/app_strings.dart';
+import '../widgets/achievement_card.dart';
 import '../widgets/gradient_scaffold.dart';
 
 class ProfilePage extends StatefulWidget {
   const ProfilePage({super.key});
+
   @override
   State<ProfilePage> createState() => _ProfilePageState();
 }
@@ -13,9 +25,59 @@ class _ProfilePageState extends State<ProfilePage> {
   DateTime? dateOfBirth;
   bool isEditing = false;
 
+  final AuthService _authService = AuthService();
+  final StoryProgressService _progressService = StoryProgressService();
+  final AchievementService _achievementService = AchievementService();
+  final ImagePicker _imagePicker = ImagePicker();
+
+  StoryProgressData _storyStats = const StoryProgressData();
+  List<AchievementModel> _achievements = const [];
+  String? _avatarUrl;
+
   final TextEditingController _usernameController = TextEditingController(
     text: "Username",
   );
+
+  UserProfile? get _user => UserSession.currentUser;
+
+  @override
+  void initState() {
+    super.initState();
+    final user = _user;
+    if (user != null) {
+      _usernameController.text = user.name;
+      selectedGender = user.gender == 'Not set' ? null : user.gender;
+      dateOfBirth = user.dateOfBirth;
+      _avatarUrl = user.avatarUrl;
+    }
+    _initializeProfileData();
+  }
+
+  Future<void> _initializeProfileData() async {
+    await _loadStoryStats();
+    await _refreshAchievements();
+  }
+
+  Future<void> _loadStoryStats() async {
+    final data = await _progressService.load();
+    if (!mounted) return;
+
+    setState(() {
+      _storyStats = data;
+    });
+  }
+
+  Future<void> _refreshAchievements() async {
+    final storyState = await _achievementService.syncWithStoryProgress(
+      _storyStats,
+    );
+
+    if (!mounted) return;
+
+    setState(() {
+      _achievements = _achievementService.buildAchievementModels(storyState);
+    });
+  }
 
   @override
   void dispose() {
@@ -82,6 +144,7 @@ class _ProfilePageState extends State<ProfilePage> {
     );
 
     if (onTap == null) return pill;
+
     return InkWell(
       borderRadius: BorderRadius.circular(999),
       onTap: onTap,
@@ -113,9 +176,9 @@ class _ProfilePageState extends State<ProfilePage> {
   Widget build(BuildContext context) {
     return GradientScaffold(
       appBar: AppBar(
-        title: const Text(
-          "Profile",
-          style: TextStyle(fontFamily: 'Cinzel', fontSize: 24),
+        title: Text(
+          t(context, 'profile'),
+          style: const TextStyle(fontFamily: 'Cinzel', fontSize: 24),
         ),
         backgroundColor: Colors.white.withOpacity(0.04),
         elevation: 0,
@@ -131,23 +194,7 @@ class _ProfilePageState extends State<ProfilePage> {
                 padding: const EdgeInsets.fromLTRB(16, 14, 16, 14),
                 child: Row(
                   children: [
-                    Container(
-                      width: 72,
-                      height: 72,
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        color: Colors.white.withOpacity(0.12),
-                        border: Border.all(
-                          color: Colors.white.withOpacity(0.25),
-                          width: 1,
-                        ),
-                      ),
-                      child: const Icon(
-                        Icons.person_rounded,
-                        color: Colors.white,
-                        size: 40,
-                      ),
-                    ),
+                    _buildAvatar(),
                     const SizedBox(width: 14),
                     Expanded(
                       child: Column(
@@ -175,13 +222,20 @@ class _ProfilePageState extends State<ProfilePage> {
                               color: Colors.white.withOpacity(0.95),
                             ),
                           ),
+                          const SizedBox(height: 4),
+                          Text(
+                            "Story explorer finding calm one choice at a time.",
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                            style: _labelStyle,
+                          ),
                         ],
                       ),
                     ),
                     const SizedBox(width: 10),
                     _glassPill(
                       height: 44,
-                      onTap: () => setState(() => isEditing = !isEditing),
+                      onTap: _handleEditTap,
                       child: Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
@@ -210,6 +264,7 @@ class _ProfilePageState extends State<ProfilePage> {
               ),
 
               const SizedBox(height: 16),
+
               _glass(
                 radius: 26,
                 padding: const EdgeInsets.fromLTRB(16, 16, 16, 16),
@@ -218,6 +273,7 @@ class _ProfilePageState extends State<ProfilePage> {
                   children: [
                     Text("Details", style: _titleStyle),
                     const SizedBox(height: 12),
+
                     Row(
                       children: [
                         Icon(
@@ -240,6 +296,7 @@ class _ProfilePageState extends State<ProfilePage> {
                     ),
 
                     const SizedBox(height: 14),
+
                     Row(
                       children: [
                         Icon(
@@ -255,6 +312,32 @@ class _ProfilePageState extends State<ProfilePage> {
                               Text("Date of Birth", style: _labelStyle),
                               const SizedBox(height: 6),
                               _buildCalendar(),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+
+                    const SizedBox(height: 14),
+
+                    Row(
+                      children: [
+                        Icon(
+                          Icons.email_rounded,
+                          color: Colors.white.withOpacity(0.8),
+                          size: 20,
+                        ),
+                        const SizedBox(width: 10),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text("Email", style: _labelStyle),
+                              const SizedBox(height: 6),
+                              Text(
+                                _user?.email ?? "Not available",
+                                style: _valueStyle,
+                              ),
                             ],
                           ),
                         ),
@@ -289,8 +372,28 @@ class _ProfilePageState extends State<ProfilePage> {
 
               const SizedBox(height: 18),
 
+              _glass(
+                radius: 24,
+                padding: const EdgeInsets.fromLTRB(16, 14, 16, 14),
+                child: Row(
+                  children: [
+                    _statChip(
+                      label: "Stories Completed",
+                      value: "${_storyStats.finishedStories.length}",
+                    ),
+                    const SizedBox(width: 10),
+                    _statChip(
+                      label: "Last Story",
+                      value: _prettyStoryName(_storyStats.lastStoryPlayed),
+                    ),
+                  ],
+                ),
+              ),
+
+              const SizedBox(height: 18),
+
               Text(
-                "Achievements",
+                t(context, 'achievements'),
                 style: TextStyle(
                   fontFamily: 'Cinzel',
                   fontSize: 20,
@@ -298,13 +401,260 @@ class _ProfilePageState extends State<ProfilePage> {
                   color: Colors.white.withOpacity(0.92),
                 ),
               ),
+              const SizedBox(height: 6),
+              Text(
+                "Unlocked through your journey in Storium.",
+                style: _labelStyle,
+              ),
               const SizedBox(height: 12),
+
               _buildBadgesGrid(),
             ],
           ),
         ),
       ),
     );
+  }
+
+  Widget _statChip({required String label, required String value}) {
+    return Expanded(
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
+        decoration: BoxDecoration(
+          color: Colors.white.withOpacity(0.08),
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: Colors.white.withOpacity(0.16)),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              label,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: _labelStyle,
+            ),
+            const SizedBox(height: 4),
+            Text(
+              value,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: _valueStyle,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Future<void> _handleEditTap() async {
+    if (isEditing) {
+      final existing = _user;
+      if (existing != null) {
+        try {
+          UserSession.currentUser = existing.copyWith(
+            name: _usernameController.text.trim().isEmpty
+                ? existing.name
+                : _usernameController.text.trim(),
+            gender: selectedGender ?? existing.gender,
+            dateOfBirth: dateOfBirth,
+            avatarUrl: _avatarUrl,
+          );
+
+          await _authService.saveProfile(
+            UserSession.currentUser!,
+            idToken: UserSession.currentUser!.idToken,
+          );
+          await UserSession.saveCurrentUser();
+        } on AuthServiceException catch (e) {
+          if (!mounted) return;
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(e.message)),
+          );
+          return;
+        } catch (_) {
+          if (!mounted) return;
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Could not save profile right now.')),
+          );
+          return;
+        }
+      }
+    }
+
+    if (!mounted) return;
+    setState(() => isEditing = !isEditing);
+  }
+
+  Widget _buildAvatar() {
+    final avatar = _avatarImage();
+
+    return Stack(
+      clipBehavior: Clip.none,
+      children: [
+        Container(
+          width: 88,
+          height: 88,
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            color: Colors.white.withOpacity(0.12),
+            border: Border.all(color: Colors.white.withOpacity(0.25), width: 1),
+          ),
+          child: ClipOval(child: avatar),
+        ),
+        Positioned(
+          right: -2,
+          bottom: -2,
+          child: InkWell(
+            onTap: _showAvatarOptions,
+            borderRadius: BorderRadius.circular(999),
+            child: Container(
+              width: 30,
+              height: 30,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: Colors.white.withOpacity(0.18),
+                border: Border.all(color: Colors.white.withOpacity(0.3)),
+              ),
+              child: const Icon(
+                Icons.edit_rounded,
+                color: Colors.white,
+                size: 16,
+              ),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _avatarImage() {
+    final avatarUrl = _avatarUrl;
+
+    if (avatarUrl == null || avatarUrl.isEmpty) {
+      return const Icon(Icons.person_rounded, color: Colors.white, size: 42);
+    }
+
+    if (avatarUrl.startsWith('data:image/')) {
+      final bytes = _bytesFromDataUrl(avatarUrl);
+      if (bytes != null) {
+        return Image.memory(bytes, fit: BoxFit.cover);
+      }
+    }
+
+    return Image.network(
+      avatarUrl,
+      fit: BoxFit.cover,
+      errorBuilder: (_, __, ___) =>
+          const Icon(Icons.person_rounded, color: Colors.white, size: 42),
+    );
+  }
+
+  Future<void> _showAvatarOptions() async {
+    await showModalBottomSheet<void>(
+      context: context,
+      backgroundColor: const Color(0xFF2A2140),
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (context) {
+        return SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(16, 12, 16, 18),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                ListTile(
+                  leading: const Icon(
+                    Icons.photo_library_rounded,
+                    color: Colors.white,
+                  ),
+                  title: const Text(
+                    'Choose from device',
+                    style: TextStyle(
+                      fontFamily: 'Poppins',
+                      color: Colors.white,
+                    ),
+                  ),
+                  onTap: () async {
+                    Navigator.pop(context);
+                    await _pickAvatarFromGallery();
+                  },
+                ),
+                ListTile(
+                  leading: const Icon(
+                    Icons.person_outline_rounded,
+                    color: Colors.white,
+                  ),
+                  title: const Text(
+                    'Use default avatar',
+                    style: TextStyle(
+                      fontFamily: 'Poppins',
+                      color: Colors.white,
+                    ),
+                  ),
+                  onTap: () async {
+                    Navigator.pop(context);
+                    await _setDefaultAvatar();
+                  },
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  Future<void> _pickAvatarFromGallery() async {
+    final xFile = await _imagePicker.pickImage(
+      source: ImageSource.gallery,
+      imageQuality: 70,
+      maxWidth: 900,
+    );
+
+    if (xFile == null) return;
+
+    final bytes = await xFile.readAsBytes();
+    final mime = xFile.mimeType ?? 'image/jpeg';
+    final dataUrl = 'data:$mime;base64,${base64Encode(bytes)}';
+
+    await _saveAvatar(dataUrl);
+  }
+
+  Future<void> _setDefaultAvatar() async {
+    await _saveAvatar('');
+  }
+
+  Future<void> _saveAvatar(String avatarUrl) async {
+    final existing = _user;
+    if (existing == null) return;
+
+    final updated = existing.copyWith(
+      avatarUrl: avatarUrl.isEmpty ? null : avatarUrl,
+    );
+
+    UserSession.currentUser = updated;
+    await _authService.saveProfile(updated, idToken: updated.idToken);
+    await UserSession.saveCurrentUser();
+
+    if (!mounted) return;
+    setState(() {
+      _avatarUrl = updated.avatarUrl;
+    });
+  }
+
+  Uint8List? _bytesFromDataUrl(String dataUrl) {
+    final commaIndex = dataUrl.indexOf(',');
+    if (commaIndex < 0 || commaIndex >= dataUrl.length - 1) return null;
+
+    final base64Part = dataUrl.substring(commaIndex + 1);
+
+    try {
+      return base64Decode(base64Part);
+    } catch (_) {
+      return null;
+    }
   }
 
   Widget _buildGenderDropdown() {
@@ -331,8 +681,9 @@ class _ProfilePageState extends State<ProfilePage> {
                 ),
               ),
               style: _valueStyle,
-              onChanged: (String? newValue) =>
-                  setState(() => selectedGender = newValue),
+              onChanged: (String? newValue) {
+                setState(() => selectedGender = newValue);
+              },
               items: ['Male', 'Female', 'Other']
                   .map(
                     (value) => DropdownMenuItem<String>(
@@ -381,7 +732,10 @@ class _ProfilePageState extends State<ProfilePage> {
                       child: child!,
                     ),
                   );
-                  if (picked != null) setState(() => dateOfBirth = picked);
+
+                  if (picked != null) {
+                    setState(() => dateOfBirth = picked);
+                  }
                 },
           child: Row(
             children: [
@@ -409,36 +763,51 @@ class _ProfilePageState extends State<ProfilePage> {
   }
 
   Widget _buildMoodChip() {
+    final int calmScore = _storyStats.lastStoryCalm;
+    final int anxietyScore = _storyStats.lastStoryAnxiety;
+
+    final String moodLabel;
+    final String moodEmoji;
+
+    if (calmScore == 0 && anxietyScore == 0) {
+      moodLabel = "Based on last story";
+      moodEmoji = "😐";
+    } else if (calmScore >= anxietyScore) {
+      moodLabel = "Calm";
+      moodEmoji = "🙂";
+    } else {
+      moodLabel = "Anxious";
+      moodEmoji = "😟";
+    }
+
     return _glassPill(
       height: 46,
       child: Row(
         children: [
           Expanded(
             child: Text(
-              "Based on last story",
+              moodLabel,
               style: _valueStyle.copyWith(
                 color: Colors.white.withOpacity(0.85),
                 fontWeight: FontWeight.w600,
               ),
             ),
           ),
-          Text("😐", style: const TextStyle(fontSize: 18)),
+          Text(moodEmoji, style: const TextStyle(fontSize: 18)),
         ],
       ),
     );
   }
 
   Widget _buildBadgesGrid() {
-    final badges = [
-      {'title': 'Bipolar Explorer', 'unlocked': false},
-      {'title': 'Anxiety Navigator', 'unlocked': false},
-      {'title': 'Isolation Survivor', 'unlocked': false},
-      {'title': 'King of Stories', 'unlocked': true},
-      {'title': 'Calm Mind', 'unlocked': false},
-      {'title': 'Resilient Heart', 'unlocked': false},
-      {'title': 'Empathic Soul', 'unlocked': false},
-      {'title': 'King of Emotions', 'unlocked': true},
-    ];
+    final items = _achievements;
+
+    if (items.isEmpty) {
+      return _glass(
+        radius: 20,
+        child: Center(child: Text("No achievements yet.", style: _labelStyle)),
+      );
+    }
 
     return GridView.count(
       shrinkWrap: true,
@@ -447,86 +816,16 @@ class _ProfilePageState extends State<ProfilePage> {
       mainAxisSpacing: 18,
       crossAxisSpacing: 18,
       childAspectRatio: 0.92,
-      children: badges.map((badge) {
-        final unlocked = badge['unlocked'] as bool;
-
-        return GestureDetector(
-          onTap: () => _showBadgeDialog(badge['title'] as String, unlocked),
-          child: _glass(
-            radius: 20,
-            padding: const EdgeInsets.fromLTRB(10, 10, 10, 10),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Stack(
-                  children: [
-                    Container(
-                      width: 62,
-                      height: 62,
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        color: unlocked
-                            ? Colors.white.withOpacity(0.20)
-                            : Colors.white.withOpacity(0.12),
-                        border: Border.all(
-                          color: unlocked
-                              ? Colors.white.withOpacity(0.35)
-                              : Colors.white.withOpacity(0.22),
-                          width: 1,
-                        ),
-                        boxShadow: unlocked
-                            ? [
-                                BoxShadow(
-                                  color: Colors.white.withOpacity(0.22),
-                                  blurRadius: 18,
-                                  spreadRadius: 1,
-                                ),
-                              ]
-                            : [],
-                      ),
-                      child: Icon(
-                        Icons.emoji_events_rounded,
-                        color: unlocked
-                            ? Colors.white.withOpacity(0.95)
-                            : Colors.white.withOpacity(0.70),
-                        size: 30,
-                      ),
-                    ),
-                    if (!unlocked)
-                      Positioned(
-                        right: 2,
-                        top: 2,
-                        child: Icon(
-                          Icons.lock_rounded,
-                          color: Colors.white.withOpacity(0.75),
-                          size: 14,
-                        ),
-                      ),
-                  ],
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  badge['title'] as String,
-                  textAlign: TextAlign.center,
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                  style: TextStyle(
-                    fontFamily: 'Poppins',
-                    fontSize: 11,
-                    height: 1.15,
-                    color: Colors.white.withOpacity(unlocked ? 0.92 : 0.78),
-                    fontWeight: unlocked ? FontWeight.w700 : FontWeight.w600,
-                  ),
-                ),
-              ],
-            ),
-          ),
+      children: items.map((achievement) {
+        return AchievementCard(
+          achievement: achievement,
+          onTap: () => _showBadgeDialog(achievement),
         );
       }).toList(),
     );
   }
 
-  void _showBadgeDialog(String title, bool isUnlocked) {
+  void _showBadgeDialog(AchievementModel achievement) {
     showDialog(
       context: context,
       builder: (context) {
@@ -551,7 +850,12 @@ class _ProfilePageState extends State<ProfilePage> {
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     Text(
-                      isUnlocked ? "🏅 Achieved!" : "🔒 Locked",
+                      achievement.icon,
+                      style: const TextStyle(fontSize: 34),
+                    ),
+                    const SizedBox(height: 10),
+                    Text(
+                      achievement.unlocked ? "🏅 Achieved!" : "🔒 Locked",
                       style: TextStyle(
                         fontFamily: 'Cinzel',
                         fontSize: 20,
@@ -561,9 +865,20 @@ class _ProfilePageState extends State<ProfilePage> {
                     ),
                     const SizedBox(height: 10),
                     Text(
-                      isUnlocked
-                          ? "You earned the $title badge!\nYou didn’t just tell stories — you *became* one 👑📖"
-                          : "This badge is still locked.\nKeep playing and discovering stories to unlock it 💫",
+                      achievement.title,
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        fontFamily: 'Cinzel',
+                        fontSize: 18,
+                        fontWeight: FontWeight.w700,
+                        color: Colors.white.withOpacity(0.95),
+                      ),
+                    ),
+                    const SizedBox(height: 10),
+                    Text(
+                      achievement.unlocked
+                          ? achievement.description
+                          : "This badge is still locked.\nKeep exploring stories to unlock it 💫",
                       textAlign: TextAlign.center,
                       style: TextStyle(
                         fontFamily: 'Poppins',
@@ -580,5 +895,20 @@ class _ProfilePageState extends State<ProfilePage> {
         );
       },
     );
+  }
+
+  String _prettyStoryName(String? raw) {
+    if (raw == null || raw.trim().isEmpty) return "None";
+
+    switch (raw.toLowerCase()) {
+      case 'depression':
+        return 'What Still Remains';
+      case 'loneliness':
+        return 'Alone, Again';
+      case 'grief':
+        return 'The Day After';
+      default:
+        return raw;
+    }
   }
 }

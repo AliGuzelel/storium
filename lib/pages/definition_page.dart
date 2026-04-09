@@ -125,7 +125,7 @@ class _DefinitionPageState extends State<DefinitionPage>
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 Text(
-                                  "Common experiences",
+                                  "What it can feel like",
                                   style: TextStyle(
                                     fontFamily: 'Cinzel',
                                     fontSize: 18,
@@ -336,7 +336,7 @@ const Map<String, _Def> _defs = {
   ),
 
   'Loneliness': _Def(
-    title: 'Loneliness 🫥',
+    title: 'Loneliness 🧠',
     shortDescription:
         "Loneliness is the feeling of disconnection — even when you’re surrounded by people. "
         "It’s not about being alone; it’s about feeling unseen or unheard. "
@@ -347,5 +347,18 @@ const Map<String, _Def> _defs = {
       "Longing for meaningful connection",
     ],
     tags: ["Connection", "Warmth", "Reach out"],
+  ),
+  'Failure': _Def(
+    title: 'Fear of Failure ⏳',
+    shortDescription:
+        "Fear of failure is the pressure that builds when you feel like your effort has to be perfect to be worth something. "
+        "It can make starting feel harder than continuing, and finishing feel like it’s never enough. "
+        "This fear doesn’t mean you’re incapable — it means you care about what you’re doing.",
+    symptoms: [
+      "Overthinking before starting or finishing tasks",
+      "Avoiding work because it feels overwhelming",
+      "Feeling like what you do is never enough",
+    ],
+    tags: ["Pressure", "Overthinking", "Self-doubt"],
   ),
 };

@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "257433134611",
+    "project_id": "storium-6083e",
+    "storage_bucket": "storium-6083e.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:257433134611:android:5cc14f4ba2a75c683d01e6",
+        "android_client_info": {
+          "package_name": "com.example.storium"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAlISRVS8IBLbRJy-0whlGJ0dWLvX3UuBg"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

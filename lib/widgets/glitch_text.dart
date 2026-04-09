@@ -11,17 +11,14 @@ class GlitchText extends StatelessWidget {
     return Stack(
       alignment: Alignment.center,
       children: [
-        // Cyan offset
         Transform.translate(
           offset: const Offset(2, 0),
           child: Text(text, style: style.copyWith(color: Colors.cyanAccent)),
         ),
-        // Magenta offset
         Transform.translate(
           offset: const Offset(-2, 0),
           child: Text(text, style: style.copyWith(color: Colors.pinkAccent)),
         ),
-        // Main black text
         Text(text, style: style.copyWith(color: Colors.black)),
       ],
     );

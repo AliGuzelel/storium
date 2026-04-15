@@ -7,6 +7,7 @@ import '../models/story_progress.dart';
 import '../models/user_session.dart';
 import '../models/achievement_model.dart';
 import 'achievement_service.dart';
+import 'firebase_project_config.dart';
 
 class StoryProgressService {
   final AchievementService _achievementService = AchievementService();
@@ -14,11 +15,8 @@ class StoryProgressService {
   static const String _prefsKeyPrefix = 'story_progress_data_';
   static const String _prefsAnnouncedAchievementsPrefix =
       'announced_achievements_';
-  static const String _apiKey = 'AIzaSyAlISRVS8IBLbRJy-0whlGJ0dWLvX3UuBg';
-  static const String _projectId = 'storium-6083e';
-
   String get _docBase =>
-      'https://firestore.googleapis.com/v1/projects/$_projectId/databases/(default)/documents/users';
+      '${FirebaseProjectConfig.firestoreDocumentsBase}/users';
 
   Future<StoryProgressData> load() async {
     final local = await _loadLocal();
@@ -162,7 +160,7 @@ class StoryProgressService {
     if (user == null || user.uid.isEmpty || user.idToken.isEmpty) return;
 
     final uri = Uri.parse(
-      '$_docBase/${user.uid}?key=$_apiKey&updateMask.fieldPaths=storyProgressJson',
+      '$_docBase/${user.uid}?key=${FirebaseProjectConfig.apiKey}&updateMask.fieldPaths=storyProgressJson',
     );
     final body = {
       'fields': {
@@ -181,7 +179,7 @@ class StoryProgressService {
 
     if (response.statusCode == 404) {
       await http.put(
-        Uri.parse('$_docBase/${user.uid}?key=$_apiKey'),
+        Uri.parse('$_docBase/${user.uid}?key=${FirebaseProjectConfig.apiKey}'),
         headers: {
           'Content-Type': 'application/json',
           'Authorization': 'Bearer ${user.idToken}',
@@ -195,7 +193,8 @@ class StoryProgressService {
     final user = UserSession.currentUser;
     if (user == null || user.uid.isEmpty || user.idToken.isEmpty) return null;
 
-    final uri = Uri.parse('$_docBase/${user.uid}?key=$_apiKey');
+    final uri =
+        Uri.parse('$_docBase/${user.uid}?key=${FirebaseProjectConfig.apiKey}');
     final resp = await http.get(
       uri,
       headers: {

@@ -458,7 +458,6 @@ class _ProfilePageState extends State<ProfilePage> {
                 : _usernameController.text.trim(),
             gender: selectedGender ?? existing.gender,
             dateOfBirth: dateOfBirth,
-            avatarUrl: _avatarUrl,
           );
 
           await _authService.saveProfile(
@@ -630,9 +629,9 @@ class _ProfilePageState extends State<ProfilePage> {
     final existing = _user;
     if (existing == null) return;
 
-    final updated = existing.copyWith(
-      avatarUrl: avatarUrl.isEmpty ? null : avatarUrl,
-    );
+    final updated = avatarUrl.isEmpty
+        ? existing.copyWith(avatarUrl: null)
+        : existing.copyWith(avatarUrl: avatarUrl);
 
     UserSession.currentUser = updated;
     await _authService.saveProfile(updated, idToken: updated.idToken);
@@ -716,25 +715,61 @@ class _ProfilePageState extends State<ProfilePage> {
           onTap: !isEditing
               ? null
               : () async {
-                  final DateTime? picked = await showDatePicker(
+                  DateTime tempDate = dateOfBirth ?? DateTime(2000);
+                  final didSave = await showDialog<bool>(
                     context: context,
-                    initialDate: dateOfBirth ?? DateTime(2000),
-                    firstDate: DateTime(1900),
-                    lastDate: DateTime.now(),
-                    builder: (context, child) => Theme(
-                      data: Theme.of(context).copyWith(
+                    barrierDismissible: false,
+                    builder: (dialogContext) {
+                      final theme = Theme.of(dialogContext).copyWith(
                         colorScheme: const ColorScheme.light(
                           primary: Color(0xFF451B80),
                           onPrimary: Colors.white,
                           onSurface: Color(0xFF2F1654),
                         ),
-                      ),
-                      child: child!,
-                    ),
+                      );
+                      return Theme(
+                        data: theme,
+                        child: AlertDialog(
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(16),
+                          ),
+                          title: Text(
+                            tRead(context, 'date_of_birth'),
+                            style: const TextStyle(
+                              fontFamily: 'Poppins',
+                              fontSize: 16,
+                            ),
+                          ),
+                          content: SizedBox(
+                            width: 320,
+                            child: CalendarDatePicker(
+                              initialDate: tempDate,
+                              firstDate: DateTime(1900),
+                              lastDate: DateTime.now(),
+                              onDateChanged: (picked) {
+                                tempDate = picked;
+                              },
+                            ),
+                          ),
+                          actions: [
+                            TextButton(
+                              onPressed: () =>
+                                  Navigator.of(dialogContext).pop(false),
+                              child: Text(tRead(context, 'cancel')),
+                            ),
+                            ElevatedButton(
+                              onPressed: () =>
+                                  Navigator.of(dialogContext).pop(true),
+                              child: Text(tRead(context, 'save')),
+                            ),
+                          ],
+                        ),
+                      );
+                    },
                   );
 
-                  if (picked != null) {
-                    setState(() => dateOfBirth = picked);
+                  if (didSave == true && mounted) {
+                    setState(() => dateOfBirth = tempDate);
                   }
                 },
           child: Row(

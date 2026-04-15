@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 import '../models/user_session.dart';
+import 'firebase_project_config.dart';
 
 class AuthServiceException implements Exception {
   final String code;
@@ -12,9 +13,6 @@ class AuthServiceException implements Exception {
 }
 
 class AuthService {
-  static const String _apiKey = 'AIzaSyAlISRVS8IBLbRJy-0whlGJ0dWLvX3UuBg';
-  static const String _projectId = 'storium-6083e';
-
   String get _identityBase =>
       'https://identitytoolkit.googleapis.com/v1/accounts';
   Future<UserProfile> signUp({
@@ -25,7 +23,7 @@ class AuthService {
     required String password,
   }) async {
     final signUpResp = await _postJson(
-      Uri.parse('$_identityBase:signUp?key=$_apiKey'),
+      Uri.parse('$_identityBase:signUp?key=${FirebaseProjectConfig.apiKey}'),
       {
         'email': email,
         'password': password,
@@ -60,7 +58,9 @@ class AuthService {
     required String password,
   }) async {
     final signInResp = await _postJson(
-      Uri.parse('$_identityBase:signInWithPassword?key=$_apiKey'),
+      Uri.parse(
+        '$_identityBase:signInWithPassword?key=${FirebaseProjectConfig.apiKey}',
+      ),
       {
         'email': email,
         'password': password,
@@ -371,7 +371,7 @@ class AuthService {
 
   Uri _userDocUri(String uid, {List<String> updateMaskFields = const []}) {
     final base =
-        'https://firestore.googleapis.com/v1/projects/$_projectId/databases/(default)/documents/users/$uid?key=$_apiKey';
+        '${FirebaseProjectConfig.firestoreDocumentsBase}/users/$uid?key=${FirebaseProjectConfig.apiKey}';
     if (updateMaskFields.isEmpty) return Uri.parse(base);
     final masks = updateMaskFields
         .map((f) => 'updateMask.fieldPaths=${Uri.encodeQueryComponent(f)}')

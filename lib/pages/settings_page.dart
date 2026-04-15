@@ -284,32 +284,32 @@ class _SettingsPageState extends State<SettingsPage> {
                       children: [
                         _themeOption(
                           keyName: 'purple',
-                          label: 'Purple',
+                          label: 'Amethyst',
                           previewColor: const Color(0xFF6A41A1),
                         ),
                         _themeOption(
                           keyName: 'blue',
-                          label: 'Blue',
+                          label: 'Azure',
                           previewColor: const Color(0xFF2C5CCF),
                         ),
                         _themeOption(
                           keyName: 'green',
-                          label: 'Green',
+                          label: 'Emerald',
                           previewColor: const Color(0xFF2E8B57),
                         ),
                         _themeOption(
                           keyName: 'pink',
-                          label: 'Pink',
+                          label: 'Sakura',
                           previewColor: const Color(0xFFF4A7B9),
                         ),
                         _themeOption(
                           keyName: 'red',
-                          label: 'Dark Red',
+                          label: 'Cherry',
                           previewColor: const Color(0xFF6D1A1A),
                         ),
                         _themeOption(
                           keyName: 'grayscale',
-                          label: 'Grayscale',
+                          label: 'Silver',
                           previewColor: const Color(0xFFD7D7D7),
                         ),
                       ],

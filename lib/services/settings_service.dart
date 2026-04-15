@@ -1,8 +1,11 @@
 import 'dart:convert';
 
+import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../models/settings_model.dart';
+import '../models/user_session.dart';
+import 'firestore_user_document_repository.dart';
 
 class SettingsService {
   static const String _settingsKey = 'app_settings';
@@ -55,6 +58,30 @@ class SettingsService {
     await _saveStructured(prefs, settings);
     // Keep JSON blob as compatibility snapshot for older builds.
     await prefs.setString(_settingsKey, jsonEncode(settings.toJson()));
+    await _pushToFirestore(settings);
+  }
+
+  /// Writes prefs from a Firestore JSON blob (no extra cloud write).
+  Future<void> importFromRemoteString(String jsonStr) async {
+    final map = jsonDecode(jsonStr) as Map<String, dynamic>;
+    final settings = SettingsModel.fromJson(map);
+    final prefs = await SharedPreferences.getInstance();
+    await _saveStructured(prefs, settings);
+    await prefs.setString(_settingsKey, jsonEncode(settings.toJson()));
+  }
+
+  Future<void> _pushToFirestore(SettingsModel settings) async {
+    final u = UserSession.currentUser;
+    if (u == null || u.uid.isEmpty || u.idToken.isEmpty) return;
+    try {
+      await FirestoreUserDocumentRepository.patchStringFields(
+        uid: u.uid,
+        idToken: u.idToken,
+        stringFields: {'settingsJson': jsonEncode(settings.toJson())},
+      );
+    } catch (e, st) {
+      debugPrint('SettingsService._pushToFirestore: $e\n$st');
+    }
   }
 
   Future<void> _saveStructured(

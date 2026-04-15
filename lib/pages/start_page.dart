@@ -15,6 +15,7 @@ import 'about_mh.dart';
 import 'profile_page.dart';
 import 'story_page.dart';
 import 'story_selection_page.dart';
+import '../garden/garden_page.dart';
 
 class StartPage extends StatefulWidget {
   final ThemeManager themeManager;
@@ -174,6 +175,18 @@ class _StartPageState extends State<StartPage> {
                   Navigator.push(
                     context,
                     MaterialPageRoute(builder: (_) => const ProfilePage()),
+                  );
+                },
+              ),
+              const SizedBox(height: 20),
+              _menuButton(
+                accent: AppThemes.secondary(settings.themeColor),
+                text: t(context, 'garden'),
+                onPressed: () {
+                  Navigator.pop(context);
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (_) => const GardenPage()),
                   );
                 },
               ),

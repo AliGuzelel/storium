@@ -1,5 +1,7 @@
-import 'dart:ui';
+import 'dart:ui' show ImageFilter;
+
 import 'package:flutter/material.dart';
+import '../widgets/app_button.dart';
 import '../widgets/gradient_scaffold.dart';
 import 'story_page.dart';
 
@@ -176,8 +178,10 @@ class _DefinitionPageState extends State<DefinitionPage>
                             child: Center(
                               child: SizedBox(
                                 width: 200,
-                                child: _glassButton(
+                                child: AppButton(
                                   label: "Start Story",
+                                  height: 52,
+                                  borderRadius: BorderRadius.circular(26),
                                   onTap: () {
                                     Navigator.push(
                                       context,
@@ -233,39 +237,6 @@ class _DefinitionPageState extends State<DefinitionPage>
             border: Border.all(color: Colors.white.withOpacity(0.22), width: 1),
           ),
           child: child,
-        ),
-      ),
-    );
-  }
-
-  Widget _glassButton({required String label, required VoidCallback onTap}) {
-    return ClipRRect(
-      borderRadius: BorderRadius.circular(26),
-      child: BackdropFilter(
-        filter: ImageFilter.blur(sigmaX: 14, sigmaY: 14),
-        child: Container(
-          height: 52,
-          decoration: BoxDecoration(
-            color: Colors.white.withOpacity(0.14),
-            borderRadius: BorderRadius.circular(26),
-            border: Border.all(color: Colors.white.withOpacity(0.25), width: 1),
-          ),
-          child: InkWell(
-            borderRadius: BorderRadius.circular(26),
-            onTap: onTap,
-            splashColor: Colors.white.withOpacity(0.12),
-            child: Center(
-              child: Text(
-                label,
-                style: const TextStyle(
-                  fontFamily: 'Poppins',
-                  fontSize: 16,
-                  fontWeight: FontWeight.w600,
-                  color: Colors.white,
-                ),
-              ),
-            ),
-          ),
         ),
       ),
     );

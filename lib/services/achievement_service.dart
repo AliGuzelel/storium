@@ -1,29 +1,81 @@
 import 'dart:convert';
+
+import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+
 import '../models/achievement_model.dart';
 import '../models/story_progress.dart';
+import '../models/user_session.dart';
+import 'firestore_user_document_repository.dart';
 
 class AchievementService {
   static const String _storageKey = 'achievement_state';
 
+  String _prefsKeyForUser() {
+    final u = UserSession.currentUser;
+    if (u == null || u.uid.isEmpty) {
+      return '${_storageKey}_guest';
+    }
+    return '${_storageKey}_${u.uid}';
+  }
+
   Future<AchievementState> loadState() async {
     final prefs = await SharedPreferences.getInstance();
-    final raw = prefs.getString(_storageKey);
+    final key = _prefsKeyForUser();
+    var raw = prefs.getString(key);
+
+    if ((raw == null || raw.isEmpty) && !key.endsWith('_guest')) {
+      final legacy = prefs.getString(_storageKey);
+      if (legacy != null && legacy.isNotEmpty) {
+        raw = legacy;
+        await prefs.setString(key, legacy);
+      }
+    }
 
     if (raw == null || raw.isEmpty) {
       return AchievementState.empty();
     }
 
     try {
-      return AchievementState.fromJson(jsonDecode(raw));
+      return AchievementState.fromJson(jsonDecode(raw) as Map<String, dynamic>);
     } catch (_) {
       return AchievementState.empty();
     }
   }
 
-  Future<void> saveState(AchievementState state) async {
+  Future<void> importFromRemoteString(String jsonStr) async {
+    try {
+      final state =
+          AchievementState.fromJson(jsonDecode(jsonStr) as Map<String, dynamic>);
+      await saveState(state, pushToCloud: false);
+    } catch (e, st) {
+      debugPrint('AchievementService.importFromRemoteString: $e\n$st');
+    }
+  }
+
+  Future<void> saveState(
+    AchievementState state, {
+    bool pushToCloud = true,
+  }) async {
     final prefs = await SharedPreferences.getInstance();
-    await prefs.setString(_storageKey, jsonEncode(state.toJson()));
+    await prefs.setString(_prefsKeyForUser(), jsonEncode(state.toJson()));
+
+    if (pushToCloud) {
+      final u = UserSession.currentUser;
+      if (u != null && u.uid.isNotEmpty && u.idToken.isNotEmpty) {
+        try {
+          await FirestoreUserDocumentRepository.patchStringFields(
+            uid: u.uid,
+            idToken: u.idToken,
+            stringFields: {
+              'achievementStateJson': jsonEncode(state.toJson()),
+            },
+          );
+        } catch (e, st) {
+          debugPrint('AchievementService.saveState cloud: $e\n$st');
+        }
+      }
+    }
   }
 
   Future<AchievementState> syncWithStoryProgress(

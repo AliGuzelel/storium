@@ -12,7 +12,6 @@ dependencies:
   flutter_localizations:
     sdk: flutter
   cupertino_icons: ^1.0.8
-  flutter_svg: ^2.2.3
   firebase_core: ^3.0.0
   firebase_auth: ^5.0.0
   shared_preferences: ^2.5.5
@@ -20,6 +19,7 @@ dependencies:
   http: ^1.6.0
   image_picker: ^1.1.2
   provider: ^6.1.2
+  google_fonts: ^8.0.2
 
 dev_dependencies:
   flutter_test:
@@ -34,6 +34,7 @@ flutter:
     - assets/images/
     - assets/images/stories/
     - assets/images/trees/
+    - assets/images/plants/
 
   fonts:
     - family: Poppins

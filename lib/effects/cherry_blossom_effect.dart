@@ -1,9 +1,13 @@
 import 'dart:math' as math;
+import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 class CherryBlossomEffect extends StatefulWidget {
   const CherryBlossomEffect({super.key});
+
+  static const String assetPath = 'assets/images/cherry_blossom_theme.png';
 
   @override
   State<CherryBlossomEffect> createState() => _CherryBlossomEffectState();
@@ -15,6 +19,7 @@ class _CherryBlossomEffectState extends State<CherryBlossomEffect>
 
   late final AnimationController _controller;
   late final List<_PetalParticle> _petals;
+  ui.Image? _blossomImage;
 
   @override
   void initState() {
@@ -26,13 +31,33 @@ class _CherryBlossomEffectState extends State<CherryBlossomEffect>
     );
     _controller = AnimationController(
       vsync: this,
-      duration: const Duration(seconds: 16),
+      duration: const Duration(seconds: 22),
     )..repeat();
+    _loadBlossomImage();
+  }
+
+  Future<void> _loadBlossomImage() async {
+    try {
+      final data = await rootBundle.load(CherryBlossomEffect.assetPath);
+      final codec = await ui.instantiateImageCodec(data.buffer.asUint8List());
+      final frame = await codec.getNextFrame();
+      if (!mounted) {
+        frame.image.dispose();
+        return;
+      }
+      setState(() {
+        _blossomImage?.dispose();
+        _blossomImage = frame.image;
+      });
+    } catch (_) {
+      // Missing asset: effect stays empty until fixed.
+    }
   }
 
   @override
   void dispose() {
     _controller.dispose();
+    _blossomImage?.dispose();
     super.dispose();
   }
 
@@ -48,6 +73,7 @@ class _CherryBlossomEffectState extends State<CherryBlossomEffect>
               painter: _CherryBlossomPainter(
                 progress: _controller.value,
                 petals: _petals,
+                blossomImage: _blossomImage,
               ),
             );
           },
@@ -58,29 +84,64 @@ class _CherryBlossomEffectState extends State<CherryBlossomEffect>
 }
 
 class _CherryBlossomPainter extends CustomPainter {
-  const _CherryBlossomPainter({required this.progress, required this.petals});
+  const _CherryBlossomPainter({
+    required this.progress,
+    required this.petals,
+    required this.blossomImage,
+  });
 
   final double progress;
   final List<_PetalParticle> petals;
+  final ui.Image? blossomImage;
+
+  /// Horizontal drift per full animation loop (0→1), as fraction of width (leftward).
+  static const double _windDriftPerLoop = 0.09;
+
+  static double _wrapUnit(double v) => v - v.floorToDouble();
 
   @override
   void paint(Canvas canvas, Size size) {
-    final petalPaint = Paint();
+    final image = blossomImage;
+    if (image == null) return;
+
+    final src = Rect.fromLTWH(
+      0,
+      0,
+      image.width.toDouble(),
+      image.height.toDouble(),
+    );
 
     for (final p in petals) {
       final t = (progress * p.speed + p.phase) % 1.0;
       final time = progress * math.pi * 2;
-      final windShift = math.sin((time * 0.14) + p.windOffset * 0.7);
-      final horizontalWind =
-          math.sin((time * 0.5) + p.windOffset) *
-          (p.windStrength + windShift * 0.0025);
-      final sway =
-          math.sin((time * 0.3) + p.windOffset) * (p.windStrength * 0.72);
+      final windShift = math.sin((time * 0.09) + p.windOffset * 0.7);
+      final horizontalWind = 0.48 *
+          math.sin((time * 0.26) + p.windOffset) *
+          (p.windStrength + windShift * 0.002);
+      final sway = 0.48 *
+          math.sin((time * 0.16) + p.windOffset) *
+          (p.windStrength * 0.72);
       final wobble =
-          math.sin((time * p.wobbleSpeed) + p.phase * 2.1) * p.wobbleAmp;
+          math.sin((time * p.wobbleSpeed * 0.85) + p.phase * 2.1) *
+          (p.wobbleAmp * 0.9);
       final driftWave = math.sin((t * math.pi * 2) + p.phase) * p.driftX;
-      final x =
-          (p.baseX + driftWave + horizontalWind + sway + wobble) * size.width;
+
+      // Smooth right → left carry + slow gusts (normalized 0–1 space).
+      final steadyWind = progress * _windDriftPerLoop * (0.92 + p.windStrength * 4.5);
+      final slowGust = math.sin(time * 0.10 + p.windOffset * 1.2) * 0.014;
+      final longGust = math.sin(time * 0.055 + p.phase * 2.4) * 0.007;
+
+      final xNorm = _wrapUnit(
+        p.baseX +
+            driftWave +
+            horizontalWind +
+            sway +
+            wobble -
+            steadyWind -
+            slowGust -
+            longGust,
+      );
+      final x = xNorm * size.width;
 
       final yBase = (t * 1.15) * size.height + p.offsetY * size.height;
       final fallVariation =
@@ -97,8 +158,8 @@ class _CherryBlossomPainter extends CustomPainter {
 
       final rotation =
           p.rotationSeed + (t * 2 * math.pi * p.rotationSpeed * p.rotationDir);
-      final petalSize = radius * 2;
-      final rect = Rect.fromCenter(
+      final petalSize = (radius * 2).clamp(8.0, 48.0);
+      final dst = Rect.fromCenter(
         center: Offset.zero,
         width: petalSize,
         height: petalSize,
@@ -107,71 +168,23 @@ class _CherryBlossomPainter extends CustomPainter {
       canvas.save();
       canvas.translate(x, y);
       canvas.rotate(rotation);
-      petalPaint
-        ..style = PaintingStyle.fill
-        ..shader = const RadialGradient(
-          colors: [Color(0xFFF9CCD9), Color(0xFFE88FAA)],
-        ).createShader(rect)
-        ..color = Colors.white.withValues(alpha: alpha)
-        ..maskFilter = null;
-      canvas.drawPath(createPetalPath(petalSize), petalPaint);
 
-      // Soft inner highlight to make the shape read closer to sakura artwork.
-      final detailPaint = Paint()
-        ..style = PaintingStyle.fill
-        ..color = Colors.white.withValues(
-          alpha: (alpha * 0.22).clamp(0.06, 0.16),
-        );
-      canvas.drawPath(createInnerPetalPath(petalSize * 0.72), detailPaint);
+      final layerRect = dst.inflate(2);
+      canvas.saveLayer(
+        layerRect,
+        Paint()..color = Color.fromRGBO(255, 255, 255, alpha.toDouble()),
+      );
+      canvas.drawImageRect(image, src, dst, Paint());
+      canvas.restore();
       canvas.restore();
     }
   }
 
-  Path createPetalPath(double size) {
-    final path = Path();
-    final half = size * 0.5;
-    final notch = size * 0.1;
-
-    path.moveTo(0, -half + notch);
-    path.quadraticBezierTo(size * 0.08, -half, size * 0.2, -half + notch * 0.2);
-    path.quadraticBezierTo(size * 0.4, -size * 0.25, size * 0.34, size * 0.12);
-    path.quadraticBezierTo(size * 0.24, size * 0.46, size * 0.02, size * 0.58);
-    path.quadraticBezierTo(0, size * 0.62, -size * 0.02, size * 0.58);
-    path.quadraticBezierTo(
-      -size * 0.24,
-      size * 0.46,
-      -size * 0.34,
-      size * 0.12,
-    );
-    path.quadraticBezierTo(
-      -size * 0.4,
-      -size * 0.25,
-      -size * 0.2,
-      -half + notch * 0.2,
-    );
-    path.quadraticBezierTo(-size * 0.08, -half, 0, -half + notch);
-    path.close();
-
-    return path;
-  }
-
-  Path createInnerPetalPath(double size) {
-    final path = Path();
-    final half = size * 0.5;
-
-    path.moveTo(0, -half + size * 0.12);
-    path.quadraticBezierTo(size * 0.2, -size * 0.22, size * 0.2, size * 0.14);
-    path.quadraticBezierTo(0, size * 0.4, -size * 0.2, size * 0.14);
-    path.quadraticBezierTo(-size * 0.2, -size * 0.22, 0, -half + size * 0.12);
-
-    path.close();
-
-    return path;
-  }
-
   @override
   bool shouldRepaint(covariant _CherryBlossomPainter oldDelegate) {
-    return oldDelegate.progress != progress || oldDelegate.petals != petals;
+    return oldDelegate.progress != progress ||
+        oldDelegate.petals != petals ||
+        oldDelegate.blossomImage != blossomImage;
   }
 }
 

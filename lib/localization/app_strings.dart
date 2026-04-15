@@ -49,6 +49,26 @@ const Map<String, Map<String, String>> translations = {
     'name': 'Name',
     'gender': 'Gender',
     'date_of_birth': 'Date of Birth',
+    'garden': 'Garden',
+    'garden_title': 'Your Garden',
+    'garden_water': 'Water',
+    'garden_pick_title': 'Choose a plant',
+    'garden_pick_subtitle':
+        'Pick one to start. You can nurture it over time.',
+    'garden_cooldown': 'Come back in {time} to water again.',
+    'garden_water_wait': 'Water in {time}',
+    'garden_come_back_in': 'Come back in {time}',
+    'garden_fully_grown_cta': 'Fully grown',
+    'garden_pick_again_title': 'Your garden',
+    'garden_pick_again_subtitle':
+        'Pick a plant to grow next, or restart one you’ve finished before.',
+    'garden_reset_same_title': 'This plant is already fully grown',
+    'garden_reset_same_body':
+        'Reset it to start growing again, or keep it as it is?',
+    'garden_reset_plant': 'Reset plant',
+    'garden_keep_as_is': 'Keep as it is',
+    'garden_full_grown': 'Fully grown — enjoy the calm.',
+    'garden_watered': 'Watered. Your plant feels a little stronger.',
   },
   'tr': {
     'profile': 'Profil',
@@ -95,6 +115,26 @@ const Map<String, Map<String, String>> translations = {
     'name': 'Isim',
     'gender': 'Cinsiyet',
     'date_of_birth': 'Dogum Tarihi',
+    'garden': 'Bahce',
+    'garden_title': 'Bahcen',
+    'garden_water': 'Sula',
+    'garden_pick_title': 'Bir bitki sec',
+    'garden_pick_subtitle':
+        'Baslamak icin birini sec. Zamanla buyutabilirsin.',
+    'garden_cooldown': 'Tekrar sulamak icin {time} bekle.',
+    'garden_water_wait': 'Sulama: {time}',
+    'garden_come_back_in': 'Geri gel: {time}',
+    'garden_fully_grown_cta': 'Tam buyudu',
+    'garden_pick_again_title': 'Bahcen',
+    'garden_pick_again_subtitle':
+        'Siradaki bitkiyi sec veya tamamladigin birini yeniden baslat.',
+    'garden_reset_same_title': 'Bu bitki zaten tam buyudu',
+    'garden_reset_same_body':
+        'Yeniden buyumeye baslatsin mi, yoksa boyle kalsin mi?',
+    'garden_reset_plant': 'Sifirla',
+    'garden_keep_as_is': 'Oldugu gibi kalsin',
+    'garden_full_grown': 'Tam buyudu — sakinligi tadini cikar.',
+    'garden_watered': 'Sulandi. Bitkin biraz daha guclu hissediyor.',
   },
 };
 
@@ -104,3 +144,9 @@ String translate(BuildContext context, String key) {
 }
 
 String t(BuildContext context, String key) => translate(context, key);
+
+/// For async gaps and callbacks: [context.watch] is only valid during [State.build].
+String tRead(BuildContext context, String key) {
+  final lang = context.read<SettingsManager>().language;
+  return translations[lang]?[key] ?? translations['en']?[key] ?? key;
+}

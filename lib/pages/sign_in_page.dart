@@ -1,9 +1,12 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
 import '../models/user_session.dart';
+import '../providers/settings_manager.dart';
 import '../services/auth_service.dart';
 import '../services/story_progress_service.dart';
+import '../services/user_session_cloud_sync.dart';
 import '../theme/ui_tokens.dart';
 import '../utils/app_strings.dart';
 import '../utils/theme_manager.dart';
@@ -81,6 +84,9 @@ class _SignInPageState extends State<SignInPage> {
       }
 
       await UserSession.saveCurrentUser();
+      await UserSessionCloudSync.hydrateIfSignedIn(
+        settingsManager: Provider.of<SettingsManager>(context, listen: false),
+      );
       await _storyProgressService.seedAnnouncedWithCurrentlyUnlocked();
       if (!mounted) return;
 
@@ -454,6 +460,7 @@ class _SignInPageState extends State<SignInPage> {
     DateTime tempDate = _dateOfBirth ?? DateTime(2000);
     final didSave = await showDialog<bool>(
       context: context,
+      barrierDismissible: false,
       builder: (context) {
         return AlertDialog(
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),

@@ -2,6 +2,13 @@ import 'dart:convert';
 
 import 'package:shared_preferences/shared_preferences.dart';
 
+/// Sentinel for [UserProfile.copyWith] — omit means "keep current [avatarUrl]".
+class _AvatarUrlUnset {
+  const _AvatarUrlUnset();
+}
+
+const Object _kAvatarUrlUnset = _AvatarUrlUnset();
+
 class UserProfile {
   final String uid;
   final String idToken;
@@ -28,7 +35,7 @@ class UserProfile {
     String? gender,
     String? email,
     DateTime? dateOfBirth,
-    String? avatarUrl,
+    Object? avatarUrl = _kAvatarUrlUnset,
   }) {
     return UserProfile(
       uid: uid ?? this.uid,
@@ -37,11 +44,18 @@ class UserProfile {
       gender: gender ?? this.gender,
       email: email ?? this.email,
       dateOfBirth: dateOfBirth ?? this.dateOfBirth,
-      avatarUrl: avatarUrl ?? this.avatarUrl,
+      avatarUrl: identical(avatarUrl, _kAvatarUrlUnset)
+          ? this.avatarUrl
+          : avatarUrl as String?,
     );
   }
 
+  /// Stored in [UserSession] prefs. Large `data:image/` URLs are omitted here
+  /// and kept under `avatar_cache_<uid>` so SharedPreferences stays within limits.
   Map<String, dynamic> toJson() {
+    final a = avatarUrl;
+    final storableAvatar =
+        (a != null && a.startsWith('data:image/')) ? null : a;
     return {
       'uid': uid,
       'idToken': idToken,
@@ -49,7 +63,7 @@ class UserProfile {
       'gender': gender,
       'email': email,
       'dateOfBirth': dateOfBirth?.toIso8601String(),
-      'avatarUrl': avatarUrl,
+      'avatarUrl': storableAvatar,
     };
   }
 
@@ -71,6 +85,8 @@ class UserSession {
   static const _userKey = 'current_user';
   static UserProfile? currentUser;
 
+  static String _avatarCacheKey(String uid) => 'avatar_cache_$uid';
+
   static Future<void> loadFromStorage() async {
     final prefs = await SharedPreferences.getInstance();
     final encoded = prefs.getString(_userKey);
@@ -80,7 +96,14 @@ class UserSession {
     }
 
     final decoded = jsonDecode(encoded) as Map<String, dynamic>;
-    currentUser = UserProfile.fromJson(decoded);
+    var user = UserProfile.fromJson(decoded);
+    final cached = prefs.getString(_avatarCacheKey(user.uid));
+    if (cached != null &&
+        cached.isNotEmpty &&
+        (user.avatarUrl == null || user.avatarUrl!.isEmpty)) {
+      user = user.copyWith(avatarUrl: cached);
+    }
+    currentUser = user;
   }
 
   static Future<void> saveCurrentUser() async {

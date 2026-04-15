@@ -5,6 +5,7 @@ import 'models/user_session.dart';
 import 'utils/theme_manager.dart';
 import 'providers/settings_manager.dart';
 import 'pages/sign_in_page.dart';
+import 'services/user_session_cloud_sync.dart';
 import 'theme/app_themes.dart';
 
 Future<void> main() async {
@@ -12,6 +13,9 @@ Future<void> main() async {
   await UserSession.loadFromStorage();
   final settingsManager = SettingsManager();
   await settingsManager.initialize();
+  await UserSessionCloudSync.hydrateIfSignedIn(
+    settingsManager: settingsManager,
+  );
   runApp(ChangeNotifierProvider.value(value: settingsManager, child: MyApp()));
 }
 

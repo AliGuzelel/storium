@@ -1,6 +1,7 @@
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
+import 'package:flutter/scheduler.dart';
 
 enum ParticleShape { circle, petal, leaf, blob, ring }
 
@@ -41,9 +42,9 @@ class BaseParticleEffect extends StatefulWidget {
 class _BaseParticleEffectState extends State<BaseParticleEffect>
     with SingleTickerProviderStateMixin {
   static const int _count = 22;
-  static const Duration _duration = Duration(seconds: 30);
 
-  late final AnimationController _controller;
+  late final Ticker _ticker;
+  Duration _elapsed = Duration.zero;
   late final List<_Particle> _particles;
 
   @override
@@ -62,29 +63,30 @@ class _BaseParticleEffectState extends State<BaseParticleEffect>
       );
     });
 
-    _controller = AnimationController(vsync: this, duration: _duration)
-      ..repeat();
+    _ticker = createTicker((dt) {
+      _elapsed += dt;
+      setState(() {});
+    })..start();
   }
 
   @override
   void dispose() {
-    _controller.dispose();
+    _ticker.dispose();
     super.dispose();
   }
+
+  double get _seconds => _elapsed.inMicroseconds / 1e6;
 
   @override
   Widget build(BuildContext context) {
     return IgnorePointer(
       child: RepaintBoundary(
-        child: AnimatedBuilder(
-          animation: _controller,
-          builder: (_, __) => CustomPaint(
-            size: Size.infinite,
-            painter: _BaseParticlePainter(
-              t: _controller.value,
-              particles: _particles,
-              config: widget,
-            ),
+        child: CustomPaint(
+          size: Size.infinite,
+          painter: _BaseParticlePainter(
+            seconds: _seconds,
+            particles: _particles,
+            config: widget,
           ),
         ),
       ),
@@ -94,12 +96,13 @@ class _BaseParticleEffectState extends State<BaseParticleEffect>
 
 class _BaseParticlePainter extends CustomPainter {
   const _BaseParticlePainter({
-    required this.t,
+    required this.seconds,
     required this.particles,
     required this.config,
   });
 
-  final double t;
+  /// Monotonically increasing — avoids phase jumps from repeating0→1 loops.
+  final double seconds;
   final List<_Particle> particles;
   final BaseParticleEffect config;
 
@@ -111,11 +114,13 @@ class _BaseParticlePainter extends CustomPainter {
 
     for (var i = 0; i < particles.length; i++) {
       final p = particles[i];
-      final phase = (t * 2 * math.pi * p.speed) + i;
+      final phase = (seconds * 0.22 * p.speed * 2 * math.pi) + i * 0.31;
       var x = (p.x * size.width) + math.sin(phase) * p.drift;
-      final y = (p.y * size.height) + math.cos(phase * 0.7) * (p.drift * 0.45);
+      final y =
+          (p.y * size.height) + math.cos(phase * 0.7) * (p.drift * 0.45);
       if (config.enableSway) {
-        x += math.sin((t * 2 * math.pi) + i * 0.8) * (p.drift * 0.35);
+        x += math.sin(seconds * 0.45 * 2 * math.pi + i * 0.8) *
+            (p.drift * 0.35);
       }
 
       final breathe = 0.86 + ((math.sin(phase * 0.65) + 1) / 2) * 0.28;
@@ -150,7 +155,8 @@ class _BaseParticlePainter extends CustomPainter {
       size.shortestSide * 0.28,
     ];
     for (var i = 0; i < haloCenters.length; i++) {
-      final phase = (math.sin((t + i * 0.17) * 2 * math.pi) + 1) / 2;
+      final phase =
+          (math.sin((seconds * 0.12 + i * 0.17) * 2 * math.pi) + 1) / 2;
       final haloPaint = Paint()
         ..color = (config.haloColor ?? const Color(0xFFCFA8FF)).withValues(
           alpha: 0.025 + phase * 0.025,
@@ -167,7 +173,7 @@ class _BaseParticlePainter extends CustomPainter {
   void _paintGrain(Canvas canvas, Size size) {
     final paint = Paint()..style = PaintingStyle.fill;
     const density = 180;
-    final phase = (t * 18).floor();
+    final phase = (seconds * 3.2).floor();
     for (var i = 0; i < density; i++) {
       final xSeed = ((i * 97 + phase * 13) % 1000) / 1000.0;
       final ySeed = ((i * 57 + phase * 17) % 1000) / 1000.0;
@@ -235,7 +241,7 @@ class _BaseParticlePainter extends CustomPainter {
 
   @override
   bool shouldRepaint(covariant _BaseParticlePainter oldDelegate) =>
-      oldDelegate.t != t || oldDelegate.config != config;
+      oldDelegate.seconds != seconds || oldDelegate.config != config;
 }
 
 class _Particle {

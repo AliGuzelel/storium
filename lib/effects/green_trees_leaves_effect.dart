@@ -13,6 +13,9 @@ class _GreenTreeSceneEffectState extends State<GreenTreeSceneEffect>
     with SingleTickerProviderStateMixin {
   static const int _leafCount = 56;
 
+  /// Slightly slower than the original 18s loop for a calmer green theme.
+  static const Duration _loopDuration = Duration(seconds: 26);
+
   late final AnimationController _controller;
   late final List<_LeafParticle> _leaves;
 
@@ -27,7 +30,7 @@ class _GreenTreeSceneEffectState extends State<GreenTreeSceneEffect>
 
     _controller = AnimationController(
       vsync: this,
-      duration: const Duration(seconds: 18),
+      duration: _loopDuration,
     )..repeat();
   }
 
@@ -79,6 +82,7 @@ class _GreenTreeSceneEffectState extends State<GreenTreeSceneEffect>
 class _GreenLeavesPainter extends CustomPainter {
   const _GreenLeavesPainter({required this.t, required this.leaves});
 
+  /// 0→1 each [_loopDuration], same semantics as the original effect.
   final double t;
   final List<_LeafParticle> leaves;
 
@@ -127,7 +131,7 @@ class _GreenLeavesPainter extends CustomPainter {
 
   @override
   bool shouldRepaint(covariant _GreenLeavesPainter oldDelegate) =>
-      oldDelegate.t != t;
+      oldDelegate.t != t || oldDelegate.leaves != leaves;
 }
 
 Path createLeafPath(double size) {

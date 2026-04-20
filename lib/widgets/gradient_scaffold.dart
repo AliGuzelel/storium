@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+
 import 'app_gradient_background.dart';
+import 'themed_subtle_effect.dart';
 
 class GradientScaffold extends StatelessWidget {
   final PreferredSizeWidget? appBar;
@@ -10,6 +12,8 @@ class GradientScaffold extends StatelessWidget {
   final bool breathe;
   final Duration speed;
   final double amplitude;
+  /// Softer theme particles behind content (main/start uses full effect elsewhere).
+  final bool subtleThemeOverlay;
 
   const GradientScaffold({
     super.key,
@@ -21,10 +25,12 @@ class GradientScaffold extends StatelessWidget {
     this.breathe = true,
     this.speed = const Duration(seconds: 18),
     this.amplitude = 0.12,
+    this.subtleThemeOverlay = true,
   });
 
   @override
   Widget build(BuildContext context) {
+    final content = SafeArea(child: body);
     return Scaffold(
       backgroundColor: Colors.transparent,
       appBar: appBar,
@@ -35,7 +41,7 @@ class GradientScaffold extends StatelessWidget {
         breathe: breathe,
         speed: speed,
         amplitude: amplitude,
-        child: SafeArea(child: body),
+        child: subtleThemeOverlay ? ThemedSubtleEffect(child: content) : content,
       ),
     );
   }

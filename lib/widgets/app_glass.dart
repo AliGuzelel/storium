@@ -13,7 +13,7 @@ class AppGlass extends StatelessWidget {
     super.key,
     required this.child,
     this.padding = const EdgeInsets.all(16),
-    this.radius = UiTokens.radiusLg,
+    this.radius = UiTokens.surfaceRadius,
   });
 
   @override
@@ -28,12 +28,9 @@ class AppGlass extends StatelessWidget {
         child: Container(
           padding: padding,
           decoration: BoxDecoration(
-            color: Colors.white.withOpacity(UiTokens.glassOpacity),
+            color: Colors.white.withValues(alpha: UiTokens.glassOpacity),
             borderRadius: BorderRadius.circular(radius),
-            border: Border.all(
-              color: Colors.white.withOpacity(UiTokens.borderOpacity),
-              width: 1,
-            ),
+            border: Border.fromBorderSide(UiTokens.surfaceBorderSide),
           ),
           child: child,
         ),

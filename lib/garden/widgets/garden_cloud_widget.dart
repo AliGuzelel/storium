@@ -42,6 +42,20 @@ class _CloudWidgetState extends State<CloudWidget>
       setState(() => _elapsed = elapsed);
     });
     _ticker.start();
+    WidgetsBinding.instance.addPostFrameCallback((_) => _ensureTickerRunning());
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _ensureTickerRunning();
+  }
+
+  void _ensureTickerRunning() {
+    if (!mounted) return;
+    if (TickerMode.of(context) && !_ticker.isActive) {
+      _ticker.start();
+    }
   }
 
   @override
@@ -57,17 +71,19 @@ class _CloudWidgetState extends State<CloudWidget>
         final h = c.maxHeight;
         final w = c.maxWidth;
         final elapsedSec = _elapsed.inMicroseconds / 1e6;
-        return CustomPaint(
-          painter: _PathCloudPainter(
-            elapsedSec: elapsedSec,
-            travelDuration: widget.travelDuration,
-            horizontalPhase: widget.horizontalPhase.clamp(0.0, 0.999),
-            verticalY: h * widget.verticalFraction,
-            opacity: widget.opacity,
-            scale: widget.scale,
-            shapeIndex: widget.shape,
+        return RepaintBoundary(
+          child: CustomPaint(
+            painter: _PathCloudPainter(
+              elapsedSec: elapsedSec,
+              travelDuration: widget.travelDuration,
+              horizontalPhase: widget.horizontalPhase.clamp(0.0, 0.999),
+              verticalY: h * widget.verticalFraction,
+              opacity: widget.opacity,
+              scale: widget.scale,
+              shapeIndex: widget.shape,
+            ),
+            size: Size(w, h),
           ),
-          size: Size(w, h),
         );
       },
     );

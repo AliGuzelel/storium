@@ -11,17 +11,21 @@ class PlantPage extends StatelessWidget {
     required this.glowEpoch,
     required this.glowTint,
     required this.plantImageHeight,
+    this.plantAmbientMotion = true,
     this.plantImageWidthFactor = 0.88,
     this.bottomOffset = 0,
+    this.onTap,
   });
 
   final String imagePath;
   final int currentPhase;
   final int glowEpoch;
   final Color glowTint;
+  final bool plantAmbientMotion;
   final double plantImageHeight;
   final double plantImageWidthFactor;
   final double bottomOffset;
+  final VoidCallback? onTap;
 
   @override
   Widget build(BuildContext context) {
@@ -30,22 +34,27 @@ class PlantPage extends StatelessWidget {
         final w = constraints.maxWidth;
         final plantW = (w * plantImageWidthFactor).clamp(200.0, 400.0);
         final plantH = plantImageHeight;
-        return Stack(
-          fit: StackFit.expand,
-          children: [
-            Align(
-              alignment: Alignment.bottomCenter,
-              child: PlantWidget(
-                imagePath: imagePath,
-                currentPhase: currentPhase,
-                glowEpoch: glowEpoch,
-                glowTint: glowTint,
-                maxWidth: plantW,
-                maxHeight: plantH,
-                bottomOffset: bottomOffset,
+        return GestureDetector(
+          behavior: HitTestBehavior.translucent,
+          onTap: onTap,
+          child: Stack(
+            fit: StackFit.expand,
+            children: [
+              Align(
+                alignment: Alignment.bottomCenter,
+                child: PlantWidget(
+                  imagePath: imagePath,
+                  currentPhase: currentPhase,
+                  glowEpoch: glowEpoch,
+                  glowTint: glowTint,
+                  ambientMotion: plantAmbientMotion,
+                  maxWidth: plantW,
+                  maxHeight: plantH,
+                  bottomOffset: bottomOffset,
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         );
       },
     );

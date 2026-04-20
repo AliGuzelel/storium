@@ -52,12 +52,14 @@ class GardenPersistedState {
     this.slots = const {},
     this.completedPlantTypes = const {},
     this.selectedPlantPageIndex = 0,
+    this.fertilizerCount = 0,
   });
 
   final Map<String, GardenPlantSlot> slots;
   final Set<String> completedPlantTypes;
   /// Current [PageView] index for the garden (restored on load).
   final int selectedPlantPageIndex;
+  final int fertilizerCount;
 
   static List<String> get allPlantIds =>
       GardenPlantOption.choices.map((e) => e.id).toList();
@@ -78,6 +80,7 @@ class GardenPersistedState {
       slots: next,
       completedPlantTypes: completedPlantTypes,
       selectedPlantPageIndex: selectedPlantPageIndex,
+      fertilizerCount: fertilizerCount,
     );
   }
 
@@ -85,12 +88,14 @@ class GardenPersistedState {
     Map<String, GardenPlantSlot>? slots,
     Set<String>? completedPlantTypes,
     int? selectedPlantPageIndex,
+    int? fertilizerCount,
   }) {
     return GardenPersistedState(
       slots: slots ?? this.slots,
       completedPlantTypes: completedPlantTypes ?? this.completedPlantTypes,
       selectedPlantPageIndex:
           selectedPlantPageIndex ?? this.selectedPlantPageIndex,
+      fertilizerCount: fertilizerCount ?? this.fertilizerCount,
     );
   }
 
@@ -103,6 +108,7 @@ class GardenPersistedState {
       'slots': slotJson,
       'completedPlantTypes': completedPlantTypes.toList()..sort(),
       'selectedPlantPageIndex': _clampPageIndex(selectedPlantPageIndex),
+      'fertilizerCount': fertilizerCount,
       'plantCatalog': [
         for (final o in GardenPlantOption.choices)
           {
@@ -128,10 +134,12 @@ class GardenPersistedState {
     final rawDone = json['completedPlantTypes'] as List<dynamic>? ?? const [];
     final completed = rawDone.map((e) => e.toString()).toSet();
     final page = (json['selectedPlantPageIndex'] as num?)?.toInt() ?? 0;
+    final fertilizer = (json['fertilizerCount'] as num?)?.toInt() ?? 0;
     return GardenPersistedState(
       slots: slots,
       completedPlantTypes: completed,
       selectedPlantPageIndex: _clampPageIndex(page),
+      fertilizerCount: fertilizer < 0 ? 0 : fertilizer,
     );
   }
 

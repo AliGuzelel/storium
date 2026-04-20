@@ -1,10 +1,13 @@
 import 'package:flutter/material.dart';
 
+import 'ui_tokens.dart';
+
 class AppThemes {
   static const List<String> supportedThemeColors = <String>[
     'purple',
     'blue',
     'green',
+    'yellow',
     'pink',
     'red',
     'grayscale',
@@ -54,6 +57,13 @@ class AppThemes {
           Color(0xFFB8E3CC),
           Color(0xFF4D8C72),
         ];
+      case 'yellow':
+        return const [
+          Color(0xFF6B5A38),
+          Color(0xFF9A8248),
+          Color(0xFFE8DCC4),
+          Color(0xFFC4A86A),
+        ];
       case 'pink':
         return const [
           Color(0xFFFAD0DA),
@@ -101,6 +111,13 @@ class AppThemes {
           Color(0xFF2E6D55),
           Color(0xFF173A2E),
         ];
+      case 'yellow':
+        return const [
+          Color(0xFF1A1610),
+          Color(0xFF2A2418),
+          Color(0xFF4A3F28),
+          Color(0xFF252018),
+        ];
       case 'pink':
         return const [
           Color(0xFF2B0F1D),
@@ -141,12 +158,11 @@ class AppThemes {
     final base = brightness == Brightness.dark
         ? ThemeData.dark()
         : ThemeData.light();
-    final glassBorderColor = isGrayscale
-        ? Colors.white.withOpacity(brightness == Brightness.dark ? 0.32 : 0.28)
-        : Colors.white.withOpacity(0.18);
     final glassFillColor = isGrayscale
-        ? Colors.white.withOpacity(brightness == Brightness.dark ? 0.16 : 0.14)
-        : Colors.white.withOpacity(0.12);
+        ? Colors.white.withValues(
+            alpha: brightness == Brightness.dark ? 0.16 : 0.14,
+          )
+        : Colors.white.withValues(alpha: 0.12);
     return base.copyWith(
       pageTransitionsTheme: const PageTransitionsTheme(
         builders: {
@@ -171,28 +187,41 @@ class AppThemes {
               surface: const Color(0xFFF5F5F5),
             ),
       iconTheme: IconThemeData(color: secondary),
+      cardTheme: CardThemeData(
+        elevation: 0,
+        color: Colors.transparent,
+        surfaceTintColor: Colors.transparent,
+        clipBehavior: Clip.antiAlias,
+        shape: UiTokens.roundedShapeNoBorder(),
+      ),
+      dialogTheme: DialogThemeData(
+        elevation: 0,
+        backgroundColor: glassFillColor,
+        shape: UiTokens.roundedShapeNoBorder(),
+      ),
       elevatedButtonTheme: ElevatedButtonThemeData(
         style: ElevatedButton.styleFrom(
           backgroundColor: glassFillColor,
           foregroundColor: Colors.white,
           elevation: 0,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(18),
-            side: BorderSide(color: glassBorderColor),
-          ),
+          shape: UiTokens.roundedShapeNoBorder(),
           textStyle: const TextStyle(
             fontFamily: 'Poppins',
             fontWeight: FontWeight.w600,
           ),
         ),
       ),
+      filledButtonTheme: FilledButtonThemeData(
+        style: FilledButton.styleFrom(
+          elevation: 0,
+          shape: UiTokens.roundedShapeNoBorder(),
+        ),
+      ),
       outlinedButtonTheme: OutlinedButtonThemeData(
         style: OutlinedButton.styleFrom(
           foregroundColor: Colors.white,
-          side: BorderSide(color: glassBorderColor),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(18),
-          ),
+          side: BorderSide.none,
+          shape: UiTokens.roundedShapeNoBorder(),
           textStyle: const TextStyle(
             fontFamily: 'Poppins',
             fontWeight: FontWeight.w600,
@@ -228,6 +257,11 @@ class AppThemes {
         return const _ThemePalette(
           primary: Color(0xFF2E8B57),
           secondary: Color(0xFF76C893),
+        );
+      case 'yellow':
+        return const _ThemePalette(
+          primary: Color(0xFF6B5428),
+          secondary: Color(0xFFB8945A),
         );
       case 'pink':
         return const _ThemePalette(

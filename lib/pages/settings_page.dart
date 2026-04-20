@@ -11,8 +11,9 @@ import '../utils/theme_manager.dart';
 import 'sign_in_page.dart';
 
 class SettingsPage extends StatefulWidget {
-  final ThemeManager themeManager;
   const SettingsPage({super.key, required this.themeManager});
+
+  final ThemeManager themeManager;
 
   @override
   State<SettingsPage> createState() => _SettingsPageState();
@@ -118,6 +119,69 @@ class _SettingsPageState extends State<SettingsPage> {
           ],
         ),
       ),
+    );
+  }
+
+  Future<void> _signOut() async {
+    final shouldSignOut = await showDialog<bool>(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          backgroundColor: const Color(0xFF2A2140),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
+          title: Text(
+            t(context, 'sign_out'),
+            style: const TextStyle(fontFamily: 'Cinzel', color: Colors.white),
+          ),
+          content: Text(
+            t(context, 'sign_out_confirm'),
+            style: const TextStyle(
+              fontFamily: 'Poppins',
+              color: Colors.white70,
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context, false),
+              child: Text(
+                t(context, 'cancel'),
+                style: const TextStyle(
+                  fontFamily: 'Poppins',
+                  color: Colors.white70,
+                ),
+              ),
+            ),
+            ElevatedButton(
+              onPressed: () => Navigator.pop(context, true),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFF5A1F89),
+              ),
+              child: Text(
+                t(context, 'sign_out'),
+                style: const TextStyle(
+                  fontFamily: 'Poppins',
+                  color: Colors.white,
+                ),
+              ),
+            ),
+          ],
+        );
+      },
+    );
+
+    if (shouldSignOut != true) return;
+
+    await UserSession.clearCurrentUser();
+    if (!mounted) return;
+
+    Navigator.pushAndRemoveUntil(
+      context,
+      MaterialPageRoute(
+        builder: (_) => SignInPage(themeManager: widget.themeManager),
+      ),
+      (route) => false,
     );
   }
 
@@ -284,18 +348,23 @@ class _SettingsPageState extends State<SettingsPage> {
                       children: [
                         _themeOption(
                           keyName: 'purple',
-                          label: 'Amethyst',
+                          label: 'Violet',
                           previewColor: const Color(0xFF6A41A1),
                         ),
                         _themeOption(
                           keyName: 'blue',
-                          label: 'Azure',
+                          label: 'Sky',
                           previewColor: const Color(0xFF2C5CCF),
                         ),
                         _themeOption(
                           keyName: 'green',
-                          label: 'Emerald',
+                          label: 'Forest',
                           previewColor: const Color(0xFF2E8B57),
+                        ),
+                        _themeOption(
+                          keyName: 'yellow',
+                          label: 'Honey',
+                          previewColor: const Color(0xFFC4A86A),
                         ),
                         _themeOption(
                           keyName: 'pink',
@@ -309,7 +378,7 @@ class _SettingsPageState extends State<SettingsPage> {
                         ),
                         _themeOption(
                           keyName: 'grayscale',
-                          label: 'Silver',
+                          label: 'Ash',
                           previewColor: const Color(0xFFD7D7D7),
                         ),
                       ],
@@ -333,69 +402,6 @@ class _SettingsPageState extends State<SettingsPage> {
           ),
         ),
       ),
-    );
-  }
-
-  Future<void> _signOut() async {
-    final shouldSignOut = await showDialog<bool>(
-      context: context,
-      builder: (context) {
-        return AlertDialog(
-          backgroundColor: const Color(0xFF2A2140),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16),
-          ),
-          title: Text(
-            t(context, 'sign_out'),
-            style: const TextStyle(fontFamily: 'Cinzel', color: Colors.white),
-          ),
-          content: Text(
-            t(context, 'sign_out_confirm'),
-            style: const TextStyle(
-              fontFamily: 'Poppins',
-              color: Colors.white70,
-            ),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context, false),
-              child: Text(
-                t(context, 'cancel'),
-                style: const TextStyle(
-                  fontFamily: 'Poppins',
-                  color: Colors.white70,
-                ),
-              ),
-            ),
-            ElevatedButton(
-              onPressed: () => Navigator.pop(context, true),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFF5A1F89),
-              ),
-              child: Text(
-                t(context, 'sign_out'),
-                style: const TextStyle(
-                  fontFamily: 'Poppins',
-                  color: Colors.white,
-                ),
-              ),
-            ),
-          ],
-        );
-      },
-    );
-
-    if (shouldSignOut != true) return;
-
-    await UserSession.clearCurrentUser();
-    if (!mounted) return;
-
-    Navigator.pushAndRemoveUntil(
-      context,
-      MaterialPageRoute(
-        builder: (_) => SignInPage(themeManager: widget.themeManager),
-      ),
-      (route) => false,
     );
   }
 }

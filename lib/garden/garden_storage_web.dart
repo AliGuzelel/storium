@@ -19,6 +19,7 @@ class GardenStorage {
   static const _completedKey = 'garden_completed_types';
   static const _schemaKey = 'garden_plant_schema_int';
   static const _selectedPageKey = 'garden_selected_plant_page';
+  static const _fertilizerCountKey = 'garden_fertilizer_count';
 
   static const int currentSchema = 4;
 
@@ -130,6 +131,8 @@ class GardenStorage {
       slots: slots,
       completedPlantTypes: completed,
       selectedPlantPageIndex: page,
+      fertilizerCount:
+          (int.tryParse(_storage[_fertilizerCountKey] ?? '') ?? 0).clamp(0, 999999),
     );
   }
 
@@ -212,6 +215,7 @@ class GardenStorage {
 
     _storage[_selectedPageKey] =
         '${state.selectedPlantPageIndex.clamp(0, GardenPlantOption.choices.length - 1)}';
+    _storage[_fertilizerCountKey] = '${state.fertilizerCount.clamp(0, 999999)}';
     _storage[_schemaKey] = '$currentSchema';
     _clearLegacy();
 

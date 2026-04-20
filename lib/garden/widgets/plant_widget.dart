@@ -2,7 +2,9 @@ import 'dart:math' as math;
 import 'dart:ui' show ImageFilter;
 
 import 'package:flutter/material.dart';
+import 'package:flutter/scheduler.dart';
 
+import '../../widgets/safe_asset_image.dart';
 import '../garden_plant_phase_visuals.dart';
 import 'garden_mature_particles.dart';
 
@@ -14,6 +16,7 @@ class PlantWidget extends StatefulWidget {
     required this.currentPhase,
     this.glowEpoch = 0,
     required this.glowTint,
+    this.ambientMotion = true,
     this.maxWidth = 100,
     this.maxHeight = 125,
     this.bottomOffset = 0,
@@ -21,6 +24,8 @@ class PlantWidget extends StatefulWidget {
 
   final String imagePath;
   final int currentPhase;
+  /// Idle sway, mature particles, and soft mature halo (Honey theme: false).
+  final bool ambientMotion;
   /// Increment to replay the water/plant glow for this instance.
   final int glowEpoch;
   final Color glowTint;
@@ -36,17 +41,18 @@ class PlantWidget extends StatefulWidget {
 
 class _PlantWidgetState extends State<PlantWidget>
     with TickerProviderStateMixin {
-  late final AnimationController _idle;
+  Ticker? _ambientTicker;
+  Duration _ambientElapsed = Duration.zero;
+
   late final AnimationController _glow;
-  late final AnimationController _matureDrift;
   late final CurvedAnimation _glowCurve;
 
   bool get _isMature => widget.currentPhase >= 3;
 
   static final Curve _phaseCurve = Curves.easeOutCubic;
 
-  /// Calm idle loop (full sway cycle).
-  static const Duration _idlePeriod = Duration(milliseconds: 6000);
+  /// Full sway cycle length (seconds), constant angular speed.
+  static const double _idlePeriodSec = 6.0;
 
   /// Horizontal sway amplitude (px).
   static const double _idleSwayPx = 3.0;
@@ -57,10 +63,11 @@ class _PlantWidgetState extends State<PlantWidget>
   @override
   void initState() {
     super.initState();
-    _idle = AnimationController(
-      vsync: this,
-      duration: _idlePeriod,
-    )..repeat(reverse: true);
+    if (widget.ambientMotion) {
+      _ambientTicker = createTicker((Duration elapsed) {
+        setState(() => _ambientElapsed = elapsed);
+      })..start();
+    }
 
     _glow = AnimationController(
       vsync: this,
@@ -68,27 +75,10 @@ class _PlantWidgetState extends State<PlantWidget>
     );
     _glowCurve = CurvedAnimation(parent: _glow, curve: Curves.easeOutCubic);
 
-    _matureDrift = AnimationController(
-      vsync: this,
-      duration: const Duration(seconds: 22),
-    );
-
-    _syncMatureDrift();
     if (widget.glowEpoch > 0) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (mounted) _glow.forward(from: 0);
       });
-    }
-  }
-
-  void _syncMatureDrift() {
-    if (_isMature) {
-      if (!_matureDrift.isAnimating) {
-        _matureDrift.repeat();
-      }
-    } else {
-      _matureDrift.stop();
-      _matureDrift.reset();
     }
   }
 
@@ -98,17 +88,25 @@ class _PlantWidgetState extends State<PlantWidget>
     if (widget.glowEpoch != oldWidget.glowEpoch) {
       _glow.forward(from: 0);
     }
-    if (oldWidget.currentPhase != widget.currentPhase) {
-      _syncMatureDrift();
+    if (widget.ambientMotion != oldWidget.ambientMotion) {
+      if (widget.ambientMotion) {
+        _ambientTicker?.dispose();
+        _ambientTicker = createTicker((Duration elapsed) {
+          setState(() => _ambientElapsed = elapsed);
+        })..start();
+      } else {
+        _ambientTicker?.dispose();
+        _ambientTicker = null;
+        _ambientElapsed = Duration.zero;
+      }
     }
   }
 
   @override
   void dispose() {
+    _ambientTicker?.dispose();
     _glowCurve.dispose();
-    _idle.dispose();
     _glow.dispose();
-    _matureDrift.dispose();
     super.dispose();
   }
 
@@ -116,12 +114,15 @@ class _PlantWidgetState extends State<PlantWidget>
   Widget build(BuildContext context) {
     return RepaintBoundary(
       child: AnimatedBuilder(
-        animation: Listenable.merge([_idle, _glow, _matureDrift]),
+        animation: _glow,
         builder: (context, child) {
-          final idleT = _idle.value;
-          final sway = math.sin(idleT * math.pi * 2) * _idleSwayPx;
-          final rot = math.sin(idleT * math.pi * 2 + 0.5) *
-              (_idleRotDeg * math.pi / 180);
+          final motion = widget.ambientMotion;
+          final sec = motion ? _ambientElapsed.inMicroseconds / 1e6 : 0.0;
+          final idlePhase = sec * (2 * math.pi / _idlePeriodSec);
+          final sway = motion ? math.sin(idlePhase) * _idleSwayPx : 0.0;
+          final rot = motion
+              ? math.sin(idlePhase + 0.5) * (_idleRotDeg * math.pi / 180)
+              : 0.0;
           final t = _glowCurve.value;
           final a = ((1.0 - t) * (1.0 - t)).clamp(0.0, 1.0);
 
@@ -140,7 +141,7 @@ class _PlantWidgetState extends State<PlantWidget>
             alignment: Alignment.bottomCenter,
             clipBehavior: Clip.none,
             children: [
-              if (_isMature)
+              if (_isMature && motion)
                 Positioned(
                   bottom: glowBottom - 6,
                   child: IgnorePointer(
@@ -164,7 +165,7 @@ class _PlantWidgetState extends State<PlantWidget>
                     ),
                   ),
                 ),
-              if (_isMature)
+              if (_isMature && motion)
                 Positioned(
                   bottom: glowBottom - 4,
                   child: IgnorePointer(
@@ -173,7 +174,7 @@ class _PlantWidgetState extends State<PlantWidget>
                       height: particleSize,
                       child: CustomPaint(
                         painter: GardenMatureParticlesPainter(
-                          progress: _matureDrift.value,
+                          seconds: sec,
                           accent: widget.glowTint,
                         ),
                       ),
@@ -222,12 +223,14 @@ class _PlantWidgetState extends State<PlantWidget>
                           curve: _phaseCurve,
                           child: Transform.translate(
                             offset: Offset(0, widget.bottomOffset),
-                            child: Image.asset(
+                            child: SafeAssetImage(
                               widget.imagePath,
                               fit: BoxFit.contain,
                               alignment: Alignment.bottomCenter,
                               filterQuality: FilterQuality.high,
                               isAntiAlias: true,
+                              width: w,
+                              height: h,
                             ),
                           ),
                         ),

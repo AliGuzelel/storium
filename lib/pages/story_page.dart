@@ -1086,7 +1086,7 @@ class _StoryPageState extends State<StoryPage> {
                           ),
                         ),
                       );
-                    }).toList(),
+                    }),
 
                     const SizedBox(height: 14),
 

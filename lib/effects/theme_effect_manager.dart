@@ -1,31 +1,33 @@
 import 'package:flutter/material.dart';
 
+import 'ash_haze_effect.dart';
 import 'blue_cloud_effect.dart';
 import 'cherry_blossom_effect.dart';
-import 'grain_effect.dart';
+import 'cherry_float_effect.dart';
 import 'green_trees_leaves_effect.dart';
-import 'mist_effect.dart';
 import 'purple_glow_effect.dart';
 
-Widget buildThemeEffect(String themeColor) =>
-    ThemeEffectManager.buildThemeEffect(themeColor);
+Widget buildThemeEffect(String themeColor, {bool subtle = false}) =>
+    ThemeEffectManager.buildThemeEffect(themeColor, subtle: subtle);
 
 class ThemeEffectManager {
-  static Widget buildThemeEffect(String themeColor) {
+  static Widget buildThemeEffect(String themeColor, {bool subtle = false}) {
     switch (themeColor) {
       case 'pink':
-        return const CherryBlossomEffect();
+        return CherryBlossomEffect(subtle: subtle);
       case 'blue':
-        return const BlueCloudEffect();
+        return BlueCloudEffect(subtle: subtle);
       case 'green':
-        return const GreenTreeSceneEffect();
+        return GreenTreeSceneEffect(subtle: subtle);
+      case 'yellow':
+        return const SizedBox.shrink();
       case 'red':
-        return const MistEffect();
+        return CherryFloatEffect(subtle: subtle);
       case 'grayscale':
-        return const GrainEffect();
+        return AshHazeEffect(subtle: subtle);
       case 'purple':
       default:
-        return const PurpleGlowEffect();
+        return PurpleGlowEffect(subtle: subtle);
     }
   }
 }

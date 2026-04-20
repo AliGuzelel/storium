@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../models/achievement_model.dart';
+import '../theme/ui_tokens.dart';
 
 class AchievementCard extends StatelessWidget {
   final AchievementModel achievement;
@@ -14,9 +15,6 @@ class AchievementCard extends StatelessWidget {
     final baseColor = unlocked
         ? Colors.white.withOpacity(0.18)
         : Colors.white.withOpacity(0.08);
-    final borderColor = unlocked
-        ? Colors.white.withOpacity(0.28)
-        : Colors.white.withOpacity(0.14);
     final titleColor = unlocked
         ? Colors.white.withOpacity(0.95)
         : Colors.white.withOpacity(0.66);
@@ -26,8 +24,8 @@ class AchievementCard extends StatelessWidget {
       child: Container(
         decoration: BoxDecoration(
           color: baseColor,
-          borderRadius: BorderRadius.circular(18),
-          border: Border.all(color: borderColor),
+          borderRadius: UiTokens.surfaceBorderRadius,
+          border: Border.fromBorderSide(UiTokens.surfaceBorderSide),
           boxShadow: unlocked
               ? [
                   BoxShadow(

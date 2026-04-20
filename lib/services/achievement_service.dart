@@ -99,7 +99,7 @@ class AchievementService {
     achievements['shadow_walker'] = completedStories['grief'] == true;
 
     achievements['first_step'] =
-        completedStories.values.where((v) => v).length >= 1;
+        completedStories.values.where((v) => v).isNotEmpty;
 
     achievements['story_seeker'] =
         completedStories.values.where((v) => v).length >= 2;

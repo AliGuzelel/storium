@@ -12,7 +12,7 @@ class BirdsWidget extends StatefulWidget {
 }
 
 class _BirdsWidgetState extends State<BirdsWidget>
-    with TickerProviderStateMixin {
+    with SingleTickerProviderStateMixin {
   late Ticker _ticker;
   Duration _elapsed = Duration.zero;
 
@@ -23,6 +23,20 @@ class _BirdsWidgetState extends State<BirdsWidget>
       setState(() => _elapsed = elapsed);
     });
     _ticker.start();
+    WidgetsBinding.instance.addPostFrameCallback((_) => _ensureTickerRunning());
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _ensureTickerRunning();
+  }
+
+  void _ensureTickerRunning() {
+    if (!mounted) return;
+    if (TickerMode.of(context) && !_ticker.isActive) {
+      _ticker.start();
+    }
   }
 
   @override

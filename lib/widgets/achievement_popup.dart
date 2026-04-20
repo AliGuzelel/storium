@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../models/achievement_model.dart';
+import '../theme/ui_tokens.dart';
 import 'app_button.dart';
 
 class AchievementPopup extends StatelessWidget {
@@ -20,9 +21,9 @@ class AchievementPopup extends StatelessWidget {
       margin: const EdgeInsets.symmetric(horizontal: 16),
       padding: const EdgeInsets.fromLTRB(18, 16, 18, 14),
       decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(22),
+        borderRadius: UiTokens.surfaceBorderRadius,
         color: Colors.white.withOpacity(0.14),
-        border: Border.all(color: Colors.white.withOpacity(0.22), width: 1),
+        border: Border.fromBorderSide(UiTokens.surfaceBorderSide),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withOpacity(0.15),

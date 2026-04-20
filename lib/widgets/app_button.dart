@@ -2,6 +2,8 @@ import 'dart:ui' show ImageFilter;
 
 import 'package:flutter/material.dart';
 
+import '../theme/ui_tokens.dart';
+
 /// Glass-style button using only [GestureDetector] (no [InkWell] splash).
 /// Avoids ticker / ink-highlight crashes when [onTap] is async or rebuilds
 /// happen quickly (e.g. garden cooldown timer + [setState]).
@@ -28,7 +30,8 @@ class _AppButtonState extends State<AppButton> {
 
   @override
   Widget build(BuildContext context) {
-    final radius = widget.borderRadius ?? BorderRadius.circular(18);
+    final radius =
+        widget.borderRadius ?? BorderRadius.circular(UiTokens.surfaceRadius);
     return ClipRRect(
       borderRadius: radius,
       child: BackdropFilter(
@@ -57,12 +60,6 @@ class _AppButtonState extends State<AppButton> {
                   Colors.white.withValues(alpha: _pressed ? 0.20 : 0.26),
                   Colors.white.withValues(alpha: _pressed ? 0.10 : 0.14),
                 ],
-              ),
-              border: Border.all(
-                color: Colors.white.withValues(
-                  alpha: _pressed ? 0.32 : 0.40,
-                ),
-                width: 1,
               ),
               boxShadow: [
                 BoxShadow(

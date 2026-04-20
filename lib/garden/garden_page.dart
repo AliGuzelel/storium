@@ -8,6 +8,7 @@ import 'package:provider/provider.dart';
 
 import '../localization/app_strings.dart';
 import '../providers/settings_manager.dart';
+import '../utils/app_asset_precache.dart';
 import 'garden_models.dart';
 import 'garden_storage.dart';
 import 'widgets/garden_plant_page.dart' show PlantPage;
@@ -31,6 +32,7 @@ class _GardenPageState extends State<GardenPage> with TickerProviderStateMixin {
   int _pageIndex = 0;
   final Map<String, int> _glowEpochByPlant = {};
   Timer? _cooldownTicker;
+  static const Duration _fertilizerReduction = Duration(hours: 3);
 
   static const _wateredToastMessage =
       'Watered. Your plant feels a little stronger.';
@@ -119,6 +121,7 @@ class _GardenPageState extends State<GardenPage> with TickerProviderStateMixin {
     });
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
+      unawaited(precacheStoriumRasterAssets(context));
       if (_pageController.hasClients) {
         final cur = _pageController.page?.round() ?? 0;
         if (cur != idx) {
@@ -234,7 +237,9 @@ class _GardenPageState extends State<GardenPage> with TickerProviderStateMixin {
     final now = DateTime.now();
 
     if (slot.currentPhase >= 3) {
-      final cooldown = GardenStorage.randomWaterCooldown(_rng);
+      final cooldown = id == 'forget_me_not'
+          ? const Duration(hours: 8)
+          : GardenStorage.randomWaterCooldown(_rng);
       final mature = _state.copyWithSlot(
         id,
         GardenPlantSlot(
@@ -271,7 +276,9 @@ class _GardenPageState extends State<GardenPage> with TickerProviderStateMixin {
     if (nextPhase >= 3) {
       completed.add(id);
     }
-    final cooldown = GardenStorage.randomWaterCooldown(_rng);
+    final cooldown = id == 'forget_me_not'
+        ? const Duration(hours: 8)
+        : GardenStorage.randomWaterCooldown(_rng);
     final updated = _state
         .copyWithSlot(
           id,
@@ -303,6 +310,56 @@ class _GardenPageState extends State<GardenPage> with TickerProviderStateMixin {
     _syncCooldownTicker();
     if (!mounted) return;
     unawaited(_presentWaterToast());
+  }
+
+  Future<void> _useFertilizer() async {
+    final slot = _currentSlot;
+    if (_state.fertilizerCount <= 0) {
+      if (!mounted) return;
+      ScaffoldMessenger.maybeOf(context)?.showSnackBar(
+        const SnackBar(content: Text('No fertilizer left.')),
+      );
+      return;
+    }
+    final next = slot.nextWaterAllowedAt;
+    final now = DateTime.now();
+    if (slot.isMature || next == null || !now.isBefore(next)) {
+      if (!mounted) return;
+      ScaffoldMessenger.maybeOf(context)?.showSnackBar(
+        const SnackBar(content: Text('No growth time to reduce.')),
+      );
+      return;
+    }
+
+    final reducedNext = next.subtract(_fertilizerReduction);
+    final clampedNext = reducedNext.isBefore(now) ? now : reducedNext;
+    final updated = _state
+        .copyWithSlot(
+          _currentPlantId,
+          slot.copyWith(nextWaterAllowedAt: clampedNext),
+        )
+        .copyWith(fertilizerCount: (_state.fertilizerCount - 1).clamp(0, 999999));
+    try {
+      await GardenStorage.save(updated);
+    } catch (e, st) {
+      debugPrint('GardenStorage.save (fertilizer): $e\n$st');
+      if (!mounted) return;
+      ScaffoldMessenger.maybeOf(context)?.showSnackBar(
+        const SnackBar(
+          content: Text('Could not save your garden. Please try again.'),
+        ),
+      );
+      return;
+    }
+    if (!mounted) return;
+    setState(() {
+      _state = updated;
+      _bumpGlow(_currentPlantId);
+    });
+    _syncCooldownTicker();
+    ScaffoldMessenger.maybeOf(context)?.showSnackBar(
+      const SnackBar(content: Text('Growth time reduced')),
+    );
   }
 
   String _formatHms(Duration d) {
@@ -345,10 +402,28 @@ class _GardenPageState extends State<GardenPage> with TickerProviderStateMixin {
     return Center(
       child: Padding(
         padding: const EdgeInsets.only(bottom: 6),
-        child: GardenWateringCan(
-          enabled: _canWaterNow,
-          onWater: _water,
-          accentGlow: accentGlow,
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            GardenWateringCan(
+              enabled: _canWaterNow,
+              onWater: _water,
+              accentGlow: accentGlow,
+            ),
+            const SizedBox(width: 12),
+            FilledButton(
+              style: FilledButton.styleFrom(
+                backgroundColor: Colors.white.withValues(alpha: 0.22),
+                foregroundColor: Colors.white,
+                shape: const CircleBorder(),
+                padding: const EdgeInsets.all(14),
+                side: BorderSide(color: Colors.white.withValues(alpha: 0.45)),
+                elevation: 0,
+              ),
+              onPressed: _useFertilizer,
+              child: const Text('🌱', style: TextStyle(fontSize: 20)),
+            ),
+          ],
         ),
       ),
     );
@@ -442,6 +517,7 @@ class _GardenPageState extends State<GardenPage> with TickerProviderStateMixin {
                             currentPhase: slot.currentPhase,
                             glowEpoch: _glowEpochByPlant[option.id] ?? 0,
                             glowTint: glowTint,
+                            plantAmbientMotion: settings.themeColor != 'yellow',
                           );
                         },
                       ),
@@ -450,6 +526,32 @@ class _GardenPageState extends State<GardenPage> with TickerProviderStateMixin {
                         right: 0,
                         top: 10,
                         child: _buildPageDots(),
+                      ),
+                      Positioned(
+                        top: 10,
+                        left: 12,
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 10,
+                            vertical: 6,
+                          ),
+                          decoration: BoxDecoration(
+                            color: Colors.black.withValues(alpha: 0.22),
+                            borderRadius: BorderRadius.circular(14),
+                            border: Border.all(
+                              color: Colors.white.withValues(alpha: 0.28),
+                            ),
+                          ),
+                          child: Text(
+                            'Fertilizer: ${_state.fertilizerCount}',
+                            style: TextStyle(
+                              fontFamily: 'Poppins',
+                              fontSize: 12,
+                              fontWeight: FontWeight.w600,
+                              color: Colors.white.withValues(alpha: 0.95),
+                            ),
+                          ),
+                        ),
                       ),
                     ],
                   ),

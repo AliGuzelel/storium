@@ -2,6 +2,8 @@ import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 
+import '../../widgets/monotonic_seconds_ticker.dart';
+
 /// Drifting soft clouds (Canvas only — no SVG).
 class CloudLayerWidget extends StatefulWidget {
   const CloudLayerWidget({super.key});
@@ -10,9 +12,9 @@ class CloudLayerWidget extends StatefulWidget {
   State<CloudLayerWidget> createState() => _CloudLayerWidgetState();
 }
 
-class _CloudLayerWidgetState extends State<CloudLayerWidget>
-    with SingleTickerProviderStateMixin {
-  late final AnimationController _controller;
+class _CloudLayerWidgetState extends State<CloudLayerWidget> {
+  static const double _loopSec = 18;
+
   late final List<_CloudSpec> _specs;
 
   @override
@@ -29,30 +31,19 @@ class _CloudLayerWidgetState extends State<CloudLayerWidget>
         opacity: 0.18 + rng.nextDouble() * 0.12,
       ),
     );
-    _controller = AnimationController(
-      vsync: this,
-      duration: const Duration(seconds: 18),
-    )..repeat();
-  }
-
-  @override
-  void dispose() {
-    _controller.dispose();
-    super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
     return IgnorePointer(
       child: RepaintBoundary(
-               child: AnimatedBuilder(
-          animation: _controller,
-          builder: (context, child) {
+        child: MonotonicSecondsTicker(
+          builder: (context, seconds) {
             return LayoutBuilder(
               builder: (context, c) {
                 return CustomPaint(
                   painter: _CloudsPainter(
-                    progress: _controller.value,
+                    phase: seconds / _loopSec,
                     specs: _specs,
                   ),
                   size: Size(c.maxWidth, c.maxHeight),
@@ -67,9 +58,9 @@ class _CloudLayerWidgetState extends State<CloudLayerWidget>
 }
 
 class _CloudsPainter extends CustomPainter {
-  _CloudsPainter({required this.progress, required this.specs});
+  _CloudsPainter({required this.phase, required this.specs});
 
-  final double progress;
+  final double phase;
   final List<_CloudSpec> specs;
 
   double _cloudX(double t, _CloudSpec spec, double width) {
@@ -95,7 +86,7 @@ class _CloudsPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     for (final spec in specs) {
-      final x = _cloudX(progress, spec, size.width);
+      final x = _cloudX(phase, spec, size.width);
       final y = spec.baseYFrac * size.height;
       canvas.save();
       canvas.translate(x, y);
@@ -108,7 +99,7 @@ class _CloudsPainter extends CustomPainter {
 
   @override
   bool shouldRepaint(covariant _CloudsPainter oldDelegate) =>
-      oldDelegate.progress != progress;
+      oldDelegate.phase != phase;
 }
 
 class _CloudSpec {

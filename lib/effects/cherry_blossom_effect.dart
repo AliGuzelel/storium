@@ -4,8 +4,12 @@ import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
+import '../widgets/monotonic_seconds_ticker.dart';
+
 class CherryBlossomEffect extends StatefulWidget {
-  const CherryBlossomEffect({super.key});
+  const CherryBlossomEffect({super.key, this.subtle = false});
+
+  final bool subtle;
 
   static const String assetPath = 'assets/images/cherry_blossom_theme.png';
 
@@ -13,35 +17,47 @@ class CherryBlossomEffect extends StatefulWidget {
   State<CherryBlossomEffect> createState() => _CherryBlossomEffectState();
 }
 
-class _CherryBlossomEffectState extends State<CherryBlossomEffect>
-    with SingleTickerProviderStateMixin {
-  static const int _particleCount = 56;
+class _CherryBlossomEffectState extends State<CherryBlossomEffect> {
+  static const int _particleCountFull = 56;
+  static const int _particleCountSubtle = 18;
+  static const double _loopSec = 22;
 
-  late final AnimationController _controller;
-  late final List<_PetalParticle> _petals;
+  late List<_PetalParticle> _petals;
   ui.Image? _blossomImage;
+  int _loadGeneration = 0;
+
+  void _rebuildPetals() {
+    final rng = math.Random(27);
+    final n = widget.subtle ? _particleCountSubtle : _particleCountFull;
+    _petals = List<_PetalParticle>.generate(
+      n,
+      (_) => _PetalParticle.random(rng, subtle: widget.subtle),
+    );
+  }
 
   @override
   void initState() {
     super.initState();
-    final rng = math.Random(27);
-    _petals = List<_PetalParticle>.generate(
-      _particleCount,
-      (_) => _PetalParticle.random(rng),
-    );
-    _controller = AnimationController(
-      vsync: this,
-      duration: const Duration(seconds: 22),
-    )..repeat();
+    _rebuildPetals();
     _loadBlossomImage();
   }
 
+  @override
+  void didUpdateWidget(covariant CherryBlossomEffect oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.subtle != widget.subtle) {
+      _rebuildPetals();
+      _loadBlossomImage();
+    }
+  }
+
   Future<void> _loadBlossomImage() async {
+    final gen = ++_loadGeneration;
     try {
       final data = await rootBundle.load(CherryBlossomEffect.assetPath);
       final codec = await ui.instantiateImageCodec(data.buffer.asUint8List());
       final frame = await codec.getNextFrame();
-      if (!mounted) {
+      if (!mounted || gen != _loadGeneration) {
         frame.image.dispose();
         return;
       }
@@ -49,14 +65,19 @@ class _CherryBlossomEffectState extends State<CherryBlossomEffect>
         _blossomImage?.dispose();
         _blossomImage = frame.image;
       });
-    } catch (_) {
-      // Missing asset: effect stays empty until fixed.
+    } catch (e, st) {
+      debugPrint('CherryBlossomEffect asset load failed: $e\n$st');
+      if (mounted && gen == _loadGeneration) {
+        setState(() {
+          _blossomImage?.dispose();
+          _blossomImage = null;
+        });
+      }
     }
   }
 
   @override
   void dispose() {
-    _controller.dispose();
     _blossomImage?.dispose();
     super.dispose();
   }
@@ -65,15 +86,16 @@ class _CherryBlossomEffectState extends State<CherryBlossomEffect>
   Widget build(BuildContext context) {
     return IgnorePointer(
       child: RepaintBoundary(
-        child: AnimatedBuilder(
-          animation: _controller,
-          builder: (_, __) {
+        child: MonotonicSecondsTicker(
+          builder: (_, seconds) {
             return CustomPaint(
               size: Size.infinite,
               painter: _CherryBlossomPainter(
-                progress: _controller.value,
+                seconds: seconds,
+                loopSec: _loopSec,
                 petals: _petals,
                 blossomImage: _blossomImage,
+                subtle: widget.subtle,
               ),
             );
           },
@@ -85,14 +107,18 @@ class _CherryBlossomEffectState extends State<CherryBlossomEffect>
 
 class _CherryBlossomPainter extends CustomPainter {
   const _CherryBlossomPainter({
-    required this.progress,
+    required this.seconds,
+    required this.loopSec,
     required this.petals,
     required this.blossomImage,
+    required this.subtle,
   });
 
-  final double progress;
+  final double seconds;
+  final double loopSec;
   final List<_PetalParticle> petals;
   final ui.Image? blossomImage;
+  final bool subtle;
 
   /// Horizontal drift per full animation loop (0→1), as fraction of width (leftward).
   static const double _windDriftPerLoop = 0.09;
@@ -111,23 +137,31 @@ class _CherryBlossomPainter extends CustomPainter {
       image.height.toDouble(),
     );
 
+    final cycles = seconds / loopSec;
+    final time = seconds * (2 * math.pi / loopSec);
+    final m = subtle ? 0.62 : 1.0;
+    final opacityScale = subtle ? 0.45 : 1.0;
+
     for (final p in petals) {
-      final t = (progress * p.speed + p.phase) % 1.0;
-      final time = progress * math.pi * 2;
+      final t = (cycles * p.speed + p.phase) % 1.0;
       final windShift = math.sin((time * 0.09) + p.windOffset * 0.7);
       final horizontalWind = 0.48 *
           math.sin((time * 0.26) + p.windOffset) *
-          (p.windStrength + windShift * 0.002);
+          (p.windStrength + windShift * 0.002) *
+          m;
       final sway = 0.48 *
           math.sin((time * 0.16) + p.windOffset) *
-          (p.windStrength * 0.72);
+          (p.windStrength * 0.72) *
+          m;
       final wobble =
           math.sin((time * p.wobbleSpeed * 0.85) + p.phase * 2.1) *
-          (p.wobbleAmp * 0.9);
+          (p.wobbleAmp * 0.9) *
+          m;
       final driftWave = math.sin((t * math.pi * 2) + p.phase) * p.driftX;
 
       // Smooth right → left carry + slow gusts (normalized 0–1 space).
-      final steadyWind = progress * _windDriftPerLoop * (0.92 + p.windStrength * 4.5);
+      final steadyWind =
+          cycles * _windDriftPerLoop * (0.92 + p.windStrength * 4.5);
       final slowGust = math.sin(time * 0.10 + p.windOffset * 1.2) * 0.014;
       final longGust = math.sin(time * 0.055 + p.phase * 2.4) * 0.007;
 
@@ -144,21 +178,23 @@ class _CherryBlossomPainter extends CustomPainter {
       final x = xNorm * size.width;
 
       final yBase = (t * 1.15) * size.height + p.offsetY * size.height;
-      final fallVariation =
-          math.sin(time + p.windOffset) * (0.3 * size.height * 0.0065);
+      final fallVariation = math.sin(time + p.windOffset) *
+          (0.3 * size.height * 0.0065) *
+          m;
       final y = yBase + fallVariation;
       final pulse = p.canPulse
           ? (0.94 + 0.08 * math.sin((t * math.pi * 2) + p.phase * 2.3))
           : 1.0;
       final radius = p.size * pulse;
-      final alpha =
-          (p.opacity *
-                  (0.88 + 0.12 * math.sin((t * math.pi * 2) + p.phase * 1.7)))
-              .clamp(0.2, 0.6);
+      final alpha = (p.opacity *
+              (0.88 + 0.12 * math.sin((t * math.pi * 2) + p.phase * 1.7)) *
+              opacityScale)
+          .clamp(subtle ? 0.12 : 0.2, subtle ? 0.38 : 0.6);
 
       final rotation =
           p.rotationSeed + (t * 2 * math.pi * p.rotationSpeed * p.rotationDir);
-      final petalSize = (radius * 2).clamp(8.0, 48.0);
+      final petalSize =
+          (radius * 2).clamp(subtle ? 6.0 : 8.0, subtle ? 30.0 : 48.0);
       final dst = Rect.fromCenter(
         center: Offset.zero,
         width: petalSize,
@@ -182,9 +218,11 @@ class _CherryBlossomPainter extends CustomPainter {
 
   @override
   bool shouldRepaint(covariant _CherryBlossomPainter oldDelegate) {
-    return oldDelegate.progress != progress ||
+    return oldDelegate.seconds != seconds ||
+        oldDelegate.loopSec != loopSec ||
         oldDelegate.petals != petals ||
-        oldDelegate.blossomImage != blossomImage;
+        oldDelegate.blossomImage != blossomImage ||
+        oldDelegate.subtle != subtle;
   }
 }
 
@@ -235,7 +273,7 @@ class _PetalParticle {
   final Color centerColor;
   final Color edgeColor;
 
-  factory _PetalParticle.random(math.Random rng) {
+  factory _PetalParticle.random(math.Random rng, {bool subtle = false}) {
     const palette = <Color>[
       Color(0x66FFF7FA),
       Color(0x66F5D6E4),
@@ -257,21 +295,25 @@ class _PetalParticle {
     final isMedium = !isLarge && !isSmall;
     final isSoft = rng.nextDouble() > 0.42;
 
-    final size = isLarge
-        ? 13 + rng.nextDouble() * 6
-        : isMedium
-        ? 9 + rng.nextDouble() * 5
-        : 7 + rng.nextDouble() * 3;
-    final opacity = isLarge
-        ? 0.38 + rng.nextDouble() * 0.22
-        : isMedium
-        ? 0.28 + rng.nextDouble() * 0.22
-        : 0.2 + rng.nextDouble() * 0.18;
-    final speed = isLarge
-        ? 0.3 + rng.nextDouble() * 0.22
-        : isMedium
-        ? 0.2 + rng.nextDouble() * 0.22
-        : 0.14 + rng.nextDouble() * 0.18;
+    final sScale = subtle ? 0.78 : 1.0;
+    final size = (isLarge
+            ? 13 + rng.nextDouble() * 6
+            : isMedium
+            ? 9 + rng.nextDouble() * 5
+            : 7 + rng.nextDouble() * 3) *
+        sScale;
+    final opacity = (isLarge
+            ? 0.38 + rng.nextDouble() * 0.22
+            : isMedium
+            ? 0.28 + rng.nextDouble() * 0.22
+            : 0.2 + rng.nextDouble() * 0.18) *
+        (subtle ? 0.85 : 1.0);
+    final speed = (isLarge
+            ? 0.3 + rng.nextDouble() * 0.22
+            : isMedium
+            ? 0.2 + rng.nextDouble() * 0.22
+            : 0.14 + rng.nextDouble() * 0.18) *
+        (subtle ? 0.92 : 1.0);
 
     return _PetalParticle(
       baseX: rng.nextDouble(),

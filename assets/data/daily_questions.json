@@ -1,0 +1,74 @@
+[
+  {
+    "question": "How are you feeling right now?",
+    "options": ["Calm", "Okay", "Heavy"]
+  },
+  {
+    "question": "What do you need more of today?",
+    "options": ["Rest", "Focus", "Connection"]
+  },
+  {
+    "question": "What feels heavy today?",
+    "options": ["Work", "Thoughts", "Uncertainty"]
+  },
+  {
+    "question": "What feels light today?",
+    "options": ["My mood", "My energy", "My thoughts"]
+  },
+  {
+    "question": "What is one thing on your mind?",
+    "options": ["Work", "People", "Myself"]
+  },
+  {
+    "question": "What would help you feel grounded?",
+    "options": ["A short walk", "Deep breaths", "Quiet time"]
+  },
+  {
+    "question": "What can you be gentle with today?",
+    "options": ["My pace", "My mistakes", "My emotions"]
+  },
+  {
+    "question": "What are you grateful for today?",
+    "options": ["A person", "A moment", "A small comfort"]
+  },
+  {
+    "question": "What are you proud of today?",
+    "options": ["Trying", "Showing up", "Setting a boundary"]
+  },
+  {
+    "question": "What can you let go of today?",
+    "options": ["Pressure", "Perfection", "Overthinking"]
+  },
+  {
+    "question": "What is asking for your attention?",
+    "options": ["My body", "My emotions", "My priorities"]
+  },
+  {
+    "question": "Where do you need more patience?",
+    "options": ["With myself", "With others", "With progress"]
+  },
+  {
+    "question": "What boundary do you need today?",
+    "options": ["Less noise", "Less pressure", "More space"]
+  },
+  {
+    "question": "What would make today a little easier?",
+    "options": ["A clear plan", "A break", "A kind talk"]
+  },
+  {
+    "question": "What is one kind thing you can do for yourself?",
+    "options": ["Rest", "Eat well", "Speak kindly to myself"]
+  },
+  {
+    "question": "What do you want less of today?",
+    "options": ["Rush", "Worry", "Distraction"]
+  },
+  {
+    "question": "What do you want to protect your energy from?",
+    "options": ["Negativity", "Overwork", "Comparison"]
+  },
+  {
+    "question": "What matters most to you right now?",
+    "options": ["Health", "Peace", "Relationships"]
+  }
+]

@@ -2,42 +2,47 @@ import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 
+import '../widgets/monotonic_seconds_ticker.dart';
+
 class GreenTreeSceneEffect extends StatefulWidget {
-  const GreenTreeSceneEffect({super.key});
+  const GreenTreeSceneEffect({super.key, this.subtle = false});
+
+  final bool subtle;
 
   @override
   State<GreenTreeSceneEffect> createState() => _GreenTreeSceneEffectState();
 }
 
-class _GreenTreeSceneEffectState extends State<GreenTreeSceneEffect>
-    with SingleTickerProviderStateMixin {
-  static const int _leafCount = 56;
+class _GreenTreeSceneEffectState extends State<GreenTreeSceneEffect> {
+  static const int _leafCountFull = 56;
+  static const int _leafCountSubtle = 18;
 
-  /// Slightly slower than the original 18s loop for a calmer green theme.
-  static const Duration _loopDuration = Duration(seconds: 26);
+  /// Baseline loop length (matches prior AnimationController duration).
+  static const double _loopSec = 26;
 
-  late final AnimationController _controller;
-  late final List<_LeafParticle> _leaves;
+  late List<_LeafParticle> _leaves;
+
+  void _rebuildLeaves() {
+    final rng = math.Random(71);
+    final n = widget.subtle ? _leafCountSubtle : _leafCountFull;
+    _leaves = List<_LeafParticle>.generate(
+      n,
+      (_) => _LeafParticle.random(rng, subtle: widget.subtle),
+    );
+  }
 
   @override
   void initState() {
     super.initState();
-    final rng = math.Random(71);
-    _leaves = List<_LeafParticle>.generate(
-      _leafCount,
-      (_) => _LeafParticle.random(rng),
-    );
-
-    _controller = AnimationController(
-      vsync: this,
-      duration: _loopDuration,
-    )..repeat();
+    _rebuildLeaves();
   }
 
   @override
-  void dispose() {
-    _controller.dispose();
-    super.dispose();
+  void didUpdateWidget(covariant GreenTreeSceneEffect oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.subtle != widget.subtle) {
+      _rebuildLeaves();
+    }
   }
 
   @override
@@ -46,29 +51,35 @@ class _GreenTreeSceneEffectState extends State<GreenTreeSceneEffect>
       child: RepaintBoundary(
         child: Stack(
           children: [
-            const Positioned.fill(
+            Positioned.fill(
               child: DecoratedBox(
                 decoration: BoxDecoration(
                   gradient: LinearGradient(
                     begin: Alignment.topCenter,
                     end: Alignment.bottomCenter,
-                    colors: [
-                      Color(0x1AA8D5BA),
-                      Color(0x145A8F7B),
-                      Color(0x0F4A7867),
-                    ],
-                    stops: [0.0, 0.6, 1.0],
+                    colors: widget.subtle
+                        ? const [
+                            Color(0x0FA8D5BA),
+                            Color(0x0A5A8F7B),
+                            Color(0x084A7867),
+                          ]
+                        : const [
+                            Color(0x1AA8D5BA),
+                            Color(0x145A8F7B),
+                            Color(0x0F4A7867),
+                          ],
+                    stops: const [0.0, 0.6, 1.0],
                   ),
                 ),
               ),
             ),
-            AnimatedBuilder(
-              animation: _controller,
-              builder: (_, __) => CustomPaint(
+            MonotonicSecondsTicker(
+              builder: (_, seconds) => CustomPaint(
                 size: Size.infinite,
                 painter: _GreenLeavesPainter(
-                  t: _controller.value,
+                  t: seconds / _loopSec,
                   leaves: _leaves,
+                  subtle: widget.subtle,
                 ),
               ),
             ),
@@ -80,11 +91,16 @@ class _GreenTreeSceneEffectState extends State<GreenTreeSceneEffect>
 }
 
 class _GreenLeavesPainter extends CustomPainter {
-  const _GreenLeavesPainter({required this.t, required this.leaves});
+  const _GreenLeavesPainter({
+    required this.t,
+    required this.leaves,
+    required this.subtle,
+  });
 
-  /// 0→1 each [_loopDuration], same semantics as the original effect.
+  /// Monotonic “cycle” index (seconds / loop); modulo in paint keeps leaves smooth.
   final double t;
   final List<_LeafParticle> leaves;
+  final bool subtle;
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -111,7 +127,8 @@ class _GreenLeavesPainter extends CustomPainter {
                 (size.height * 1.25) -
             (size.height * 0.12);
 
-      final x = baseX + math.sin(phase + p.windOffset) * 1.5;
+      final sway = subtle ? 1.0 : 1.5;
+      final x = baseX + math.sin(phase + p.windOffset) * sway;
       final y = baseY;
       final rot = p.rotationSeed + (phase * p.rotationSpeed);
       final path = createLeafPath(p.radius);
@@ -120,9 +137,9 @@ class _GreenLeavesPainter extends CustomPainter {
       canvas.translate(x, y);
       canvas.rotate(rot);
       leafPaint
-        ..color = p.color.withValues(alpha: p.alpha)
+        ..color = p.color.withValues(alpha: p.alpha * (subtle ? 0.58 : 1.0))
         ..maskFilter = p.blur
-            ? const MaskFilter.blur(BlurStyle.normal, 2.3)
+            ? MaskFilter.blur(BlurStyle.normal, subtle ? 1.6 : 2.3)
             : null;
       canvas.drawPath(path, leafPaint);
       canvas.restore();
@@ -131,7 +148,9 @@ class _GreenLeavesPainter extends CustomPainter {
 
   @override
   bool shouldRepaint(covariant _GreenLeavesPainter oldDelegate) =>
-      oldDelegate.t != t || oldDelegate.leaves != leaves;
+      oldDelegate.t != t ||
+      oldDelegate.leaves != leaves ||
+      oldDelegate.subtle != subtle;
 }
 
 Path createLeafPath(double size) {
@@ -176,26 +195,29 @@ class _LeafParticle {
   final bool spawnFromLeft;
   final Color color;
 
-  factory _LeafParticle.random(math.Random random) {
+  factory _LeafParticle.random(math.Random random, {bool subtle = false}) {
     const palette = <Color>[
       Color(0xFF2F5D50),
       Color(0xFF3E6F5E),
       Color(0xFF526F47),
     ];
-    final radius = 8.0 + random.nextDouble() * 14.0;
+    final radius = (8.0 + random.nextDouble() * 14.0) * (subtle ? 0.78 : 1.0);
     final largeLeaf = radius > 15.5;
+    final sp = subtle ? 0.9 : 1.0;
     return _LeafParticle(
       x: random.nextDouble() * 1.05,
       y: random.nextDouble() * 1.05,
       radius: radius,
-      alpha: 0.24 + random.nextDouble() * 0.34,
-      speed: 0.9 + random.nextDouble() * 0.7,
-      fallSpeed: largeLeaf
-          ? 0.22 + random.nextDouble() * 0.13
-          : 0.12 + random.nextDouble() * 0.11,
-      windSpeed: largeLeaf
-          ? 0.28 + random.nextDouble() * 0.2
-          : 0.18 + random.nextDouble() * 0.15,
+      alpha: (0.24 + random.nextDouble() * 0.34) * (subtle ? 0.82 : 1.0),
+      speed: (0.9 + random.nextDouble() * 0.7) * sp,
+      fallSpeed: (largeLeaf
+              ? 0.22 + random.nextDouble() * 0.13
+              : 0.12 + random.nextDouble() * 0.11) *
+          sp,
+      windSpeed: (largeLeaf
+              ? 0.28 + random.nextDouble() * 0.2
+              : 0.18 + random.nextDouble() * 0.15) *
+          sp,
       blur: random.nextDouble() < 0.38,
       phase: random.nextDouble() * math.pi * 2,
       windOffset: random.nextDouble() * math.pi * 2,

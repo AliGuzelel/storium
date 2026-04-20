@@ -1,5 +1,6 @@
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
+import 'package:flutter/scheduler.dart';
 import 'package:provider/provider.dart';
 import '../providers/settings_manager.dart';
 import '../theme/app_themes.dart';
@@ -26,33 +27,67 @@ class AppGradientBackground extends StatefulWidget {
 
 class _AppGradientBackgroundState extends State<AppGradientBackground>
     with SingleTickerProviderStateMixin {
-  late final AnimationController _ctrl;
+  late final Ticker _ticker;
+  Duration _elapsed = Duration.zero;
+  SettingsManager? _settings;
 
   @override
   void initState() {
     super.initState();
-    _ctrl = AnimationController(vsync: this, duration: widget.speed);
-    if (widget.breathe) _ctrl.repeat(reverse: true);
+    _ticker = createTicker((Duration elapsed) {
+      if (!widget.breathe) return;
+      setState(() => _elapsed = elapsed);
+    });
+    WidgetsBinding.instance.addPostFrameCallback((_) => _ensureTickerRunning());
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final s = context.read<SettingsManager>();
+    if (!identical(s, _settings)) {
+      _settings?.removeListener(_syncTickerToTheme);
+      _settings = s;
+      _settings!.addListener(_syncTickerToTheme);
+    }
+    _syncTickerToTheme();
+    _ensureTickerRunning();
+  }
+
+  void _ensureTickerRunning() {
+    if (!mounted) return;
+    if (TickerMode.of(context) && !_ticker.isActive) {
+      final honey = _settings?.themeColor == 'yellow';
+      final run = widget.breathe && !honey;
+      if (run) {
+        _ticker.start();
+      }
+    }
+  }
+
+  void _syncTickerToTheme() {
+    if (!mounted) return;
+    final honey = _settings?.themeColor == 'yellow';
+    final run = widget.breathe && !honey;
+    if (run) {
+      if (!_ticker.isActive) _ticker.start();
+    } else {
+      if (_ticker.isActive) _ticker.stop();
+    }
   }
 
   @override
   void didUpdateWidget(covariant AppGradientBackground oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (oldWidget.breathe != widget.breathe ||
-        oldWidget.speed != widget.speed) {
-      if (widget.breathe) {
-        _ctrl
-          ..duration = widget.speed
-          ..repeat(reverse: true);
-      } else {
-        _ctrl.stop();
-      }
+    if (oldWidget.breathe != widget.breathe) {
+      _syncTickerToTheme();
     }
   }
 
   @override
   void dispose() {
-    _ctrl.dispose();
+    _settings?.removeListener(_syncTickerToTheme);
+    _ticker.dispose();
     super.dispose();
   }
 
@@ -80,20 +115,21 @@ class _AppGradientBackgroundState extends State<AppGradientBackground>
       );
     }
 
-    if (!widget.breathe) {
-      return paint(const Alignment(0, -1), const Alignment(1, 1));
+    if (!widget.breathe || settings.themeColor == 'yellow') {
+      return RepaintBoundary(
+        child: paint(const Alignment(0, -1), const Alignment(1, 1)),
+      );
     }
 
-    return AnimatedBuilder(
-      animation: _ctrl,
-      builder: (_, __) {
-        final t = (math.sin(_ctrl.value * 2 * math.pi) + 1) / 2; // 0..1
-        final a = widget.amplitude.clamp(0.0, 0.35);
-        final begin = Alignment(0.0, -1.0 + a * 0.8 * t);
-        final end = Alignment(1.0 - a * t, 1.0);
-        return paint(begin, end);
-      },
-    );
+    final seconds = _elapsed.inMicroseconds / 1e6;
+    final periodSec = widget.speed.inMilliseconds / 1000.0;
+    final safePeriod = periodSec < 0.5 ? 0.5 : periodSec;
+    final phase = seconds * (2 * math.pi / safePeriod);
+    final t = (math.sin(phase) + 1) / 2;
+    final a = widget.amplitude.clamp(0.0, 0.35);
+    final begin = Alignment(0.0, -1.0 + a * 0.8 * t);
+    final end = Alignment(1.0 - a * t, 1.0);
+    return RepaintBoundary(child: paint(begin, end));
   }
 
   List<Color> _smoothColors(List<Color> source) {

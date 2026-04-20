@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../../widgets/safe_asset_image.dart';
+
 /// Floating watering-can control: soft radial halo, tap scale, light droplet hint.
 class GardenWateringCan extends StatefulWidget {
   const GardenWateringCan({
@@ -20,7 +22,7 @@ class GardenWateringCan extends StatefulWidget {
 class _GardenWateringCanState extends State<GardenWateringCan>
     with TickerProviderStateMixin {
   late final AnimationController _tapScale;
-  late final Animation<double> _tapCurve;
+  late final CurvedAnimation _tapCurve;
   late final AnimationController _drops;
 
   @override
@@ -43,6 +45,7 @@ class _GardenWateringCanState extends State<GardenWateringCan>
 
   @override
   void dispose() {
+    _tapCurve.dispose();
     _tapScale.dispose();
     _drops.dispose();
     super.dispose();
@@ -116,7 +119,7 @@ class _GardenWateringCanState extends State<GardenWateringCan>
                     child: child,
                   );
                 },
-                child: Image.asset(
+                child: SafeAssetImage(
                   'assets/images/wateringcan.png',
                   width: 52,
                   height: 52,

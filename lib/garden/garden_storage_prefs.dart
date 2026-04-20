@@ -16,6 +16,7 @@ class GardenStorage {
   static const _completedKey = 'garden_completed_types';
   static const _schemaKey = 'garden_plant_schema_int';
   static const _selectedPageKey = 'garden_selected_plant_page';
+  static const _fertilizerCountKey = 'garden_fertilizer_count';
 
   /// Bump when the persisted plant catalog or slot format changes.
   static const int currentSchema = 4;
@@ -124,6 +125,7 @@ class GardenStorage {
       slots: slots,
       completedPlantTypes: completed,
       selectedPlantPageIndex: page,
+      fertilizerCount: (prefs.getInt(_fertilizerCountKey) ?? 0).clamp(0, 999999),
     );
   }
 
@@ -220,6 +222,7 @@ class GardenStorage {
       state.selectedPlantPageIndex
           .clamp(0, GardenPlantOption.choices.length - 1),
     );
+    await prefs.setInt(_fertilizerCountKey, state.fertilizerCount.clamp(0, 999999));
     await prefs.setInt(_schemaKey, currentSchema);
     await _clearLegacy(prefs);
 

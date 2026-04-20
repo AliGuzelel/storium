@@ -1,22 +1,50 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
+import 'package:flutter/painting.dart';
 import 'package:provider/provider.dart';
 import 'models/user_session.dart';
 import 'utils/theme_manager.dart';
 import 'providers/settings_manager.dart';
+import 'providers/saved_images_store.dart';
 import 'pages/sign_in_page.dart';
 import 'services/user_session_cloud_sync.dart';
 import 'theme/app_themes.dart';
+import 'utils/app_asset_precache.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  _configurePersistentImageCache();
   await UserSession.loadFromStorage();
   final settingsManager = SettingsManager();
   await settingsManager.initialize();
   await UserSessionCloudSync.hydrateIfSignedIn(
     settingsManager: settingsManager,
   );
-  runApp(ChangeNotifierProvider.value(value: settingsManager, child: MyApp()));
+  final savedImagesStore = SavedImagesStore();
+  await savedImagesStore.load();
+  runApp(
+    MultiProvider(
+      providers: [
+        ChangeNotifierProvider.value(value: settingsManager),
+        ChangeNotifierProvider.value(value: savedImagesStore),
+      ],
+      child: MyApp(),
+    ),
+  );
+}
+
+void _configurePersistentImageCache() {
+  const targetMaximumEntries = 2000;
+  const targetMaximumBytes = 512 * 1024 * 1024; // 512 MB
+  final cache = PaintingBinding.instance.imageCache;
+  if (cache.maximumSize < targetMaximumEntries) {
+    cache.maximumSize = targetMaximumEntries;
+  }
+  if (cache.maximumSizeBytes < targetMaximumBytes) {
+    cache.maximumSizeBytes = targetMaximumBytes;
+  }
 }
 
 class MyApp extends StatefulWidget {
@@ -26,6 +54,7 @@ class MyApp extends StatefulWidget {
 
 class _MyAppState extends State<MyApp> {
   final ThemeManager _themeManager = ThemeManager();
+  bool _didScheduleRasterPrecache = false;
 
   @override
   void dispose() {
@@ -57,6 +86,14 @@ class _MyAppState extends State<MyApp> {
       ],
       themeMode: settings.isDarkMode ? ThemeMode.dark : ThemeMode.light,
       builder: (context, child) {
+        if (!_didScheduleRasterPrecache && child != null) {
+          _didScheduleRasterPrecache = true;
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            if (context.mounted) {
+              unawaited(precacheStoriumRasterAssets(context));
+            }
+          });
+        }
         return AnimatedSwitcher(
           duration: const Duration(milliseconds: 250),
           child: MediaQuery(

@@ -5,24 +5,27 @@ import 'package:flutter/material.dart';
 /// Very subtle drifting specks for fully grown plants (phase 3).
 class GardenMatureParticlesPainter extends CustomPainter {
   GardenMatureParticlesPainter({
-    required this.progress,
+    required this.seconds,
     required this.accent,
   });
 
-  final double progress;
+  /// Monotonic time (no AnimationController loop restarts).
+  final double seconds;
   final Color accent;
 
   static const int _n = 9;
+  static const double _loopSec = 22;
 
   @override
   void paint(Canvas canvas, Size size) {
     final cx = size.width / 2;
     final baseY = size.height * 0.72;
     final p = Paint()..maskFilter = const MaskFilter.blur(BlurStyle.normal, 1.2);
+    final cycles = seconds / _loopSec;
 
     for (var i = 0; i < _n; i++) {
-      final t = (progress + i * 0.11) % 1.0;
-      final ang = i * 1.7 + progress * math.pi * 2;
+      final t = (cycles + i * 0.11) % 1.0;
+      final ang = i * 1.7 + seconds * (2 * math.pi / _loopSec);
       final r = 8.0 + (i % 4) * 5.0;
       final ox = math.cos(ang) * r * 0.35;
       final oy = -t * 42 - (i % 3) * 6.0;
@@ -38,5 +41,5 @@ class GardenMatureParticlesPainter extends CustomPainter {
 
   @override
   bool shouldRepaint(covariant GardenMatureParticlesPainter oldDelegate) =>
-      oldDelegate.progress != progress || oldDelegate.accent != accent;
+      oldDelegate.seconds != seconds || oldDelegate.accent != accent;
 }

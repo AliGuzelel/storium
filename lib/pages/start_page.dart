@@ -15,6 +15,9 @@ import 'about_mh.dart';
 import 'profile_page.dart';
 import 'story_page.dart';
 import 'story_selection_page.dart';
+import 'my_space_page.dart';
+import 'collections_page.dart';
+import 'daily_questions_page.dart';
 import '../garden/garden_page.dart';
 
 class StartPage extends StatefulWidget {
@@ -42,7 +45,14 @@ class _StartPageState extends State<StartPage> {
         breathe: true,
         child: Stack(
           children: [
-            Positioned.fill(child: buildThemeEffect(settings.themeColor)),
+            Positioned.fill(
+              child: KeyedSubtree(
+                key: ValueKey<String>('start_theme_fx_${settings.themeColor}'),
+                child: RepaintBoundary(
+                  child: buildThemeEffect(settings.themeColor),
+                ),
+              ),
+            ),
             SafeArea(
               child: Stack(
                 children: [
@@ -81,6 +91,30 @@ class _StartPageState extends State<StartPage> {
                         _glassButton(
                           label: t(context, 'continue'),
                           onTap: _continueStory,
+                        ),
+                        const SizedBox(height: 15),
+                        _glassButton(
+                          label: 'Explore Collections 📖',
+                          onTap: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (_) => const CollectionsPage(),
+                              ),
+                            );
+                          },
+                        ),
+                        const SizedBox(height: 15),
+                        _glassButton(
+                          label: 'Daily Check-in',
+                          onTap: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (_) => const DailyQuestionsPage(),
+                              ),
+                            );
+                          },
                         ),
                       ],
                     ),
@@ -175,6 +209,18 @@ class _StartPageState extends State<StartPage> {
                   Navigator.push(
                     context,
                     MaterialPageRoute(builder: (_) => const ProfilePage()),
+                  );
+                },
+              ),
+              const SizedBox(height: 20),
+              _menuButton(
+                accent: AppThemes.secondary(settings.themeColor),
+                text: 'My Space',
+                onPressed: () {
+                  Navigator.pop(context);
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (_) => const MySpacePage()),
                   );
                 },
               ),

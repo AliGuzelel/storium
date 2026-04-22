@@ -32,6 +32,7 @@ flutter:
     - assets/fonts/
     - assets/images/
     - assets/images/stories/
+    - assets/images/stories/grief/
     - assets/images/plants/
     - assets/data/
     - assets/collection_images/

@@ -171,6 +171,35 @@ class AboutMentalHealthPage extends StatelessWidget {
                       "Longing to be seen, heard, or understood",
                     ]),
                     const SizedBox(height: 10),
+
+                    Text('Academic Pressure 📚', style: h2),
+                    const SizedBox(height: 6),
+                    _bullets(body, [
+                      "Fear of failing or not meeting expectations",
+                      "Constant pressure to perform or keep up",
+                      "Overthinking results, grades, or future outcomes",
+                    ]),
+                    const SizedBox(height: 6),
+                    Text(
+                      "Sometimes it’s not about the work itself — it’s the weight we attach to it.",
+                      style: small,
+                    ),
+
+                    const SizedBox(height: 10),
+
+                    Text('Anxiety & Overthinking 🌪️', style: h2),
+                    const SizedBox(height: 6),
+                    _bullets(body, [
+                      "Racing thoughts that are hard to slow down",
+                      "Imagining worst-case scenarios again and again",
+                      "Feeling tense, restless, or mentally exhausted",
+                    ]),
+                    const SizedBox(height: 6),
+                    Text(
+                      "Your mind is trying to protect you — even if it feels overwhelming.",
+                      style: small,
+                    ),
+                    const SizedBox(height: 10),
                     Text(
                       "Storium isn’t a medical tool — it’s a gentle, interactive space to notice patterns, feelings, and choices.",
                       style: small,
@@ -250,6 +279,23 @@ class AboutMentalHealthPage extends StatelessWidget {
                     const SizedBox(height: 8),
                     Text(
                       "Your experience is yours. We keep things simple and respectful — and you always choose what to do next.",
+                      style: body,
+                    ),
+                  ],
+                ),
+              ),
+              _glassCard(
+                context,
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text('A Small Reminder 🌿', style: h1),
+                    const SizedBox(height: 8),
+                    Text(
+                      "You don’t have to understand everything you feel.\n\n"
+                      "You don’t have to fix it immediately.\n\n"
+                      "Some days are heavier than others.\n\n"
+                      "And that doesn’t mean you’re falling behind.",
                       style: body,
                     ),
                   ],

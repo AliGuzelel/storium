@@ -8,11 +8,13 @@ import 'story_page.dart';
 class DefinitionPage extends StatefulWidget {
   final String storyTitle;
   final String topic;
+  final String resumeStoryId;
 
   const DefinitionPage({
     super.key,
     required this.storyTitle,
     required this.topic,
+    required this.resumeStoryId,
   });
 
   @override
@@ -77,6 +79,7 @@ class _DefinitionPageState extends State<DefinitionPage>
                     ),
                     child: IntrinsicHeight(
                       child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
                         children: [
                           _glassPanel(
                             radius: 26,
@@ -189,6 +192,7 @@ class _DefinitionPageState extends State<DefinitionPage>
                                         builder: (_) => StoryPage(
                                           storyTitle: widget.storyTitle,
                                           topic: widget.topic,
+                                          resumeStoryId: widget.resumeStoryId,
                                         ),
                                       ),
                                     );
@@ -331,5 +335,24 @@ const Map<String, _Def> _defs = {
       "Feeling like what you do is never enough",
     ],
     tags: ["Pressure", "Overthinking", "Self-doubt"],
+  ),
+  'Anxiety': _Def(
+    title: 'Too Loud Inside 🧠',
+    shortDescription:
+        "Some days feel normal on the outside.\n\n"
+        "Nothing goes wrong.\n"
+        "Nothing unusual happens.\n\n"
+        "But inside, your thoughts don't stop.\n\n"
+        "They repeat.\n"
+        "They question.\n"
+        "They grow louder for no clear reason.\n\n"
+        "This story is about a day like that.\n\n"
+        "Take your time.",
+    symptoms: [
+      "Racing thoughts that are hard to slow down",
+      "Replaying conversations and second-guessing yourself",
+      "Physical tension, shallow breathing, or restlessness",
+    ],
+    tags: ["Anxiety", "Overthinking", "Grounding"],
   ),
 };

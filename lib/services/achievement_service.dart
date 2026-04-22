@@ -128,7 +128,8 @@ class AchievementService {
       AchievementModel(
         id: 'shadow_walker',
         title: 'Shadow Walker',
-        description: 'Completed The Day After and faced grief with courage.',
+        description:
+            'Completed The Space You Left and faced grief with courage.',
         icon: '🖤',
         unlocked: a['shadow_walker'] ?? false,
       ),

@@ -941,7 +941,7 @@ class _ProfilePageState extends State<ProfilePage> {
       case 'loneliness':
         return 'Alone, Again';
       case 'grief':
-        return 'The Day After';
+        return 'The Space You Left';
       default:
         return raw;
     }

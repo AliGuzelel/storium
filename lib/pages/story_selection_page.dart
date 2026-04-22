@@ -95,6 +95,7 @@ class _StorySelectionPageState extends State<StorySelectionPage>
     BuildContext context, {
     required String title,
     required String topic,
+    required String resumeStoryId,
     required String emoji,
     required String desc,
     required List<String> chips,
@@ -111,7 +112,11 @@ class _StorySelectionPageState extends State<StorySelectionPage>
           Navigator.push(
             context,
             MaterialPageRoute(
-              builder: (_) => DefinitionPage(storyTitle: title, topic: topic),
+              builder: (_) => DefinitionPage(
+                storyTitle: title,
+                topic: topic,
+                resumeStoryId: resumeStoryId,
+              ),
             ),
           );
         },
@@ -288,10 +293,12 @@ class _StorySelectionPageState extends State<StorySelectionPage>
                         context,
                         title: t(context, 'the_day_after'),
                         topic: 'Grief',
+                        resumeStoryId: 'the_day_after',
                         emoji: '🕊️',
                         desc: 'A quiet story about loss and love.',
                         chips: const ['Reflective', 'Gentle'],
-                        isCompleted: _isStoryCompleted('The Day After', 'Grief'),
+                        isCompleted:
+                            _isStoryCompleted('The Space You Left', 'Grief'),
                       ),
                       const SizedBox(height: 14),
 
@@ -299,6 +306,7 @@ class _StorySelectionPageState extends State<StorySelectionPage>
                         context,
                         title: t(context, 'what_still_remains'),
                         topic: 'Depression',
+                        resumeStoryId: 'what_still_remains',
                         emoji: '🌙',
                         desc: 'Between messages, memories, and the quiet ache.',
                         chips: const ['Emotional', 'Heavy'],
@@ -313,6 +321,7 @@ class _StorySelectionPageState extends State<StorySelectionPage>
                         context,
                         title: t(context, 'alone_again'),
                         topic: 'Loneliness',
+                        resumeStoryId: 'alone_again',
                         emoji: '🌫️',
                         desc: 'A quiet ache you carry through the night.',
                         chips: const ['Soft', 'Dark'],
@@ -324,10 +333,25 @@ class _StorySelectionPageState extends State<StorySelectionPage>
                         context,
                         title: t(context, 'almost_there'),
                         topic: 'Failure',
+                        resumeStoryId: 'almost_there',
                         emoji: '⏳',
                         desc: 'The quiet pressure of trying to be enough.',
                         chips: const ['Stress', 'Realistic'],
                         isCompleted: _isStoryCompleted('Almost There', 'Failure'),
+                      ),
+                      const SizedBox(height: 14),
+                      _storyCard(
+                        context,
+                        title: 'Too Loud Inside',
+                        topic: 'Anxiety',
+                        resumeStoryId: 'too_loud_inside',
+                        emoji: '🧠',
+                        desc: "A day where nothing happens, but your mind won't stop.",
+                        chips: const ['Anxiety', 'Overthinking'],
+                        isCompleted: _isStoryCompleted(
+                          'Too Loud Inside',
+                          'Anxiety',
+                        ),
                       ),
                       const SizedBox(height: 10),
                     ],

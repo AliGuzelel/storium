@@ -1,14 +1,24 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import '../services/story_progress_service.dart';
+import '../utils/story_resume_catalog.dart';
 import '../widgets/gradient_scaffold.dart';
 import 'summary_page.dart';
 
 class StoryPage extends StatefulWidget {
-  const StoryPage({super.key, required this.storyTitle, required this.topic});
+  const StoryPage({
+    super.key,
+    required this.storyTitle,
+    required this.topic,
+    this.initialSceneIndex,
+    this.resumeStoryId,
+  });
 
   final String storyTitle;
   final String topic;
+  final int? initialSceneIndex;
+  /// Stable catalog id (e.g. the_day_after). Keeps progress correct when [storyTitle] is localized.
+  final String? resumeStoryId;
 
   @override
   State<StoryPage> createState() => _StoryPageState();
@@ -452,112 +462,160 @@ class _StoryPageState extends State<StoryPage> {
 
   final Map<int, Map<String, dynamic>> _griefScenes = {
     1: {
-      'image': 'assets/images/stories/grief_1.png',
+      'image': 'assets/images/stories/grief/grief1.png',
       'text':
-          "The house is quiet in a way it never was before. Your father’s shoes are still by the door. For a moment, you expect to hear his voice.",
+          "You wake up.\n\nFor a second, everything feels normal.\n\nThen it returns. Not a thought.\nNot a memory.\n\nJust a weight.",
       'choices': [
-        {'text': "Stand there and breathe", 'nextScene': 2, 'stat': 'calm'},
-        {'text': "Turn away quickly", 'nextScene': 3, 'stat': 'anxiety'},
+        {'text': "Continue", 'nextScene': 2, 'stat': 'none'},
       ],
     },
     2: {
-      'image': 'assets/images/stories/grief_2.png',
+      'image': 'assets/images/stories/grief/grief2.png',
       'text':
-          "You stay still. Your chest feels tight, but the air slowly finds its way in. The silence hurts — yet it also feels honest.",
+          "You stay in bed.\n\nStaring at the ceiling.\n\nYour phone is nearby. You don't reach for it.\n\nYou already know what it says.\n\n\"I'm so sorry for your loss.\"",
       'choices': [
-        {'text': "Distract yourself", 'nextScene': 3, 'stat': 'anxiety'},
-        {'text': "Let the feeling come", 'nextScene': 4, 'stat': 'calm'},
+        {'text': "Continue", 'nextScene': 3, 'stat': 'none'},
       ],
     },
     3: {
-      'image': 'assets/images/stories/grief_3.png',
+      'image': 'assets/images/stories/grief/grief3.png',
       'text':
-          "You move to another room. Your phone lights up, but no message feels right. Everything feels slightly unreal, like you’re watching yourself.",
+          "You step into the hallway.\n\nEverything looks the same.\nBut it feels… empty.\n\nHis door is ahead. Slightly open.",
       'choices': [
-        {'text': "Sit down", 'nextScene': 4, 'stat': 'calm'},
-        {'text': "Keep moving", 'nextScene': 5, 'stat': 'anxiety'},
+        {'text': "Walk past it", 'nextScene': 4, 'stat': 'anxiety'},
+        {'text': "Stop for a moment", 'nextScene': 5, 'stat': 'calm'},
       ],
     },
     4: {
-      'image': 'assets/images/stories/grief_4.png',
+      'image': 'assets/images/stories/grief/grief4a.png',
       'text':
-          "You sit. A memory surfaces — something small. A look, a laugh, advice he once gave you. It catches you off guard.",
+          "You walk past the door.\n\nYou don't look at it.\n\nBut you feel it behind you.\n\nLike something you're avoiding.",
       'choices': [
-        {'text': "Push it away", 'nextScene': 5, 'stat': 'anxiety'},
-        {'text': "Hold onto the memory", 'nextScene': 6, 'stat': 'calm'},
+        {'text': "Continue", 'nextScene': 6, 'stat': 'none'},
       ],
     },
     5: {
-      'image': 'assets/images/stories/grief_5.png',
+      'image': 'assets/images/stories/grief/grief4b.png',
       'text':
-          "Your thoughts race. There’s guilt, anger, questions with no answers. You wonder if you should feel stronger by now.",
+          "You stop in front of the door.\n\nIt's still slightly open.\n\nLike it's waiting.\n\nYour hand almost moves.",
       'choices': [
-        {
-          'text': "Remind yourself grief has no rules",
-          'nextScene': 6,
-          'stat': 'calm',
-        },
-        {
-          'text': "Judge yourself for struggling",
-          'nextScene': 7,
-          'stat': 'anxiety',
-        },
+        {'text': "Continue", 'nextScene': 6, 'stat': 'none'},
       ],
     },
     6: {
-      'image': 'assets/images/stories/grief_6.png',
+      'image': 'assets/images/stories/grief/grief5.png',
       'text':
-          "You realize something quietly: missing him means the love is still here. That part never left.",
+          "You stand there.\n\nCloser now.\n\nCloser than you were yesterday.\n\nThe silence feels heavier here.",
       'choices': [
-        {'text': "Accept the feeling", 'nextScene': 8, 'stat': 'calm'},
-        {'text': "Stay in the moment", 'nextScene': 7, 'stat': 'anxiety'},
+        {'text': "Push the door open", 'nextScene': 7, 'stat': 'calm'},
+        {'text': "Step back", 'nextScene': 8, 'stat': 'anxiety'},
       ],
     },
     7: {
-      'image': 'assets/images/stories/grief_7.png',
+      'image': 'assets/images/stories/grief/grief6a.png',
       'text':
-          "The weight feels heavy, but not unbearable. You don’t need to solve anything today. Just being here is enough.",
+          "You push the door open.\n\nNothing changed.\n\nEverything is still there.\n\nExactly how he left it.",
       'choices': [
-        {'text': "Let the day pass quietly", 'nextScene': 9, 'stat': 'anxiety'},
-        {'text': "Take a slow breath", 'nextScene': 8, 'stat': 'calm'},
+        {'text': "Continue", 'nextScene': 9, 'stat': 'none'},
       ],
     },
     8: {
-      'image': 'assets/images/stories/grief_8.png',
+      'image': 'assets/images/stories/grief/grief6b.png',
       'text':
-          "You feel tired, but a little steadier. Grief doesn’t disappear — it changes shape. And so do you.",
+          "You step back.\n\nIt feels like too much.\n\nLike something will break if you go in.\n\nSo you don't.",
       'choices': [
-        {
-          'text': "Let the day carry you forward",
-          'nextScene': 10,
-          'stat': 'calm',
-        },
-        {
-          'text': "Sit quietly with the feeling",
-          'nextScene': 10,
-          'stat': 'calm',
-        },
+        {'text': "Continue", 'nextScene': 9, 'stat': 'none'},
       ],
     },
     9: {
-      'image': 'assets/images/stories/grief_9.png',
+      'image': 'assets/images/stories/grief/grief7.png',
       'text':
-          "You get through the day. Not perfectly. But honestly. The weight is still there — just not as sharp.",
+          "You move away.\n\nBut not far.\n\nThe house feels different now.\n\nLike it noticed.",
       'choices': [
-        {
-          'text': "Acknowledge what you survived today",
-          'nextScene': 10,
-          'stat': 'calm',
-        },
-        {'text': "Rest without expectations", 'nextScene': 10, 'stat': 'calm'},
+        {'text': "Continue", 'nextScene': 10, 'stat': 'none'},
       ],
     },
     10: {
-      'image': 'assets/images/stories/grief_10.png',
+      'image': 'assets/images/stories/grief/grief8.png',
       'text':
-          "Tonight, you are allowed to rest. Grief will walk beside you — but it does not erase who you are becoming.",
+          "Your phone buzzes again.\n\nYou look at it this time.\n\nMore messages.\n\nMore words you don't want.",
       'choices': [
-        {'text': "Let the day end", 'nextScene': -1, 'stat': 'calm'},
+        {'text': "Open them", 'nextScene': 11, 'stat': 'calm'},
+        {'text': "Lock your phone", 'nextScene': 12, 'stat': 'anxiety'},
+      ],
+    },
+    11: {
+      'image': 'assets/images/stories/grief/grief9a.png',
+      'text':
+          "You read one message.\n\nThen another.\n\nThey all say the same thing.\n\nBut somehow… it helps a little.",
+      'choices': [
+        {'text': "Continue", 'nextScene': 13, 'stat': 'none'},
+      ],
+    },
+    12: {
+      'image': 'assets/images/stories/grief/grief9b.png',
+      'text':
+          "You lock your phone.\n\nYou don't want to read them.\n\nNot now.\n\nNot like this.",
+      'choices': [
+        {'text': "Continue", 'nextScene': 13, 'stat': 'none'},
+      ],
+    },
+    13: {
+      'image': 'assets/images/stories/grief/grief10.png',
+      'text':
+          "You find yourself back in the hallway.\n\nYou didn't plan to come back.\n\nBut you did.\n\nLike something pulled you here.",
+      'choices': [
+        {'text': "Continue", 'nextScene': 14, 'stat': 'none'},
+      ],
+    },
+    14: {
+      'image': 'assets/images/stories/grief/grief11.png',
+      'text':
+          "The door is still open.\n\nExactly how you left it.\n\nNothing changed.\n\nExcept you.",
+      'choices': [
+        {'text': "Go inside", 'nextScene': 15, 'stat': 'calm'},
+        {'text': "Walk away", 'nextScene': 16, 'stat': 'anxiety'},
+      ],
+    },
+    15: {
+      'image': 'assets/images/stories/grief/grief12a.png',
+      'text':
+          "You step inside.\n\nAnd this time… you stay.\n\nIt hurts more than before.\n\nBut you don't leave.",
+      'choices': [
+        {'text': "Continue", 'nextScene': 17, 'stat': 'none'},
+      ],
+    },
+    16: {
+      'image': 'assets/images/stories/grief/grief12b.png',
+      'text':
+          "You turn away again.\n\nFaster this time.\n\nLike something might follow you.\n\nBut it doesn't.",
+      'choices': [
+        {'text': "Continue", 'nextScene': 17, 'stat': 'none'},
+      ],
+    },
+    17: {
+      'image': 'assets/images/stories/grief/grief13.png',
+      'text':
+          "You stop.\n\nSomewhere between rooms.\n\nBetween staying and leaving.\n\nYou don't know which one is easier.",
+      'choices': [
+        {'text': "Go back", 'nextScene': 18, 'stat': 'calm'},
+        {'text': "Keep moving", 'nextScene': 19, 'stat': 'anxiety'},
+      ],
+    },
+    18: {
+      'image': 'assets/images/stories/grief/grief14a.png',
+      'text':
+          "You go back.\n\nYou don't rush it this time.\n\nYou just stand there.\n\nAnd for a moment… you don't fight it.",
+      'choices': [
+        {'text': "Continue", 'nextScene': -1, 'stat': 'none'},
+      ],
+    },
+    19: {
+      'image': 'assets/images/stories/grief/grief14b.png',
+      'text':
+          "You keep moving.\n\nRoom to room.\n\nWithout stopping.\n\nLike standing still might make it real.",
+      'choices': [
+        {'text': "Continue", 'nextScene': -1, 'stat': 'none'},
       ],
     },
   };
@@ -794,6 +852,129 @@ class _StoryPageState extends State<StoryPage> {
     },
   };
 
+  final Map<int, Map<String, dynamic>> _anxietyScenes = {
+    1: {
+      'image': 'assets/images/stories/depression_1.png',
+      'text':
+          "You wake up.\n\nNothing feels wrong.\n\nThe room is quiet.\n\nStill... something feels off.",
+      'choices': [
+        {'text': "Continue", 'nextScene': 2, 'stat': 'anxiety'},
+      ],
+    },
+    2: {
+      'image': 'assets/images/stories/depression_2.png',
+      'text': "You check your phone.\n\nNo new messages.\n\nYou pause.",
+      'choices': [
+        {'text': "Check again", 'nextScene': 3, 'stat': 'anxiety'},
+        {'text': "Put it down", 'nextScene': 3, 'stat': 'calm'},
+        {'text': "Open social media", 'nextScene': 3, 'stat': 'anxiety'},
+      ],
+    },
+    3: {
+      'image': 'assets/images/stories/depression_3.png',
+      'text':
+          "It starts small.\n\n'Did I forget something?'\n\nYou try to ignore it.\n\nIt stays.",
+      'choices': [
+        {'text': "...", 'nextScene': 4, 'stat': 'anxiety'},
+      ],
+    },
+    4: {
+      'image': 'assets/images/stories/depression_4.png',
+      'text': "You're getting ready.\n\nYour mind keeps drifting.",
+      'choices': [
+        {'text': "Play music", 'nextScene': 5, 'stat': 'calm'},
+        {'text': "Stay in silence", 'nextScene': 5, 'stat': 'anxiety'},
+        {'text': "Rush everything", 'nextScene': 5, 'stat': 'anxiety'},
+      ],
+    },
+    5: {
+      'image': 'assets/images/stories/depression_5.png',
+      'text':
+          "You remember something you said.\n\n'Why did I say it like that?'\n\nIt didn't matter then.\n\nNow it does.",
+      'choices': [
+        {'text': "Continue", 'nextScene': 6, 'stat': 'anxiety'},
+      ],
+    },
+    6: {
+      'image': 'assets/images/stories/depression_6.png',
+      'text':
+          "You're around people.\n\nEverything feels normal.\n\nBut your thoughts aren't.",
+      'choices': [
+        {'text': "Stay quiet", 'nextScene': 7, 'stat': 'anxiety'},
+        {'text': "Act normal", 'nextScene': 7, 'stat': 'anxiety'},
+        {'text': "Avoid eye contact", 'nextScene': 7, 'stat': 'anxiety'},
+      ],
+    },
+    7: {
+      'image': 'assets/images/stories/depression_7.png',
+      'text':
+          "It builds.\n\n'They noticed.'\n'That sounded weird.'\n'Why am I like this?'\n\nYou can't stop it.",
+      'choices': [
+        {'text': "Keep going", 'nextScene': 8, 'stat': 'anxiety'},
+      ],
+    },
+    8: {
+      'image': 'assets/images/stories/depression_8.png',
+      'text': "You try to distract yourself.",
+      'choices': [
+        {'text': "Use your phone", 'nextScene': 9, 'stat': 'anxiety'},
+        {'text': "Listen to music", 'nextScene': 9, 'stat': 'calm'},
+        {'text': "Do nothing", 'nextScene': 9, 'stat': 'anxiety'},
+      ],
+    },
+    9: {
+      'image': 'assets/images/stories/depression_9.png',
+      'text':
+          "You try to focus.\n\nYou can't.\n\nEvery few seconds-\nanother thought.",
+      'choices': [
+        {'text': "...", 'nextScene': 10, 'stat': 'anxiety'},
+      ],
+    },
+    10: {
+      'image': 'assets/images/stories/depression_10.png',
+      'text':
+          "It's not one thought anymore.\n\nIt's many.\n\nLoud.\n\nStacked.\n\nUnclear.",
+      'choices': [
+        {'text': "Continue", 'nextScene': 11, 'stat': 'anxiety'},
+      ],
+    },
+    11: {
+      'image': 'assets/images/stories/depression_11.png',
+      'text':
+          "You're finally alone.\n\nThe day is over.\n\nYour mind isn't.",
+      'choices': [
+        {'text': "Scroll", 'nextScene': 12, 'stat': 'anxiety'},
+        {'text': "Close your eyes", 'nextScene': 12, 'stat': 'calm'},
+        {'text': "Sit in silence", 'nextScene': 12, 'stat': 'calm'},
+      ],
+    },
+    12: {
+      'image': 'assets/images/stories/depression_12.png',
+      'text':
+          "This is the worst part.\n\nEverything hits.\n\n'What if something goes wrong?'\n'What if I messed up?'\n\nIt feels real.",
+      'choices': [
+        {'text': "...", 'nextScene': 13, 'stat': 'anxiety'},
+      ],
+    },
+    13: {
+      'image': 'assets/images/stories/depression_13.png',
+      'text': "You notice your breathing.\n\nFast.\n\nShallow.",
+      'choices': [
+        {'text': "Take a deep breath", 'nextScene': 14, 'stat': 'calm'},
+        {'text': "Ignore it", 'nextScene': 14, 'stat': 'anxiety'},
+        {'text': "Look around you", 'nextScene': 14, 'stat': 'calm'},
+      ],
+    },
+    14: {
+      'image': 'assets/images/stories/depression_14.png',
+      'text':
+          "It doesn't disappear.\n\nBut it softens.\n\nA little.\n\nFor now... that's enough.",
+      'choices': [
+        {'text': "Finish", 'nextScene': -1, 'stat': 'calm'},
+      ],
+    },
+  };
+
   final StoryProgressService _progressService = StoryProgressService();
 
   @override
@@ -812,6 +993,9 @@ class _StoryPageState extends State<StoryPage> {
       case 'Failure':
         storyScenes = _failureScenes;
         break;
+      case 'Anxiety':
+        storyScenes = _anxietyScenes;
+        break;
       default:
         storyScenes = _griefScenes;
     }
@@ -821,16 +1005,45 @@ class _StoryPageState extends State<StoryPage> {
   Future<void> _restoreProgress() async {
     final data = await _progressService.load();
     if (!mounted) return;
-    if (data.currentTopic == widget.topic &&
+
+    final sid = (widget.resumeStoryId != null &&
+            widget.resumeStoryId!.trim().isNotEmpty)
+        ? widget.resumeStoryId!.trim()
+        : (StoryResumeCatalog.storyIdFromStoryTitleAndTopic(
+              storyTitle: widget.storyTitle,
+              topic: widget.topic,
+            ) ??
+            StoryResumeCatalog.storyIdFromNormalizedTopic(widget.topic));
+
+    final topicMatches =
+        data.currentTopic?.toLowerCase() == widget.topic.toLowerCase();
+
+    final initialScene = widget.initialSceneIndex;
+    final fromMap =
+        (sid != null && sid.isNotEmpty) ? data.inProgressStories[sid] : null;
+    int? sceneToUse = initialScene;
+    if (sceneToUse == null &&
+        fromMap != null &&
+        fromMap > 0 &&
+        storyScenes.containsKey(fromMap)) {
+      sceneToUse = fromMap;
+    }
+    if (sceneToUse == null &&
+        topicMatches &&
         data.currentScene != null &&
         storyScenes.containsKey(data.currentScene)) {
+      sceneToUse = data.currentScene;
+    }
+
+    if (sceneToUse != null && storyScenes.containsKey(sceneToUse)) {
       setState(() {
-        currentScene = data.currentScene!;
-        calm = data.currentCalm;
-        anxiety = data.currentAnxiety;
-        choicesMade = data.currentChoicesMade;
+        currentScene = sceneToUse!;
+        if (topicMatches) {
+          calm = data.currentCalm;
+          anxiety = data.currentAnxiety;
+          choicesMade = data.currentChoicesMade;
+        }
       });
-    } else {
       await _progressService.recordProgress(
         storyTitle: widget.storyTitle,
         topic: widget.topic,
@@ -838,16 +1051,28 @@ class _StoryPageState extends State<StoryPage> {
         calm: calm,
         anxiety: anxiety,
         currentChoicesMade: choicesMade,
+        resumeStoryId: sid,
       );
+      return;
     }
+
+    await _progressService.recordProgress(
+      storyTitle: widget.storyTitle,
+      topic: widget.topic,
+      currentScene: currentScene,
+      calm: calm,
+      anxiety: anxiety,
+      currentChoicesMade: choicesMade,
+      resumeStoryId: sid,
+    );
   }
 
   Future<void> _goToSummary() async {
     final total = calm + anxiety;
     final score = total == 0 ? 0 : ((calm / total) * 100).round();
-    final String mood = (calm == anxiety)
-        ? "Neutral"
-        : (calm > anxiety ? "Calm" : "Anxious");
+    final String mood = (calm >= anxiety)
+        ? (calm == anxiety ? "Balanced" : "Calm")
+        : "Anxious";
     final String emotion = "Calm $calm • Anxiety $anxiety";
 
     final newlyUnlocked = await _progressService.markStoryCompleted(
@@ -856,6 +1081,7 @@ class _StoryPageState extends State<StoryPage> {
       choicesMadeInStory: choicesMade,
       calm: calm,
       anxiety: anxiety,
+      resumeStoryId: widget.resumeStoryId,
     );
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -869,7 +1095,11 @@ class _StoryPageState extends State<StoryPage> {
             mood: mood,
             emotion: emotion,
             score: score,
+            anxietyCount: anxiety,
             newlyUnlockedAchievements: newlyUnlocked,
+            resumeStoryId: widget.resumeStoryId,
+            griefStayedEnding:
+                widget.topic == 'Grief' ? (calm >= anxiety) : null,
           ),
         ),
       );
@@ -878,9 +1108,13 @@ class _StoryPageState extends State<StoryPage> {
 
   void _chooseOption(String stat, int nextScene) {
     setState(() {
-      if (stat == 'calm') calm++;
-      if (stat == 'anxiety') anxiety++;
-      choicesMade++;
+      if (stat == 'calm') {
+        calm++;
+        choicesMade++;
+      } else if (stat == 'anxiety') {
+        anxiety++;
+        choicesMade++;
+      }
     });
 
     if (nextScene == -1) {
@@ -904,6 +1138,7 @@ class _StoryPageState extends State<StoryPage> {
       calm: calm,
       anxiety: anxiety,
       currentChoicesMade: choicesMade,
+      resumeStoryId: widget.resumeStoryId,
     );
 
     final next = storyScenes[nextScene];
@@ -1076,13 +1311,16 @@ class _StoryPageState extends State<StoryPage> {
                     const SizedBox(height: 18),
 
                     ...(scene['choices'] as List).map<Widget>((choice) {
+                      final rawStat = choice['stat'];
+                      final statStr =
+                          rawStat is String ? rawStat : 'none';
                       return Padding(
                         padding: const EdgeInsets.symmetric(vertical: 7),
                         child: _glassChoiceButton(
-                          label: choice['text'],
+                          label: choice['text'] as String,
                           onTap: () => _chooseOption(
-                            choice['stat'],
-                            choice['nextScene'],
+                            statStr,
+                            choice['nextScene'] as int,
                           ),
                         ),
                       );

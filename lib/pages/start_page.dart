@@ -1,7 +1,9 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import '../models/in_progress_story.dart';
 import '../services/story_progress_service.dart';
+import '../utils/story_resume_catalog.dart';
 import '../effects/theme_effect_manager.dart';
 import '../localization/app_strings.dart';
 import '../providers/settings_manager.dart';
@@ -90,7 +92,7 @@ class _StartPageState extends State<StartPage> {
                         const SizedBox(height: 15),
                         _glassButton(
                           label: t(context, 'continue'),
-                          onTap: _continueStory,
+                          onTap: () => showContinueList(context),
                         ),
                         const SizedBox(height: 15),
                         _glassButton(
@@ -321,26 +323,284 @@ class _StartPageState extends State<StartPage> {
     );
   }
 
-  Future<void> _continueStory() async {
-    final progress = await _progressService.load();
-    if (!mounted) return;
+  Future<List<InProgressStory>> getInProgressStories() {
+    return _progressService.loadContinuableStories();
+  }
 
-    if (progress.currentTopic == null || progress.currentStoryTitle == null) {
+  Future<void> showContinueList(BuildContext context) async {
+    final stories = await getInProgressStories();
+    if (!context.mounted) return;
+
+    await showDialog<void>(
+      context: context,
+      barrierDismissible: true,
+      barrierColor: Colors.black.withOpacity(0.48),
+      builder: (dialogContext) {
+        final size = MediaQuery.sizeOf(dialogContext);
+        final maxH = size.height * 0.62;
+        final w = (size.width - 40).clamp(280.0, 420.0);
+        return Theme(
+          data: Theme.of(context),
+          child: Material(
+            type: MaterialType.transparency,
+            color: Colors.transparent,
+            child: Center(
+              child: SizedBox(
+                width: w,
+                height: maxH,
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(26),
+                  child: BackdropFilter(
+                    filter: ImageFilter.blur(sigmaX: 14, sigmaY: 14),
+                    child: Container(
+                      decoration: BoxDecoration(
+                        color: Colors.white.withOpacity(0.14),
+                        borderRadius: BorderRadius.circular(26),
+                        border: Border.all(
+                          color: Colors.white.withOpacity(0.28),
+                        ),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withOpacity(0.15),
+                            blurRadius: 16,
+                            offset: const Offset(0, 6),
+                          ),
+                        ],
+                      ),
+                      child: Padding(
+                        padding: const EdgeInsets.fromLTRB(16, 14, 16, 16),
+                        child: stories.isEmpty
+                            ? _buildEmptyContinueState(dialogContext)
+                            : _buildContinueListContent(
+                                dialogContext,
+                                stories,
+                              ),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildContinueListContent(
+    BuildContext context,
+    List<InProgressStory> stories,
+  ) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'Continue where you left off',
+          style: TextStyle(
+            fontFamily: 'Cinzel',
+            fontSize: 21,
+            color: Colors.white.withOpacity(0.95),
+            decoration: TextDecoration.none,
+            decorationColor: Colors.transparent,
+          ),
+        ),
+        const SizedBox(height: 10),
+        Expanded(
+          child: ListView.separated(
+            physics: const BouncingScrollPhysics(),
+            itemCount: stories.length,
+            separatorBuilder: (_, __) => const SizedBox(height: 10),
+            itemBuilder: (context, index) {
+              final item = stories[index];
+              return _continueItem(
+                context: context,
+                item: item,
+                onTap: () {
+                  Navigator.of(context).pop();
+                  _openStoryFromInProgress(item);
+                },
+              );
+            },
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildEmptyContinueState(BuildContext context) {
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'Continue where you left off',
+          style: TextStyle(
+            fontFamily: 'Cinzel',
+            fontSize: 21,
+            color: Colors.white.withOpacity(0.95),
+            decoration: TextDecoration.none,
+            decorationColor: Colors.transparent,
+          ),
+        ),
+        const SizedBox(height: 14),
+        Text(
+          'Nothing to continue yet.',
+          style: TextStyle(
+            fontFamily: 'Poppins',
+            fontSize: 14.5,
+            color: Colors.white.withOpacity(0.84),
+            decoration: TextDecoration.none,
+            decorationColor: Colors.transparent,
+          ),
+        ),
+        const SizedBox(height: 14),
+        TextButton(
+          style: TextButton.styleFrom(
+            foregroundColor: Colors.white,
+            backgroundColor: Colors.white.withOpacity(0.14),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(14),
+              side: BorderSide(color: Colors.white.withOpacity(0.24)),
+            ),
+          ),
+          onPressed: () {
+            Navigator.of(context).pop();
+            Navigator.push(
+              this.context,
+              MaterialPageRoute(builder: (_) => const StorySelectionPage()),
+            );
+          },
+          child: const Padding(
+            padding: EdgeInsets.symmetric(horizontal: 6, vertical: 6),
+            child: Text(
+              'Start a new story',
+              style: TextStyle(fontFamily: 'Poppins', fontWeight: FontWeight.w600),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _continueItem({
+    required BuildContext context,
+    required InProgressStory item,
+    required VoidCallback onTap,
+  }) {
+    final emoji = StoryResumeCatalog.emojis[item.storyId] ?? '📖';
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        borderRadius: BorderRadius.circular(16),
+        splashColor: Colors.white.withOpacity(0.08),
+        highlightColor: Colors.white.withOpacity(0.04),
+        onTap: onTap,
+        child: Ink(
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+          decoration: BoxDecoration(
+            color: Colors.white.withOpacity(0.12),
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: Colors.white.withOpacity(0.22)),
+          ),
+          child: Row(
+            children: [
+              Text(emoji, style: const TextStyle(fontSize: 20)),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      StoryResumeCatalog.displayTitleForId(item.storyId),
+                      style: const TextStyle(
+                        fontFamily: 'Poppins',
+                        fontSize: 15.5,
+                        fontWeight: FontWeight.w600,
+                        color: Colors.white,
+                        decoration: TextDecoration.none,
+                        decorationColor: Colors.transparent,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      'Scene ${item.sceneIndex}',
+                      style: TextStyle(
+                        fontFamily: 'Poppins',
+                        fontSize: 13,
+                        color: Colors.white.withOpacity(0.8),
+                        decoration: TextDecoration.none,
+                        decorationColor: Colors.transparent,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              Icon(
+                Icons.chevron_right_rounded,
+                size: 24,
+                color: Colors.white.withOpacity(0.7),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  void _openStoryFromInProgress(InProgressStory selected) {
+    if (!mounted) return;
+    final routeConfig = _routeConfigForStoryId(selected.storyId);
+    if (routeConfig == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('No saved story progress yet.')),
+        const SnackBar(content: Text('This story is not available yet.')),
       );
       return;
     }
-
+    final clampedScene = selected.sceneIndex < 1 ? 1 : selected.sceneIndex;
     Navigator.push(
       context,
       MaterialPageRoute(
         builder: (_) => StoryPage(
-          storyTitle: progress.currentStoryTitle!,
-          topic: progress.currentTopic!,
+          storyTitle: routeConfig.storyTitle,
+          topic: routeConfig.topic,
+          initialSceneIndex: clampedScene,
+          resumeStoryId: selected.storyId,
         ),
       ),
     );
+  }
+
+  _StoryRouteConfig? _routeConfigForStoryId(String storyId) {
+    switch (storyId) {
+      case 'too_loud_inside':
+        return const _StoryRouteConfig(
+          storyTitle: 'Too Loud Inside',
+          topic: 'Anxiety',
+        );
+      case 'alone_again':
+        return const _StoryRouteConfig(
+          storyTitle: 'Alone, Again',
+          topic: 'Loneliness',
+        );
+      case 'what_still_remains':
+        return const _StoryRouteConfig(
+          storyTitle: 'What Still Remains',
+          topic: 'Depression',
+        );
+      case 'the_day_after':
+        return const _StoryRouteConfig(
+          storyTitle: 'The Space You Left',
+          topic: 'Grief',
+        );
+      case 'almost_there':
+        return const _StoryRouteConfig(
+          storyTitle: 'Almost There',
+          topic: 'Failure',
+        );
+      default:
+        return null;
+    }
   }
 
   Widget _glassButton({required String label, required VoidCallback onTap}) {
@@ -349,4 +609,14 @@ class _StartPageState extends State<StartPage> {
       child: AppButton(label: label, onTap: onTap),
     );
   }
+}
+
+class _StoryRouteConfig {
+  final String storyTitle;
+  final String topic;
+
+  const _StoryRouteConfig({
+    required this.storyTitle,
+    required this.topic,
+  });
 }

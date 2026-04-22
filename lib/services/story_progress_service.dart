@@ -3,11 +3,14 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../models/in_progress_story.dart';
 import '../models/story_progress.dart';
 import '../models/user_session.dart';
 import '../models/achievement_model.dart';
+import '../utils/story_resume_catalog.dart';
 import 'achievement_service.dart';
 import 'firebase_project_config.dart';
+import 'firestore_user_document_repository.dart';
 
 class StoryProgressService {
   final AchievementService _achievementService = AchievementService();
@@ -19,20 +22,160 @@ class StoryProgressService {
       '${FirebaseProjectConfig.firestoreDocumentsBase}/users';
 
   Future<StoryProgressData> load() async {
+    await _migrateGuestProgressIfNeeded();
     final local = await _loadLocal();
     final user = UserSession.currentUser;
 
     if (user == null || user.uid.isEmpty || user.idToken.isEmpty) {
-      return local;
+      return _hydrateInProgressIfNeeded(local);
     }
 
     final remote = await _fetchFromFirebase();
     if (remote != null) {
-      await _saveLocal(remote);
-      return remote;
+      var merged = _mergeLocalAndRemoteStoryProgress(local, remote);
+      merged = _hydrateInProgressIfNeeded(merged);
+      merged = _stripInProgressForFinishedStories(merged);
+      await _saveLocal(merged);
+      await _syncToFirebase(merged);
+      return merged;
     }
 
-    return local;
+    return _hydrateInProgressIfNeeded(_stripInProgressForFinishedStories(local));
+  }
+
+  /// Stories with scene &gt; 0 that are not marked finished (for Continue UI).
+  Future<List<InProgressStory>> loadContinuableStories() async {
+    final progress = await load();
+    final merged = Map<String, int>.from(progress.inProgressStories);
+    _foldCurrentSessionIntoMap(progress, merged);
+    merged.removeWhere((_, scene) => scene < 1);
+
+    final finished =
+        StoryResumeCatalog.storyIdsForFinishedTopics(progress.finishedStories);
+    merged.removeWhere((storyId, _) => finished.contains(storyId));
+
+    final list = merged.entries
+        .where((e) => e.value >= 1)
+        .map(
+          (e) => InProgressStory(storyId: e.key, sceneIndex: e.value),
+        )
+        .toList()
+      ..sort(
+        (a, b) => StoryResumeCatalog.displayTitleForId(a.storyId).compareTo(
+          StoryResumeCatalog.displayTitleForId(b.storyId),
+        ),
+      );
+    return list;
+  }
+
+  /// If the user signs in, copy `guest` prefs into `uid` when uid has no file yet.
+  Future<void> _migrateGuestProgressIfNeeded() async {
+    final user = UserSession.currentUser;
+    if (user == null || user.uid.isEmpty) return;
+    final prefs = await SharedPreferences.getInstance();
+    final userKey = '$_prefsKeyPrefix${user.uid}';
+    final guestKey = '${_prefsKeyPrefix}guest';
+    final existing = prefs.getString(userKey);
+    if (existing != null && existing.isNotEmpty) return;
+    final guestRaw = prefs.getString(guestKey);
+    if (guestRaw == null || guestRaw.isEmpty) return;
+    await prefs.setString(userKey, guestRaw);
+  }
+
+  StoryProgressData _mergeLocalAndRemoteStoryProgress(
+    StoryProgressData local,
+    StoryProgressData remote,
+  ) {
+    final mergedMap = _mergeInProgressSceneMaps(
+      local.inProgressStories,
+      remote.inProgressStories,
+    );
+    final mergedFinished = {
+      ...local.finishedStories,
+      ...remote.finishedStories,
+    }.toList();
+
+    final useLocalSession = _isLocalSessionNewer(local, remote);
+    if (useLocalSession) {
+      return remote.copyWith(
+        inProgressStories: mergedMap,
+        finishedStories: mergedFinished,
+        currentStoryTitle: local.currentStoryTitle ?? remote.currentStoryTitle,
+        currentTopic: local.currentTopic ?? remote.currentTopic,
+        currentScene: local.currentScene ?? remote.currentScene,
+        currentCalm: local.currentCalm,
+        currentAnxiety: local.currentAnxiety,
+        currentChoicesMade: local.currentChoicesMade,
+        lastPlayedAt: local.lastPlayedAt ?? remote.lastPlayedAt,
+        lastStoryPlayed: local.lastStoryPlayed ?? remote.lastStoryPlayed,
+        lastStoryCalm: local.lastStoryCalm,
+        lastStoryAnxiety: local.lastStoryAnxiety,
+        totalChoicesMade: local.totalChoicesMade > remote.totalChoicesMade
+            ? local.totalChoicesMade
+            : remote.totalChoicesMade,
+      );
+    }
+
+    return remote.copyWith(
+      inProgressStories: mergedMap,
+      finishedStories: mergedFinished,
+    );
+  }
+
+  bool _isLocalSessionNewer(StoryProgressData local, StoryProgressData remote) {
+    final lt = local.lastPlayedAt;
+    final rt = remote.lastPlayedAt;
+    if (lt == null) return false;
+    if (rt == null) return true;
+    return !lt.isBefore(rt);
+  }
+
+  Map<String, int> _mergeInProgressSceneMaps(
+    Map<String, int> a,
+    Map<String, int> b,
+  ) {
+    final out = Map<String, int>.from(b);
+    a.forEach((k, v) {
+      final existing = out[k] ?? 0;
+      out[k] = v > existing ? v : existing;
+    });
+    return out;
+  }
+
+  StoryProgressData _hydrateInProgressIfNeeded(StoryProgressData data) {
+    final map = Map<String, int>.from(data.inProgressStories);
+    _foldCurrentSessionIntoMap(data, map);
+    return data.copyWith(inProgressStories: map);
+  }
+
+  /// Ensures the active session ([currentScene] / [currentTopic]) is reflected in
+  /// [merged], so Continue and disk state stay aligned (avoids "resume works but
+  /// Continue list is empty" when the map was non-empty or missing this story).
+  void _foldCurrentSessionIntoMap(
+    StoryProgressData data,
+    Map<String, int> merged,
+  ) {
+    final scene = data.currentScene;
+    final topic = data.currentTopic;
+    if (scene == null || scene < 1 || topic == null || topic.isEmpty) {
+      return;
+    }
+    final sid = StoryResumeCatalog.storyIdFromStoryTitleAndTopic(
+          storyTitle: data.currentStoryTitle ?? '',
+          topic: topic,
+        ) ??
+        StoryResumeCatalog.storyIdFromNormalizedTopic(topic);
+    if (sid == null) return;
+    final prev = merged[sid] ?? 0;
+    merged[sid] = scene > prev ? scene : prev;
+  }
+
+  StoryProgressData _stripInProgressForFinishedStories(StoryProgressData data) {
+    final done = StoryResumeCatalog.storyIdsForFinishedTopics(data.finishedStories);
+    if (done.isEmpty) return data;
+    final map = Map<String, int>.from(data.inProgressStories);
+    map.removeWhere((id, _) => done.contains(id));
+    return data.copyWith(inProgressStories: map);
   }
 
   Future<void> save(StoryProgressData data) async {
@@ -47,9 +190,20 @@ class StoryProgressService {
     required int calm,
     required int anxiety,
     required int currentChoicesMade,
+    String? resumeStoryId,
   }) async {
     final current = await load();
     final normalizedTopic = _normalizeTopic(topic, storyTitle);
+    final storyId = _resolveResumeStoryId(
+      resumeStoryId: resumeStoryId,
+      storyTitle: storyTitle,
+      normalizedTopic: normalizedTopic,
+      rawTopic: topic,
+    );
+    final inProgress = Map<String, int>.from(current.inProgressStories);
+    if (storyId != null && currentScene > 0) {
+      inProgress[storyId] = currentScene;
+    }
 
     final next = current.copyWith(
       currentStoryTitle: storyTitle,
@@ -60,6 +214,7 @@ class StoryProgressService {
       currentChoicesMade: currentChoicesMade,
       lastPlayedAt: DateTime.now(),
       lastStoryPlayed: normalizedTopic,
+      inProgressStories: inProgress,
     );
 
     await save(next);
@@ -71,6 +226,7 @@ class StoryProgressService {
     required int choicesMadeInStory,
     required int calm,
     required int anxiety,
+    String? resumeStoryId,
   }) async {
     final current = await load();
     final normalizedTopic = _normalizeTopic(topic, storyTitle);
@@ -80,6 +236,16 @@ class StoryProgressService {
       finished.add(normalizedTopic);
     }
 
+    final storyId = _resolveResumeStoryId(
+          resumeStoryId: resumeStoryId,
+          storyTitle: storyTitle,
+          normalizedTopic: normalizedTopic,
+          rawTopic: topic,
+        ) ??
+        StoryResumeCatalog.storyIdFromNormalizedTopic(normalizedTopic);
+    final inProgress = Map<String, int>.from(current.inProgressStories);
+    if (storyId != null) inProgress.remove(storyId);
+
     final next = current.copyWith(
       clearCurrent: true,
       finishedStories: finished,
@@ -88,6 +254,7 @@ class StoryProgressService {
       lastStoryPlayed: normalizedTopic,
       lastStoryCalm: calm,
       lastStoryAnxiety: anxiety,
+      inProgressStories: inProgress,
     );
 
     await save(next);
@@ -96,6 +263,34 @@ class StoryProgressService {
     final afterState = await _achievementService.syncWithStoryProgress(next);
     final rawUnlocked = _getNewlyUnlockedAchievements(beforeState, afterState);
     return _filterAndRememberAnnounced(rawUnlocked);
+  }
+
+  /// Clears saved mid-story progress so the next open starts at scene 1 (e.g. Summary "Replay").
+  Future<void> discardStoryProgress({
+    required String resumeStoryId,
+    required String storyTitle,
+    required String topic,
+  }) async {
+    final current = await load();
+    final normalizedTopic = _normalizeTopic(topic, storyTitle);
+    final storyId = _resolveResumeStoryId(
+          resumeStoryId: resumeStoryId,
+          storyTitle: storyTitle,
+          normalizedTopic: normalizedTopic,
+          rawTopic: topic,
+        ) ??
+        StoryResumeCatalog.storyIdFromNormalizedTopic(normalizedTopic);
+    if (storyId == null) return;
+
+    final map = Map<String, int>.from(current.inProgressStories);
+    map.remove(storyId);
+
+    final clearCurrent = current.currentTopic == normalizedTopic;
+    final next = current.copyWith(
+      inProgressStories: map,
+      clearCurrent: clearCurrent,
+    );
+    await save(next);
   }
 
   /// Prevents replaying all historical achievement popups after sign-in
@@ -139,18 +334,43 @@ class StoryProgressService {
     }).toList();
   }
 
+  String? _resolveResumeStoryId({
+    String? resumeStoryId,
+    required String storyTitle,
+    required String normalizedTopic,
+    required String rawTopic,
+  }) {
+    final trimmed = resumeStoryId?.trim();
+    if (trimmed != null && trimmed.isNotEmpty) return trimmed;
+    return StoryResumeCatalog.storyIdFromStoryTitleAndTopic(
+          storyTitle: storyTitle,
+          topic: normalizedTopic,
+        ) ??
+        StoryResumeCatalog.storyIdFromStoryTitleAndTopic(
+          storyTitle: storyTitle,
+          topic: rawTopic,
+        ) ??
+        StoryResumeCatalog.storyIdFromNormalizedTopic(normalizedTopic) ??
+        StoryResumeCatalog.storyIdFromNormalizedTopic(rawTopic);
+  }
+
   String _normalizeTopic(String topic, String storyTitle) {
     final raw = topic.trim().toLowerCase();
 
     if (raw.contains('depression')) return 'depression';
     if (raw.contains('loneliness')) return 'loneliness';
     if (raw.contains('grief')) return 'grief';
+    if (raw.contains('anxiety')) return 'anxiety';
+    if (raw.contains('failure')) return 'failure';
 
     final title = storyTitle.trim().toLowerCase();
 
     if (title.contains('what still remains')) return 'depression';
     if (title.contains('alone, again')) return 'loneliness';
+    if (title.contains('the space you left')) return 'grief';
     if (title.contains('the day after')) return 'grief';
+    if (title.contains('too loud inside')) return 'anxiety';
+    if (title.contains('almost there')) return 'failure';
 
     return raw;
   }
@@ -193,30 +413,180 @@ class StoryProgressService {
     final user = UserSession.currentUser;
     if (user == null || user.uid.isEmpty || user.idToken.isEmpty) return null;
 
-    final uri =
-        Uri.parse('$_docBase/${user.uid}?key=${FirebaseProjectConfig.apiKey}');
-    final resp = await http.get(
-      uri,
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': 'Bearer ${user.idToken}',
-      },
+    final fields = await FirestoreUserDocumentRepository.fetchFields(
+      uid: user.uid,
+      idToken: user.idToken,
     );
-
-    if (resp.statusCode != 200) return null;
-
-    final decoded = jsonDecode(resp.body) as Map<String, dynamic>;
-    final fields = decoded['fields'] as Map<String, dynamic>?;
     if (fields == null) return null;
+
+    final extraInProgress = _inProgressFromFirestoreRawFields(fields);
 
     final rawProgress =
         (fields['storyProgressJson'] as Map<String, dynamic>?)?['stringValue']
             as String?;
 
-    if (rawProgress == null || rawProgress.isEmpty) return null;
+    if (rawProgress != null && rawProgress.isNotEmpty) {
+      try {
+        final progressJson = jsonDecode(rawProgress) as Map<String, dynamic>;
+        final base = StoryProgressData.fromJson(progressJson);
+        if (extraInProgress.isEmpty) return base;
+        return base.copyWith(
+          inProgressStories: _mergeInProgressSceneMaps(
+            base.inProgressStories,
+            extraInProgress,
+          ),
+        );
+      } catch (_) {
+        /* fall through: still return partial data from extra fields */
+      }
+    }
 
-    final progressJson = jsonDecode(rawProgress) as Map<String, dynamic>;
-    return StoryProgressData.fromJson(progressJson);
+    if (extraInProgress.isEmpty) return null;
+    return StoryProgressData(inProgressStories: extraInProgress);
+  }
+
+  /// Merges `inProgressStories` stored as separate Firestore fields (not only inside
+  /// [storyProgressJson]).
+  Map<String, int> _inProgressFromFirestoreRawFields(
+    Map<String, dynamic> fields,
+  ) {
+    final merged = <String, int>{};
+    void add(Map<String, int> m) {
+      m.forEach((k, v) {
+        final prev = merged[k] ?? 0;
+        merged[k] = v > prev ? v : prev;
+      });
+    }
+
+    add(_parseFirestoreDocumentMap(fields['inProgressStories']));
+    add(_parseFirestoreDocumentMap(fields['in_progress_stories']));
+    add(_parseInProgressFromJsonStringField(fields['inProgressStories']));
+    add(_parseInProgressFromJsonStringField(fields['inProgressStoriesJson']));
+
+    final blob = _decodeStoryProgressStringField(fields['storyProgressJson']);
+    if (blob != null) {
+      add(_inProgressEmbeddedInStoryJson(blob));
+    }
+    return merged;
+  }
+
+  Map<String, int> _parseFirestoreDocumentMap(Object? rawInProgress) {
+    if (rawInProgress is Map) {
+      final raw = Map<String, dynamic>.from(rawInProgress);
+      final mapValue = raw['mapValue'];
+      if (mapValue is Map) {
+        final inner = Map<String, dynamic>.from(mapValue);
+        final fieldEntries = inner['fields'];
+        if (fieldEntries is Map) {
+          final fieldsMap = Map<String, dynamic>.from(fieldEntries);
+          final out = <String, int>{};
+          fieldsMap.forEach((storyId, rawScene) {
+            final scene = _parseSceneValue(rawScene);
+            if (scene != null) out[storyId.toString()] = scene;
+          });
+          if (out.isNotEmpty) return out;
+        }
+      }
+
+      final direct = <String, int>{};
+      raw.forEach((storyId, rawScene) {
+        if (storyId == 'mapValue' || storyId == 'stringValue') return;
+        final scene = _parseSceneValue(rawScene);
+        if (scene != null) direct[storyId.toString()] = scene;
+      });
+      if (direct.isNotEmpty) return direct;
+    }
+    return const <String, int>{};
+  }
+
+  int? _parseSceneValue(Object? rawScene) {
+    return _parseFirestoreInt(rawScene) ?? _parseLooseInt(rawScene);
+  }
+
+  Map<String, int> _parseInProgressFromJsonStringField(Object? rawField) {
+    final jsonText = _parseFirestoreString(rawField);
+    if (jsonText == null || jsonText.isEmpty) return const <String, int>{};
+    try {
+      final decoded = jsonDecode(jsonText);
+      if (decoded is! Map) return const <String, int>{};
+      final map = Map<String, dynamic>.from(decoded);
+      final out = <String, int>{};
+      map.forEach((storyId, rawScene) {
+        final scene = _parseLooseInt(rawScene);
+        if (scene != null) out[storyId] = scene;
+      });
+      return out;
+    } catch (_) {
+      return const <String, int>{};
+    }
+  }
+
+  Map<String, dynamic>? _decodeStoryProgressStringField(Object? rawField) {
+    final jsonText = _parseFirestoreString(rawField);
+    if (jsonText == null || jsonText.isEmpty) return null;
+    try {
+      final decoded = jsonDecode(jsonText);
+      if (decoded is Map) return Map<String, dynamic>.from(decoded);
+    } catch (_) {}
+    return null;
+  }
+
+  Map<String, int> _inProgressEmbeddedInStoryJson(Map<String, dynamic> decoded) {
+    final fromMap = <String, int>{};
+    final rawMap = decoded['inProgressStories'];
+    if (rawMap is Map) {
+      rawMap.forEach((k, v) {
+        final scene = _parseLooseInt(v);
+        if (scene != null && scene > 0) fromMap[k.toString()] = scene;
+      });
+    }
+    final topic = decoded['currentTopic']?.toString();
+    final storyTitle = decoded['currentStoryTitle']?.toString();
+    final currentScene = _parseLooseInt(decoded['currentScene']);
+    if (currentScene != null && currentScene > 0) {
+      final storyId = StoryResumeCatalog.storyIdFromStoryTitleAndTopic(
+            storyTitle: storyTitle ?? '',
+            topic: topic ?? '',
+          ) ??
+          StoryResumeCatalog.storyIdFromNormalizedTopic(topic ?? '');
+      if (storyId != null) fromMap.putIfAbsent(storyId, () => currentScene);
+    }
+    return fromMap;
+  }
+
+  String? _parseFirestoreString(Object? rawField) {
+    if (rawField is Map) {
+      final m = Map<String, dynamic>.from(rawField);
+      final stringValue = m['stringValue'];
+      if (stringValue is String && stringValue.isNotEmpty) {
+        return stringValue;
+      }
+    }
+    if (rawField is String && rawField.isNotEmpty) return rawField;
+    return null;
+  }
+
+  int? _parseFirestoreInt(Object? raw) {
+    if (raw is Map) {
+      final m = Map<String, dynamic>.from(raw);
+      final integerValue = m['integerValue'];
+      if (integerValue is String) return int.tryParse(integerValue);
+      if (integerValue is num) return integerValue.toInt();
+
+      final stringValue = m['stringValue'];
+      if (stringValue is String) return int.tryParse(stringValue);
+
+      final doubleValue = m['doubleValue'];
+      if (doubleValue is num) return doubleValue.round();
+    }
+    return null;
+  }
+
+  int? _parseLooseInt(Object? raw) {
+    if (raw is int) return raw;
+    if (raw is double) return raw.round();
+    if (raw is String) return int.tryParse(raw);
+    return null;
   }
 
   String _prefsKeyForUser() {

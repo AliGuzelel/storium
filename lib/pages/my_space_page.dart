@@ -14,14 +14,6 @@ class MySpacePage extends StatelessWidget {
     final items = store.entries;
 
     return GradientScaffold(
-      appBar: AppBar(
-        title: const Text(
-          'My Space',
-          style: TextStyle(fontFamily: 'Cinzel', fontSize: 22),
-        ),
-        backgroundColor: Colors.white.withValues(alpha: 0.04),
-        elevation: 0,
-      ),
       body: items.isEmpty
           ? Center(
               child: Text(
@@ -52,8 +44,7 @@ class MySpacePage extends StatelessWidget {
                       Navigator.of(context).push(
                         MaterialPageRoute<void>(
                           builder: (_) => MySpaceImageViewerPage(
-                            imagePath: entry.path,
-                            caption: entry.caption,
+                            initialIndex: index,
                           ),
                         ),
                       );

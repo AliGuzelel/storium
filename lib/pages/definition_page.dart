@@ -56,14 +56,6 @@ class _DefinitionPageState extends State<DefinitionPage>
     final _Def def = _defs[widget.topic] ?? _defs.values.first;
 
     return GradientScaffold(
-      appBar: AppBar(
-        title: const Text(
-          'Definition',
-          style: TextStyle(fontFamily: 'Cinzel', fontSize: 24),
-        ),
-        backgroundColor: Colors.white.withOpacity(0.04),
-        elevation: 0,
-      ),
       body: FadeTransition(
         opacity: _fade,
         child: SlideTransition(

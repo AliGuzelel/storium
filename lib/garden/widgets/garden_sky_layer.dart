@@ -2,12 +2,11 @@ import 'package:flutter/material.dart';
 
 import 'garden_bird_widget.dart';
 import 'garden_cloud_widget.dart';
-import 'garden_sun_widget.dart';
 import 'garden_sky_theme.dart';
+import 'garden_sun_widget.dart';
+import 'garden_theme_particles.dart';
 
-/// Full-screen calm sky. Layer order (bottom → top): gradient → clouds → birds.
-/// [themeColor] `yellow` (Honey): gradient only — no motion layers.
-/// Clouds are clipped to the upper band only so they never sit over the plant strip.
+/// Base stack: gradient → drifting clouds (single paint pass) → particles → sun → birds.
 class GardenSkyLayer extends StatelessWidget {
   const GardenSkyLayer({
     super.key,
@@ -18,12 +17,12 @@ class GardenSkyLayer extends StatelessWidget {
   final String themeColor;
   final Brightness brightness;
 
-  /// Drifting clouds only in the top portion of the screen (above the plant strip).
-  static const double _cloudBandHeightFactor = 0.36;
+  static const double _cloudBandHeightFactor = 0.38;
 
   @override
   Widget build(BuildContext context) {
-    final colors = gardenSkyGradientColors(themeColor, brightness);
+    final gradient = gardenSkyGradient(themeColor, brightness);
+
     return KeyedSubtree(
       key: ValueKey<String>('garden_sky_$themeColor'),
       child: LayoutBuilder(
@@ -31,31 +30,11 @@ class GardenSkyLayer extends StatelessWidget {
           final h = constraints.maxHeight;
           final cloudBandH = h * _cloudBandHeightFactor;
 
-          if (themeColor == 'yellow') {
-            return DecoratedBox(
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topCenter,
-                  end: Alignment.bottomCenter,
-                  colors: colors,
-                  stops: const [0.0, 0.22, 0.4, 0.58, 0.78],
-                ),
-              ),
-            );
-          }
-
           return Stack(
             fit: StackFit.expand,
             children: [
               DecoratedBox(
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    begin: Alignment.topCenter,
-                    end: Alignment.bottomCenter,
-                    colors: colors,
-                    stops: const [0.0, 0.22, 0.4, 0.58, 0.78],
-                  ),
-                ),
+                decoration: BoxDecoration(gradient: gradient),
               ),
               Align(
                 alignment: Alignment.topCenter,
@@ -63,81 +42,22 @@ class GardenSkyLayer extends StatelessWidget {
                   child: SizedBox(
                     width: constraints.maxWidth,
                     height: cloudBandH,
-                    child: Stack(
-                      fit: StackFit.expand,
-                      children: [
-                        // Large / medium — slow drift
-                        CloudWidget(
-                          travelDuration: const Duration(seconds: 38),
-                          verticalFraction: 0.30,
-                          horizontalPhase: 0.05,
-                          opacity: 0.15,
-                          scale: 1.05,
-                          shape: 0,
-                        ),
-                        CloudWidget(
-                          travelDuration: const Duration(seconds: 34),
-                          verticalFraction: 0.52,
-                          horizontalPhase: 0.38,
-                          opacity: 0.13,
-                          scale: 0.92,
-                          shape: 1,
-                        ),
-                        CloudWidget(
-                          travelDuration: const Duration(seconds: 42),
-                          verticalFraction: 0.14,
-                          horizontalPhase: 0.72,
-                          opacity: 0.14,
-                          scale: 0.88,
-                          shape: 2,
-                        ),
-                        // Smaller wisps
-                        CloudWidget(
-                          travelDuration: const Duration(seconds: 36),
-                          verticalFraction: 0.68,
-                          horizontalPhase: 0.18,
-                          opacity: 0.12,
-                          scale: 0.62,
-                          shape: 1,
-                        ),
-                        CloudWidget(
-                          travelDuration: const Duration(seconds: 40),
-                          verticalFraction: 0.08,
-                          horizontalPhase: 0.55,
-                          opacity: 0.11,
-                          scale: 0.58,
-                          shape: 2,
-                        ),
-                        CloudWidget(
-                          travelDuration: const Duration(seconds: 44),
-                          verticalFraction: 0.42,
-                          horizontalPhase: 0.82,
-                          opacity: 0.12,
-                          scale: 0.72,
-                          shape: 0,
-                        ),
-                        CloudWidget(
-                          travelDuration: const Duration(seconds: 32),
-                          verticalFraction: 0.22,
-                          horizontalPhase: 0.30,
-                          opacity: 0.13,
-                          scale: 0.78,
-                          shape: 1,
-                        ),
-                    ],
+                    child: const GardenCloudsBand(),
                   ),
                 ),
               ),
-            ),
-            const GardenSunWidget(),
-            const Align(
-              alignment: Alignment.topCenter,
-              child: FractionallySizedBox(
-                heightFactor: 0.58,
-                widthFactor: 1,
-                child: BirdsWidget(),
+              Positioned.fill(
+                child: GardenThemeParticlesLayer(themeColor: themeColor),
               ),
-            ),
+              const GardenSunWidget(),
+              Align(
+                alignment: Alignment.topCenter,
+                child: FractionallySizedBox(
+                  heightFactor: 0.58,
+                  widthFactor: 1,
+                  child: BirdsWidget(),
+                ),
+              ),
             ],
           );
         },

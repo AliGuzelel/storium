@@ -175,14 +175,6 @@ class _ProfilePageState extends State<ProfilePage> {
   @override
   Widget build(BuildContext context) {
     return GradientScaffold(
-      appBar: AppBar(
-        title: Text(
-          t(context, 'profile'),
-          style: const TextStyle(fontFamily: 'Cinzel', fontSize: 24),
-        ),
-        backgroundColor: Colors.white.withOpacity(0.04),
-        elevation: 0,
-      ),
       body: SafeArea(
         child: SingleChildScrollView(
           padding: const EdgeInsets.fromLTRB(18, 18, 18, 24),
@@ -451,32 +443,37 @@ class _ProfilePageState extends State<ProfilePage> {
     if (isEditing) {
       final existing = _user;
       if (existing != null) {
+        final updated = existing.copyWith(
+          name: _usernameController.text.trim().isEmpty
+              ? existing.name
+              : _usernameController.text.trim(),
+          gender: selectedGender ?? existing.gender,
+          dateOfBirth: dateOfBirth,
+        );
         try {
-          UserSession.currentUser = existing.copyWith(
-            name: _usernameController.text.trim().isEmpty
-                ? existing.name
-                : _usernameController.text.trim(),
-            gender: selectedGender ?? existing.gender,
-            dateOfBirth: dateOfBirth,
-          );
+          UserSession.currentUser = updated;
+          await UserSession.saveCurrentUser();
 
           await _authService.saveProfile(
             UserSession.currentUser!,
             idToken: UserSession.currentUser!.idToken,
           );
-          await UserSession.saveCurrentUser();
         } on AuthServiceException catch (e) {
           if (!mounted) return;
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(e.message)),
+            SnackBar(
+              content: Text('Saved on this device only. ${e.message}'),
+            ),
           );
-          return;
         } catch (_) {
           if (!mounted) return;
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Could not save profile right now.')),
+            const SnackBar(
+              content: Text(
+                'Saved on this device only. Could not sync profile right now.',
+              ),
+            ),
           );
-          return;
         }
       }
     }
@@ -634,8 +631,26 @@ class _ProfilePageState extends State<ProfilePage> {
         : existing.copyWith(avatarUrl: avatarUrl);
 
     UserSession.currentUser = updated;
-    await _authService.saveProfile(updated, idToken: updated.idToken);
     await UserSession.saveCurrentUser();
+    try {
+      await _authService.saveProfile(updated, idToken: updated.idToken);
+    } on AuthServiceException catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Avatar saved on this device only. ${e.message}'),
+        ),
+      );
+    } catch (_) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text(
+            'Avatar saved on this device only. Could not sync right now.',
+          ),
+        ),
+      );
+    }
 
     if (!mounted) return;
     setState(() {

@@ -235,12 +235,6 @@ class _StorySelectionPageState extends State<StorySelectionPage>
   @override
   Widget build(BuildContext context) {
     return GradientScaffold(
-      appBar: AppBar(
-        title: Text(t(context, 'choose_story'),
-            style: const TextStyle(fontFamily: 'Cinzel')),
-        backgroundColor: Colors.white.withOpacity(0.04),
-        elevation: 0,
-      ),
       body: FadeTransition(
         opacity: _fade,
         child: SlideTransition(

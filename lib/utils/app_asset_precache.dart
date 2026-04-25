@@ -19,7 +19,10 @@ Future<void> _precacheStoriumRasterAssetsImpl(BuildContext context) async {
   final paths = <String>[
     CherryBlossomEffect.assetPath,
     'assets/images/wateringcan.png',
-    for (final o in GardenPlantOption.choices) o.imagePath,
+    for (final o in GardenPlantOption.choices) ...[
+      o.imagePath,
+      ...o.images.values,
+    ],
     kSpaceCollectionGridPreviewAsset,
     kNatureCollectionGridPreviewAsset,
     kArtCollectionGridPreviewAsset,

@@ -57,18 +57,33 @@ class _AppGradientBackgroundState extends State<AppGradientBackground>
   void _ensureTickerRunning() {
     if (!mounted) return;
     if (TickerMode.of(context) && !_ticker.isActive) {
-      final honey = _settings?.themeColor == 'yellow';
-      final run = widget.breathe && !honey;
+      final run = _gradientBreatheActive;
       if (run) {
         _ticker.start();
       }
     }
   }
 
+  /// Breathe drives a full [setState] every frame; skip for themes that stack
+  /// heavy effects (blue clouds) so we do not rebuild the whole subtree at 60fps.
+  bool get _gradientBreatheActive {
+    if (!widget.breathe) return false;
+    final c = _settings?.themeColor;
+    if (c == null) return true;
+    if (c == 'yellow' || c == 'blue') return false;
+    return true;
+  }
+
+  bool _breatheForTheme(String themeColor) {
+    if (!widget.breathe) return false;
+    final key = AppThemes.normalizeThemeColor(themeColor);
+    if (key == 'yellow' || key == 'blue') return false;
+    return true;
+  }
+
   void _syncTickerToTheme() {
     if (!mounted) return;
-    final honey = _settings?.themeColor == 'yellow';
-    final run = widget.breathe && !honey;
+    final run = _gradientBreatheActive;
     if (run) {
       if (!_ticker.isActive) _ticker.start();
     } else {
@@ -115,7 +130,7 @@ class _AppGradientBackgroundState extends State<AppGradientBackground>
       );
     }
 
-    if (!widget.breathe || settings.themeColor == 'yellow') {
+    if (!_breatheForTheme(settings.themeColor)) {
       return RepaintBoundary(
         child: paint(const Alignment(0, -1), const Alignment(1, 1)),
       );

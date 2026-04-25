@@ -83,15 +83,6 @@ class AboutMentalHealthPage extends StatelessWidget {
     );
 
     return GradientScaffold(
-      appBar: AppBar(
-        title: const Text(
-          'About Mental Health',
-          style: TextStyle(fontFamily: 'Cinzel'),
-        ),
-        centerTitle: true,
-        backgroundColor: Colors.white.withOpacity(0.04),
-        elevation: 0,
-      ),
       body: SafeArea(
         child: SingleChildScrollView(
           padding: const EdgeInsets.fromLTRB(20, 12, 20, 28),
@@ -233,8 +224,8 @@ class AboutMentalHealthPage extends StatelessWidget {
                     Text('Gentle Skills You Can Try 🌿', style: h1),
                     const SizedBox(height: 8),
                     _bullets(body, [
-                      "🫁 4-7-8 Breathing: inhale 4, hold 7, exhale 8 — repeat x4",
-                      "📝 Label It: “I’m feeling a lot right now.” Naming helps",
+                      "🫁 4-7-8 Breathing: inhale 4, hold 7, exhale 8 — repeat x4 slow it down, don’t rush it”",
+                      "📝 Label It: “I’m feeling a lot right now.” even saying it quietly can help",
                       "🔁 Reframe: “I failed” → “I learned something I can use”",
                       "📅 Micro-steps: 10-minute walk, 1 page read, 1 message to a friend",
                       "🤗 Reach Out: share with someone you trust",

@@ -14,14 +14,6 @@ class CollectionsPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return GradientScaffold(
-      appBar: AppBar(
-        title: const Text(
-          'Collections',
-          style: TextStyle(fontFamily: 'Cinzel', fontSize: 22),
-        ),
-        backgroundColor: Colors.white.withValues(alpha: 0.04),
-        elevation: 0,
-      ),
       body: CustomScrollView(
         physics: const BouncingScrollPhysics(),
         slivers: [

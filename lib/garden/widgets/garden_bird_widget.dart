@@ -3,7 +3,7 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
 
-/// Minimal bird silhouettes: a small flock every ~12s, smooth horizontal pass.
+/// Bird silhouettes: variable gaps, flock size, speed, and vertical band.
 class BirdsWidget extends StatefulWidget {
   const BirdsWidget({super.key});
 
@@ -16,10 +16,21 @@ class _BirdsWidgetState extends State<BirdsWidget>
   late Ticker _ticker;
   Duration _elapsed = Duration.zero;
 
+  final math.Random _rng = math.Random();
+  double? _flightStartSec;
+  double _idleUntilSec = 0;
+  double _flightDurationSec = 5.5;
+  double _speedMul = 1.0;
+  int _birdCount = 2;
+  double _baseYFraction = 0.28;
+  double _spacingW = 0.055;
+
   @override
   void initState() {
     super.initState();
+    _idleUntilSec = 1.5 + _rng.nextDouble() * 4;
     _ticker = createTicker((elapsed) {
+      _advance(elapsed);
       setState(() => _elapsed = elapsed);
     });
     _ticker.start();
@@ -39,6 +50,32 @@ class _BirdsWidgetState extends State<BirdsWidget>
     }
   }
 
+  void _advance(Duration elapsed) {
+    final sec = elapsed.inMicroseconds / 1e6;
+
+    if (_flightStartSec != null) {
+      final effectiveDur = _flightDurationSec / _speedMul;
+      if (sec >= _flightStartSec! + effectiveDur) {
+        _flightStartSec = null;
+        _idleUntilSec = sec + 4 + _rng.nextDouble() * 18;
+      }
+      return;
+    }
+
+    if (sec >= _idleUntilSec) {
+      if (_rng.nextDouble() < 0.2) {
+        _idleUntilSec = sec + 6 + _rng.nextDouble() * 14;
+        return;
+      }
+      _flightStartSec = sec;
+      _flightDurationSec = 4.2 + _rng.nextDouble() * 4.8;
+      _speedMul = 0.78 + _rng.nextDouble() * 0.42;
+      _birdCount = 2 + _rng.nextInt(2);
+      _baseYFraction = 0.18 + _rng.nextDouble() * 0.22;
+      _spacingW = 0.042 + _rng.nextDouble() * 0.035;
+    }
+  }
+
   @override
   void dispose() {
     _ticker.dispose();
@@ -49,12 +86,25 @@ class _BirdsWidgetState extends State<BirdsWidget>
   Widget build(BuildContext context) {
     return LayoutBuilder(
       builder: (context, c) {
+        final sec = _elapsed.inMicroseconds / 1e6;
+        double? u;
+        if (_flightStartSec != null) {
+          final effectiveDur = _flightDurationSec / _speedMul;
+          final t = sec - _flightStartSec!;
+          if (t >= 0 && t <= effectiveDur) {
+            u = (t / effectiveDur).clamp(0.0, 1.0);
+          }
+        }
+
         return RepaintBoundary(
           child: CustomPaint(
             painter: _BirdFlockPainter(
-              elapsed: _elapsed,
+              progress: u,
               width: c.maxWidth,
               height: c.maxHeight,
+              birdCount: _birdCount,
+              baseYFraction: _baseYFraction,
+              spacingW: _spacingW,
             ),
             size: Size(c.maxWidth, c.maxHeight),
           ),
@@ -66,17 +116,20 @@ class _BirdsWidgetState extends State<BirdsWidget>
 
 class _BirdFlockPainter extends CustomPainter {
   _BirdFlockPainter({
-    required this.elapsed,
+    required this.progress,
     required this.width,
     required this.height,
+    required this.birdCount,
+    required this.baseYFraction,
+    required this.spacingW,
   });
 
-  final Duration elapsed;
+  final double? progress;
   final double width;
   final double height;
-
-  static const double _intervalSec = 12;
-  static const double _flightSec = 5.5;
+  final int birdCount;
+  final double baseYFraction;
+  final double spacingW;
 
   void _bird(Canvas canvas, Offset center, double wing, Paint paint) {
     final path = Path()
@@ -98,39 +151,54 @@ class _BirdFlockPainter extends CustomPainter {
 
   @override
   void paint(Canvas canvas, Size size) {
-    final sec = elapsed.inMicroseconds / 1e6;
-    final cycleT = sec % _intervalSec;
-    if (cycleT >= _flightSec) return;
+    final u = progress;
+    if (u == null) return;
 
-    final u = cycleT / _flightSec;
     final ease = u * u * (3 - 2 * u);
     final startX = -width * 0.06;
     final endX = width * 1.06;
     final x = startX + (endX - startX) * ease;
 
-    final baseY = height * 0.28;
+    final baseY = height * baseYFraction;
     final wing = width * 0.028;
 
     final paint = Paint()
-      ..color = const Color(0xFF2C3A4A).withValues(alpha: 0.82)
+      ..color = const Color(0xFF2C3A4A).withValues(alpha: 0.68)
       ..style = PaintingStyle.stroke
-      ..strokeWidth = math.max(1.0, wing * 0.22)
+      ..strokeWidth = math.max(1.0, wing * 0.2)
       ..strokeCap = StrokeCap.round;
 
-    final n = 2 + ((sec ~/ _intervalSec) % 2);
-    if (n >= 3) {
+    if (birdCount >= 3) {
       _bird(canvas, Offset(x, baseY), wing * 1.05, paint);
-      _bird(canvas, Offset(x - width * 0.05, baseY + height * 0.04), wing * 0.9, paint);
-      _bird(canvas, Offset(x - width * 0.095, baseY + height * 0.015), wing * 0.85, paint);
+      _bird(
+        canvas,
+        Offset(x - width * spacingW, baseY + height * 0.04),
+        wing * 0.9,
+        paint,
+      );
+      _bird(
+        canvas,
+        Offset(x - width * (spacingW * 1.75), baseY + height * 0.016),
+        wing * 0.85,
+        paint,
+      );
     } else {
       _bird(canvas, Offset(x, baseY), wing * 1.05, paint);
-      _bird(canvas, Offset(x - width * 0.055, baseY + height * 0.038), wing * 0.88, paint);
+      _bird(
+        canvas,
+        Offset(x - width * (spacingW * 1.05), baseY + height * 0.038),
+        wing * 0.88,
+        paint,
+      );
     }
   }
 
   @override
   bool shouldRepaint(covariant _BirdFlockPainter oldDelegate) =>
-      oldDelegate.elapsed != elapsed ||
+      oldDelegate.progress != progress ||
       oldDelegate.width != width ||
-      oldDelegate.height != height;
+      oldDelegate.height != height ||
+      oldDelegate.birdCount != birdCount ||
+      oldDelegate.baseYFraction != baseYFraction ||
+      oldDelegate.spacingW != spacingW;
 }

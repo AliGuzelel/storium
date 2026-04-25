@@ -77,17 +77,36 @@ class AuthService {
       );
     }
 
-    final data = await _readProfile(uid: uid, idToken: idToken);
+    Map<String, dynamic>? data;
+    try {
+      data = await _readProfile(uid: uid, idToken: idToken);
+    } on AuthServiceException catch (e) {
+      // Do not block authentication when profile document is temporarily
+      // unavailable (e.g. Firestore permission/config hiccup). We'll recover
+      // with a local fallback profile and attempt to write it back.
+      if (e.code != 'profile-read-failed') rethrow;
+      data = null;
+    }
 
     if (data == null) {
+      final cached = UserSession.currentUser;
+      final hasCachedSameUser = cached != null && cached.uid == uid;
       final fallbackProfile = UserProfile(
         uid: uid,
         idToken: idToken,
-        name: _nameFromEmail(email),
-        gender: 'Not set',
-        email: email,
+        name: hasCachedSameUser ? cached.name : _nameFromEmail(email),
+        gender: hasCachedSameUser ? cached.gender : 'Not set',
+        email: hasCachedSameUser ? cached.email : email,
+        dateOfBirth: hasCachedSameUser ? cached.dateOfBirth : null,
+        avatarUrl: hasCachedSameUser ? cached.avatarUrl : null,
       );
-      await _saveProfile(fallbackProfile, idToken: idToken);
+      try {
+        await _saveProfile(fallbackProfile, idToken: idToken);
+      } on AuthServiceException catch (e) {
+        // Keep sign-in usable even when cloud profile writes fail.
+        // Other services can retry persistence later in the session.
+        if (e.code != 'profile-save-failed') rethrow;
+      }
       return fallbackProfile;
     }
 

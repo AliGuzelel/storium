@@ -116,6 +116,7 @@ class GardenPersistedState {
             'name': o.name,
             'description': o.description,
             'imagePath': o.imagePath,
+            'images': o.images,
           },
       ],
     };
@@ -157,16 +158,20 @@ class GardenPlantOption {
     required this.id,
     required this.name,
     required this.description,
-    required this.imagePath,
+    required this.images,
     this.plantImageHeight = 200,
     this.plantImageWidthFactor = 0.88,
     this.bottomOffset = 0,
+    this.plantPhaseScaleFactor = 1.0,
   });
 
   final String id;
   final String name;
   final String description;
-  final String imagePath;
+  /// Per-stage rasters: 0=seed, 1=grow, 2=full.
+  final Map<int, String> images;
+  /// Multiplies [getScale] in [PlantWidget] so this plant reads larger at every phase.
+  final double plantPhaseScaleFactor;
   /// Fixed layout height for the plant [Image] box ([BoxFit.contain] avoids stretch).
   final double plantImageHeight;
   /// Fraction of page width used as max width for the plant box.
@@ -174,19 +179,47 @@ class GardenPlantOption {
   /// Pushes the raster down (+Y) to cancel transparent padding under the stem in the PNG.
   final double bottomOffset;
 
+  /// Maps growth level to image stage: 0=seed, 1=grow, 2=full.
+  static int getStage(int level) {
+    if (level <= 0) return 0;
+    if (level == 1) return 1;
+    return 2;
+  }
+
+  String get imagePath => images[0] ?? '';
+
+  /// Resolved stage asset for [currentPhase].
+  String resolvedImagePath(int currentPhase) {
+    final stage = getStage(currentPhase);
+    return images[stage] ??
+        images[2] ??
+        images[1] ??
+        images[0] ??
+        images.values.first;
+  }
+
   static const List<GardenPlantOption> choices = [
     GardenPlantOption(
       id: 'forget_me_not',
       name: 'Forget Me Not',
       description: 'it lingers, though not as it once was',
-      imagePath: 'assets/images/plants/forget_me_not.png',
-      bottomOffset: 12,
+      images: {
+        0: 'assets/images/plants/forget_me_not/forget_me_not_seed.png',
+        1: 'assets/images/plants/forget_me_not/forget_me_not_grow.png',
+        2: 'assets/images/plants/forget_me_not/forget_me_not_full.png',
+      },
+      bottomOffset: 2,
+      plantPhaseScaleFactor: 1.45,
     ),
     GardenPlantOption(
       id: 'lavender',
       name: 'Lavender',
       description: 'peace that settles without asking',
-      imagePath: 'assets/images/plants/lavender.png',
+      images: {
+        0: 'assets/images/plants/lavender.png',
+        1: 'assets/images/plants/lavender.png',
+        2: 'assets/images/plants/lavender.png',
+      },
       plantImageHeight: 216,
       bottomOffset: 14,
     ),
@@ -194,31 +227,51 @@ class GardenPlantOption {
       id: 'rose',
       name: 'Rose',
       description: 'growth shaped by both light and weight',
-      imagePath: 'assets/images/plants/rose.png',
+      images: {
+        0: 'assets/images/plants/rose/rose_seed.png',
+        1: 'assets/images/plants/rose/rose_grow.png',
+        2: 'assets/images/plants/rose/rose_full.png',
+      },
       bottomOffset: 11,
+      plantPhaseScaleFactor: 1.45,
     ),
     GardenPlantOption(
       id: 'camellia',
       name: 'Camellia',
       description: 'beauty that exists without needing to be seen',
-      imagePath: 'assets/images/plants/camellia.png',
+      images: {
+        0: 'assets/images/plants/camellia/camellia_seed.png',
+        1: 'assets/images/plants/camellia/camellia_grown.png',
+        2: 'assets/images/plants/camellia/camellia_full.png',
+      },
       bottomOffset: 10,
+      plantPhaseScaleFactor: 1.45,
     ),
     GardenPlantOption(
       id: 'iris',
       name: 'Iris',
       description: 'strength that moves in silence',
-      imagePath: 'assets/images/plants/iris.png',
+      images: {
+        0: 'assets/images/plants/iris/iris_seed.png',
+        1: 'assets/images/plants/iris/iris_grow.png',
+        2: 'assets/images/plants/iris/iris_full.png',
+      },
       plantImageHeight: 208,
       bottomOffset: 16,
+      plantPhaseScaleFactor: 1.45,
     ),
     GardenPlantOption(
       id: 'ranunculus',
       name: 'Ranunculus',
       description: 'unfolding slowly, layer by layer',
-      imagePath: 'assets/images/plants/ranunculus.png',
+      images: {
+        0: 'assets/images/plants/ranunculus/ranunculus_seed.png',
+        1: 'assets/images/plants/ranunculus/ranunculus_grow.png',
+        2: 'assets/images/plants/ranunculus/ranunculus_full.png',
+      },
       plantImageHeight: 204,
       bottomOffset: 13,
+      plantPhaseScaleFactor: 1.45,
     ),
   ];
 }

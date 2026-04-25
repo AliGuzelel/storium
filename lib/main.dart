@@ -37,7 +37,7 @@ Future<void> main() async {
 
 void _configurePersistentImageCache() {
   const targetMaximumEntries = 2000;
-  const targetMaximumBytes = 512 * 1024 * 1024; // 512 MB
+  const targetMaximumBytes = 512 * 1024 * 1024;
   final cache = PaintingBinding.instance.imageCache;
   if (cache.maximumSize < targetMaximumEntries) {
     cache.maximumSize = targetMaximumEntries;

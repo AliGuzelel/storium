@@ -4,6 +4,7 @@ import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../models/saved_image_entry.dart';
+import '../services/cloud_blob_state_service.dart';
 
 /// Saved My Space items (local only).
 class SavedImagesStore extends ChangeNotifier {
@@ -11,6 +12,7 @@ class SavedImagesStore extends ChangeNotifier {
 
   static const String _prefsKeyV2 = 'my_space_saved_images_v2';
   static const String _prefsKeyLegacy = 'my_space_saved_images';
+  static const String _cloudField = 'mySpaceJson';
 
   final List<SavedImageEntry> _entries = <SavedImageEntry>[];
 
@@ -54,6 +56,8 @@ class SavedImagesStore extends ChangeNotifier {
       }
     }
 
+    await _mergeFromCloud();
+
     notifyListeners();
   }
 
@@ -87,5 +91,43 @@ class SavedImagesStore extends ChangeNotifier {
     final prefs = await SharedPreferences.getInstance();
     final raw = jsonEncode(_entries.map((e) => e.toJson()).toList());
     await prefs.setString(_prefsKeyV2, raw);
+    await CloudBlobStateService.push(_cloudField, raw);
+  }
+
+  Future<void> _mergeFromCloud() async {
+    final raw = await CloudBlobStateService.fetch(_cloudField);
+    if (raw == null || raw.isEmpty) return;
+    try {
+      final decoded = jsonDecode(raw);
+      if (decoded is! List) return;
+      final remote = decoded
+          .whereType<Map>()
+          .map((m) => SavedImageEntry.fromJson(Map<String, dynamic>.from(m)))
+          .toList();
+      if (remote.isEmpty) return;
+
+      final byPath = <String, SavedImageEntry>{
+        for (final entry in remote) entry.path: entry,
+      };
+      for (final local in _entries) {
+        final existing = byPath[local.path];
+        if (existing == null) {
+          byPath[local.path] = local;
+          continue;
+        }
+        byPath[local.path] = SavedImageEntry(
+          path: local.path,
+          caption: (local.caption != null && local.caption!.trim().isNotEmpty)
+              ? local.caption
+              : existing.caption,
+        );
+      }
+      _entries
+        ..clear()
+        ..addAll(byPath.values);
+      await _persist();
+    } catch (_) {
+      // Ignore malformed cloud payload and keep local entries.
+    }
   }
 }

@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 
 import '../theme/ui_tokens.dart';
 import '../widgets/gradient_scaffold.dart';
+import '../widgets/safe_asset_image.dart';
 import 'animal_gallery_viewer_page.dart';
 import 'collection_constants.dart';
 
@@ -21,14 +22,6 @@ class CollectionDetailPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return GradientScaffold(
-      appBar: AppBar(
-        title: Text(
-          title,
-          style: const TextStyle(fontFamily: 'Cinzel', fontSize: 20),
-        ),
-        backgroundColor: Colors.white.withValues(alpha: 0.04),
-        elevation: 0,
-      ),
       body: switch (title) {
         'Animals' => _buildAnimalsFullPageGrid(context),
         'Space' => _buildSpaceFullPageGrid(context),
@@ -153,27 +146,11 @@ class CollectionDetailPage extends StatelessWidget {
         final cellH = (innerH - (rc - 1) * ms) / rc;
         /// Same cell geometry as Space so scrollable collections (e.g. Nature) fill the width and row height.
         final childAspectRatio = (cellW / cellH).clamp(0.01, 100.0);
-        final dpr = MediaQuery.devicePixelRatioOf(context);
-        final safeCellW = cellW.isFinite && cellW > 0 ? cellW : innerW / cc;
-        final decodeCacheWidth = (safeCellW * dpr).round().clamp(64, 4096);
-
-        Widget cellImage(String path, int index) {
-          final err = ColoredBox(
-            color: placeholderColors[index % placeholderColors.length],
-            child: Center(
-              child: Icon(
-                emptyIcon,
-                color: Colors.white.withValues(alpha: 0.55),
-                size: 32,
-              ),
-            ),
-          );
-          final core = Image.asset(
+        Widget cellImage(String path) {
+          final core = SafeAssetImage(
             path,
             fit: BoxFit.cover,
             filterQuality: FilterQuality.medium,
-            cacheWidth: decodeCacheWidth,
-            errorBuilder: (_, __, ___) => err,
           );
           final expanded = SizedBox.expand(child: core);
           if (!thinBorderAroundImage) return expanded;
@@ -219,7 +196,7 @@ class CollectionDetailPage extends StatelessWidget {
                   );
                 },
                 child: path != null
-                    ? cellImage(path, index)
+                    ? cellImage(path)
                     : Container(
                         decoration: thinBorderAroundImage
                             ? BoxDecoration(

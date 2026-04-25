@@ -10,8 +10,9 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../effects/theme_effect_manager.dart';
 import '../garden/garden_storage.dart';
 import '../providers/settings_manager.dart';
-import '../widgets/app_button.dart';
 import '../widgets/app_gradient_background.dart';
+import '../widgets/immersive_back_button.dart';
+import '../services/cloud_blob_state_service.dart';
 
 class DailyQuestionsPage extends StatefulWidget {
   const DailyQuestionsPage({super.key});
@@ -20,27 +21,50 @@ class DailyQuestionsPage extends StatefulWidget {
   State<DailyQuestionsPage> createState() => _DailyQuestionsPageState();
 }
 
-class _DailyQuestionsPageState extends State<DailyQuestionsPage> {
+class _DailyQuestionsPageState extends State<DailyQuestionsPage>
+    with SingleTickerProviderStateMixin {
   static const String _lastCompletedKey = 'daily_questions_last_completed_date';
   static const String _dailyQuestionsDateKey = 'daily_questions_selected_date';
   static const String _dailyQuestionsListKey = 'daily_questions_selected_list';
+  static const String _dailyQuestionsPreviousListKey =
+      'daily_questions_previous_selected_list';
   static const String _questionsAssetPath = 'assets/data/daily_questions.json';
+  static const String _cloudField = 'dailyCheckinJson';
+  static const List<String> _requiredCategories = <String>[
+    'state',
+    'need',
+    'reflection',
+    'action',
+  ];
 
   final Map<int, String> _selectedAnswers = <int, String>{};
   List<_DailyQuestion> _questions = const <_DailyQuestion>[];
   bool _loading = true;
   bool _completedToday = false;
   bool _saving = false;
+  late final AnimationController _questionFlowController;
+  bool _questionFlowPlayed = false;
 
   @override
   void initState() {
     super.initState();
+    _questionFlowController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 240),
+    );
     _loadDailyStatus();
+  }
+
+  @override
+  void dispose() {
+    _questionFlowController.dispose();
+    super.dispose();
   }
 
   Future<void> _loadDailyStatus() async {
     final today = _todayStamp();
     final prefs = await SharedPreferences.getInstance();
+    await _hydrateDailyStateFromCloud(prefs);
     final lastCompleted = prefs.getString(_lastCompletedKey);
     final selectedDate = prefs.getString(_dailyQuestionsDateKey);
     final savedQuestions = prefs.getStringList(_dailyQuestionsListKey);
@@ -50,7 +74,8 @@ class _DailyQuestionsPageState extends State<DailyQuestionsPage> {
 
     if (selectedDate == today &&
         savedQuestions != null &&
-        savedQuestions.length == 4) {
+        savedQuestions.length >= 4 &&
+        savedQuestions.length <= 5) {
       todaysQuestions = savedQuestions
           .map((prompt) => bank.firstWhere(
                 (q) => q.prompt == prompt,
@@ -58,7 +83,19 @@ class _DailyQuestionsPageState extends State<DailyQuestionsPage> {
               ))
           .toList();
     } else {
-      todaysQuestions = _pickFourQuestions(bank);
+      if (selectedDate != null &&
+          selectedDate != today &&
+          savedQuestions != null &&
+          savedQuestions.isNotEmpty) {
+        await prefs.setStringList(_dailyQuestionsPreviousListKey, savedQuestions);
+      }
+      final previousPrompts =
+          prefs.getStringList(_dailyQuestionsPreviousListKey)?.toSet() ??
+              const <String>{};
+      todaysQuestions = _pickDailyQuestions(
+        bank,
+        avoidPrompts: previousPrompts,
+      );
       await prefs.setString(_dailyQuestionsDateKey, today);
       await prefs.setStringList(
         _dailyQuestionsListKey,
@@ -67,14 +104,26 @@ class _DailyQuestionsPageState extends State<DailyQuestionsPage> {
       if (lastCompleted != today) {
         await prefs.remove(_lastCompletedKey);
       }
+      await _pushDailyStateToCloud(prefs);
     }
 
     if (!mounted) return;
+    await _pushDailyStateToCloud(prefs);
+    final questionCount = todaysQuestions.length.clamp(1, 5);
+    const perQuestionDelayMs = 100;
+    const perQuestionDurationMs = 240;
+    final totalMs =
+        ((questionCount - 1) * perQuestionDelayMs) + perQuestionDurationMs;
+    _questionFlowController.duration = Duration(milliseconds: totalMs);
     setState(() {
       _questions = todaysQuestions;
       _completedToday = (lastCompleted == today);
       _loading = false;
     });
+    if (!_completedToday && !_questionFlowPlayed) {
+      _questionFlowPlayed = true;
+      _questionFlowController.forward(from: 0);
+    }
   }
 
   Future<List<_DailyQuestion>> _loadQuestionBank() async {
@@ -94,10 +143,65 @@ class _DailyQuestionsPageState extends State<DailyQuestionsPage> {
     }
   }
 
-  List<_DailyQuestion> _pickFourQuestions(List<_DailyQuestion> bank) {
-    final pool = List<_DailyQuestion>.from(bank);
-    pool.shuffle(Random());
-    return pool.take(4).toList();
+  List<_DailyQuestion> _pickDailyQuestions(
+    List<_DailyQuestion> bank, {
+    Set<String> avoidPrompts = const <String>{},
+  }) {
+    final rng = Random();
+    final selected = <_DailyQuestion>[];
+    final usedPrompts = <String>{};
+
+    _DailyQuestion? pickOne(List<_DailyQuestion> pool) {
+      if (pool.isEmpty) return null;
+      final shuffled = List<_DailyQuestion>.from(pool)..shuffle(rng);
+      return shuffled.firstWhere(
+        (q) => !usedPrompts.contains(q.prompt),
+        orElse: () => shuffled.first,
+      );
+    }
+
+    for (final category in _requiredCategories) {
+      final categoryPool = bank.where((q) => q.category == category).toList();
+      final filtered = categoryPool
+          .where((q) => !avoidPrompts.contains(q.prompt))
+          .toList();
+      final picked = pickOne(filtered.isNotEmpty ? filtered : categoryPool);
+      if (picked == null) continue;
+      selected.add(picked);
+      usedPrompts.add(picked.prompt);
+    }
+
+    List<_DailyQuestion> remainingPool() {
+      final filtered = bank
+          .where(
+            (q) =>
+                !usedPrompts.contains(q.prompt) &&
+                !avoidPrompts.contains(q.prompt),
+          )
+          .toList();
+      if (filtered.isNotEmpty) return filtered;
+      return bank.where((q) => !usedPrompts.contains(q.prompt)).toList();
+    }
+
+    while (selected.length < 4) {
+      final remaining = remainingPool();
+      if (remaining.isEmpty) break;
+      final picked = pickOne(remaining);
+      if (picked == null) break;
+      selected.add(picked);
+      usedPrompts.add(picked.prompt);
+    }
+
+    final remaining = remainingPool();
+    if (remaining.isNotEmpty && rng.nextBool()) {
+      final picked = pickOne(remaining);
+      if (picked != null) {
+        selected.add(picked);
+      }
+    }
+
+    selected.shuffle(rng);
+    return selected.take(5).toList();
   }
 
   String _todayStamp() {
@@ -110,14 +214,20 @@ class _DailyQuestionsPageState extends State<DailyQuestionsPage> {
 
   Future<void> _completeForToday() async {
     if (_selectedAnswers.length != _questions.length) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please answer all questions.')),
-      );
       return;
     }
+
+    final alreadyCompletedInCloud = await _isAlreadyCompletedTodayInCloud();
+    if (alreadyCompletedInCloud) {
+      if (!mounted) return;
+      setState(() => _completedToday = true);
+      return;
+    }
+
     setState(() => _saving = true);
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString(_lastCompletedKey, _todayStamp());
+    await _pushDailyStateToCloud(prefs);
     try {
       final gardenState = await GardenStorage.load();
       final boosted = gardenState.copyWith(
@@ -134,6 +244,68 @@ class _DailyQuestionsPageState extends State<DailyQuestionsPage> {
     });
   }
 
+  Future<bool> _isAlreadyCompletedTodayInCloud() async {
+    final raw = await CloudBlobStateService.fetch(_cloudField);
+    if (raw == null || raw.isEmpty) return false;
+    try {
+      final decoded = jsonDecode(raw);
+      if (decoded is! Map) return false;
+      final map = Map<String, dynamic>.from(decoded);
+      final lastCompleted = map['lastCompletedDate'] as String?;
+      return lastCompleted == _todayStamp();
+    } catch (_) {
+      return false;
+    }
+  }
+
+  Future<void> _hydrateDailyStateFromCloud(SharedPreferences prefs) async {
+    final raw = await CloudBlobStateService.fetch(_cloudField);
+    if (raw == null || raw.isEmpty) return;
+    try {
+      final decoded = jsonDecode(raw);
+      if (decoded is! Map) return;
+      final map = Map<String, dynamic>.from(decoded);
+
+      final selectedDate = map['selectedDate'] as String?;
+      final lastCompleted = map['lastCompletedDate'] as String?;
+      final selectedQuestions = (map['selectedQuestions'] as List<dynamic>?)
+          ?.whereType<String>()
+          .toList();
+      final previousQuestions = (map['previousQuestions'] as List<dynamic>?)
+          ?.whereType<String>()
+          .toList();
+
+      if (selectedDate != null && selectedDate.isNotEmpty) {
+        await prefs.setString(_dailyQuestionsDateKey, selectedDate);
+      }
+      if (lastCompleted != null && lastCompleted.isNotEmpty) {
+        await prefs.setString(_lastCompletedKey, lastCompleted);
+      }
+      if (selectedQuestions != null && selectedQuestions.isNotEmpty) {
+        await prefs.setStringList(_dailyQuestionsListKey, selectedQuestions);
+      }
+      if (previousQuestions != null && previousQuestions.isNotEmpty) {
+        await prefs.setStringList(
+          _dailyQuestionsPreviousListKey,
+          previousQuestions,
+        );
+      }
+    } catch (_) {
+      // Keep local prefs when cloud payload cannot be decoded.
+    }
+  }
+
+  Future<void> _pushDailyStateToCloud(SharedPreferences prefs) async {
+    final payload = <String, dynamic>{
+      'selectedDate': prefs.getString(_dailyQuestionsDateKey) ?? '',
+      'lastCompletedDate': prefs.getString(_lastCompletedKey) ?? '',
+      'selectedQuestions': prefs.getStringList(_dailyQuestionsListKey) ?? const [],
+      'previousQuestions':
+          prefs.getStringList(_dailyQuestionsPreviousListKey) ?? const [],
+    };
+    await CloudBlobStateService.push(_cloudField, jsonEncode(payload));
+  }
+
   @override
   Widget build(BuildContext context) {
     final settings = context.watch<SettingsManager>();
@@ -144,40 +316,63 @@ class _DailyQuestionsPageState extends State<DailyQuestionsPage> {
         breathe: true,
         child: Stack(
           children: [
-            Positioned.fill(child: buildThemeEffect(settings.themeColor)),
-            Positioned(
-              top: 12,
-              left: 12,
-              child: SafeArea(
-                child: IconButton(
-                  style: IconButton.styleFrom(
-                    backgroundColor: Colors.white.withValues(alpha: 0.16),
-                    foregroundColor: Colors.white,
-                  ),
-                  onPressed: () => Navigator.pop(context),
-                  icon: const Icon(Icons.arrow_back_rounded),
-                  tooltip: 'Back',
+            Positioned.fill(
+              child: KeyedSubtree(
+                key: ValueKey<String>('daily_theme_fx_${settings.themeColor}'),
+                child: RepaintBoundary(
+                  child: buildThemeEffect(settings.themeColor),
                 ),
               ),
             ),
             SafeArea(
-              child: Center(
-                child: SingleChildScrollView(
-                  padding: const EdgeInsets.fromLTRB(12, 16, 12, 28),
-                  child: _glassPanel(
-                    context,
-                    child: _loading
-                        ? const Padding(
-                            padding: EdgeInsets.symmetric(vertical: 36),
-                            child: Center(child: CircularProgressIndicator()),
-                          )
-                        : (_completedToday
-                            ? _buildCompletedState(context)
-                            : _buildQuestionnaireState(context)),
+              top: true,
+              bottom: false,
+              child: Padding(
+                padding: const EdgeInsets.only(top: 40),
+                child: Center(
+                  child: SingleChildScrollView(
+                    padding: const EdgeInsets.fromLTRB(12, 16, 12, 28),
+                    child: _glassPanel(
+                      context,
+                      child: AnimatedSwitcher(
+                        duration: const Duration(milliseconds: 240),
+                        switchInCurve: Curves.easeOutCubic,
+                        switchOutCurve: Curves.easeOutCubic,
+                        transitionBuilder: (child, animation) {
+                          final fade = CurvedAnimation(
+                            parent: animation,
+                            curve: Curves.easeOutCubic,
+                          );
+                          final scale = Tween<double>(begin: 0.95, end: 1.0).animate(
+                            CurvedAnimation(
+                              parent: animation,
+                              curve: Curves.easeOutCubic,
+                            ),
+                          );
+                          return FadeTransition(
+                            opacity: fade,
+                            child: ScaleTransition(
+                              scale: scale,
+                              child: child,
+                            ),
+                          );
+                        },
+                        child: _loading
+                            ? const Padding(
+                                key: ValueKey<String>('daily-loading'),
+                                padding: EdgeInsets.symmetric(vertical: 36),
+                                child: Center(child: CircularProgressIndicator()),
+                              )
+                            : (_completedToday
+                                ? _buildCompletedState(context)
+                                : _buildQuestionnaireState(context)),
+                      ),
+                    ),
                   ),
                 ),
               ),
             ),
+            const ImmersiveBackButton(),
           ],
         ),
       ),
@@ -186,46 +381,60 @@ class _DailyQuestionsPageState extends State<DailyQuestionsPage> {
 
   Widget _buildCompletedState(BuildContext context) {
     return Column(
+      key: const ValueKey<String>('daily-completed'),
       mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         const Text(
           'Daily Check-in',
-          textAlign: TextAlign.left,
+          textAlign: TextAlign.center,
           style: TextStyle(
             fontSize: 24,
             fontWeight: FontWeight.w700,
             color: Colors.white,
           ),
         ),
-        const SizedBox(height: 14),
+        const SizedBox(height: 18),
         Text(
-          'You gained +2 fertilizers for the garden',
-          textAlign: TextAlign.left,
+          'You showed up today.\nThat matters more than you think.',
+          textAlign: TextAlign.center,
           style: TextStyle(
             fontSize: 15,
-            color: Colors.white.withValues(alpha: 0.92),
+            color: Colors.white.withValues(alpha: 0.88),
+            fontWeight: FontWeight.w500,
+            height: 1.65,
+          ),
+        ),
+        const SizedBox(height: 18),
+        Text(
+          '+2 added to your garden 🌱',
+          textAlign: TextAlign.center,
+          style: TextStyle(
+            fontSize: 15,
+            height: 1.5,
+            color: Colors.white.withValues(alpha: 0.98),
             fontWeight: FontWeight.w600,
-            height: 1.4,
           ),
         ),
-        const SizedBox(height: 10),
+        const SizedBox(height: 18),
         Text(
-          'Come back tomorrow for new questions',
-          textAlign: TextAlign.left,
+          "Come back tomorrow, whenever you're ready.",
+          textAlign: TextAlign.center,
           style: TextStyle(
-            fontSize: 15,
-            height: 1.45,
-            color: Colors.white.withValues(alpha: 0.9),
+            fontSize: 14,
+            height: 1.55,
+            color: Colors.white.withValues(alpha: 0.82),
+            fontWeight: FontWeight.w400,
           ),
         ),
-        const SizedBox(height: 28),
+        const SizedBox(height: 30),
         Align(
-          alignment: Alignment.centerLeft,
+          alignment: Alignment.center,
           child: ConstrainedBox(
             constraints: const BoxConstraints(minWidth: 200, maxWidth: 320),
-            child: AppButton(
-              label: 'Back',
+            child: _continueButton(
+              label: 'Continue',
+              enabled: true,
               onTap: () => Navigator.pop(context),
             ),
           ),
@@ -235,7 +444,9 @@ class _DailyQuestionsPageState extends State<DailyQuestionsPage> {
   }
 
   Widget _buildQuestionnaireState(BuildContext context) {
+    final canContinue = _selectedAnswers.length == _questions.length && !_saving;
     return Column(
+      key: const ValueKey<String>('daily-questionnaire'),
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         const Text(
@@ -254,20 +465,64 @@ class _DailyQuestionsPageState extends State<DailyQuestionsPage> {
           style: TextStyle(
             fontSize: 14,
             height: 1.4,
-            color: Colors.white.withValues(alpha: 0.85),
+            color: Colors.white.withValues(alpha: 0.66),
           ),
         ),
-        const SizedBox(height: 22),
+        const SizedBox(height: 14),
+        Text(
+          "There's no right answer.\nJust go with what feels closest.",
+          textAlign: TextAlign.left,
+          style: TextStyle(
+            fontSize: 13,
+            height: 1.5,
+            color: Colors.white.withValues(alpha: 0.56),
+            fontWeight: FontWeight.w400,
+          ),
+        ),
+        const SizedBox(height: 40),
         for (int i = 0; i < _questions.length; i++) ...[
-          _buildQuestionBlock(i, _questions[i]),
-          if (i != _questions.length - 1) const SizedBox(height: 20),
+          _buildAnimatedQuestionBlock(i, _questions[i], _questions.length),
+          if (i != _questions.length - 1) const SizedBox(height: 36),
         ],
-        const SizedBox(height: 28),
-        AppButton(
-          label: _saving ? 'Saving...' : 'Complete Today',
-          onTap: _saving ? null : _completeForToday,
+        const SizedBox(height: 42),
+        _continueButton(
+          label: _saving ? 'Saving...' : 'Continue',
+          enabled: canContinue,
+          onTap: _completeForToday,
         ),
       ],
+    );
+  }
+
+  Widget _buildAnimatedQuestionBlock(
+    int index,
+    _DailyQuestion question,
+    int totalQuestions,
+  ) {
+    const perQuestionDelayMs = 100.0;
+    const perQuestionDurationMs = 240.0;
+    final safeTotal = totalQuestions.clamp(1, 5);
+    final totalMs =
+        ((safeTotal - 1) * perQuestionDelayMs) + perQuestionDurationMs;
+    final start = ((index * perQuestionDelayMs) / totalMs).clamp(0.0, 1.0);
+    final end =
+        (((index * perQuestionDelayMs) + perQuestionDurationMs) / totalMs)
+            .clamp(0.0, 1.0);
+    final curved = CurvedAnimation(
+      parent: _questionFlowController,
+      curve: Interval(start, end, curve: Curves.easeOutCubic),
+    );
+    final slide = Tween<Offset>(
+      begin: const Offset(0, 0.12),
+      end: Offset.zero,
+    ).animate(curved);
+
+    return FadeTransition(
+      opacity: curved,
+      child: SlideTransition(
+        position: slide,
+        child: _buildQuestionBlock(index, question),
+      ),
     );
   }
 
@@ -277,21 +532,21 @@ class _DailyQuestionsPageState extends State<DailyQuestionsPage> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          question.prompt,
+          '${question.emoji} ${question.prompt}',
           textAlign: TextAlign.left,
-          style: const TextStyle(
-            fontSize: 15,
-            height: 1.35,
-            color: Colors.white,
+          style: TextStyle(
+            fontSize: 16,
+            height: 1.4,
+            color: Colors.white.withValues(alpha: 0.93),
             fontWeight: FontWeight.w600,
           ),
         ),
-        const SizedBox(height: 10),
+        const SizedBox(height: 14),
         Wrap(
           alignment: WrapAlignment.start,
           crossAxisAlignment: WrapCrossAlignment.start,
-          spacing: 8,
-          runSpacing: 8,
+          spacing: 10,
+          runSpacing: 10,
           children: question.options.map((option) {
             final isSelected = selected == option;
             return _optionButton(
@@ -316,23 +571,116 @@ class _DailyQuestionsPageState extends State<DailyQuestionsPage> {
   }) {
     return GestureDetector(
       onTap: onTap,
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 150),
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(16),
-          color: Colors.white.withValues(alpha: selected ? 0.24 : 0.12),
-          border: Border.all(
-            color: Colors.white.withValues(alpha: selected ? 0.6 : 0.28),
+      child: AnimatedScale(
+        duration: const Duration(milliseconds: 200),
+        curve: Curves.easeOutCubic,
+        scale: selected ? 1.03 : 1.0,
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 200),
+          curve: Curves.easeOutCubic,
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(16),
+            gradient: LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: selected
+                  ? [
+                      Colors.white.withValues(alpha: 0.30),
+                      Colors.white.withValues(alpha: 0.18),
+                    ]
+                  : [
+                      Colors.white.withValues(alpha: 0.17),
+                      Colors.white.withValues(alpha: 0.1),
+                    ],
+            ),
+            border: Border.all(
+              color: Colors.white.withValues(alpha: selected ? 0.62 : 0.3),
+            ),
+            boxShadow: selected
+                ? [
+                    BoxShadow(
+                      color: Colors.white.withValues(alpha: 0.18),
+                      blurRadius: 10,
+                      spreadRadius: 0.4,
+                    ),
+                  ]
+                : null,
+          ),
+          child: Text(
+            label,
+            style: TextStyle(
+              color: Colors.white.withValues(alpha: selected ? 0.99 : 0.92),
+              fontSize: 14,
+              fontWeight: selected ? FontWeight.w600 : FontWeight.w500,
+            ),
           ),
         ),
+      ),
+    );
+  }
+
+  Widget _continueButton({
+    required String label,
+    required bool enabled,
+    required VoidCallback onTap,
+  }) {
+    final button = AnimatedContainer(
+      duration: const Duration(milliseconds: 200),
+      curve: Curves.easeOutCubic,
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(18),
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: enabled
+              ? [
+                  Colors.white.withValues(alpha: 0.34),
+                  Colors.white.withValues(alpha: 0.2),
+                ]
+              : [
+                  Colors.white.withValues(alpha: 0.16),
+                  Colors.white.withValues(alpha: 0.1),
+                ],
+        ),
+        border: Border.all(
+          color: Colors.white.withValues(alpha: enabled ? 0.5 : 0.24),
+        ),
+        boxShadow: enabled
+            ? [
+                BoxShadow(
+                  color: Colors.white.withValues(alpha: 0.14),
+                  blurRadius: 14,
+                  spreadRadius: 0.5,
+                ),
+              ]
+            : null,
+      ),
+      child: Center(
         child: Text(
           label,
           style: TextStyle(
-            color: Colors.white.withValues(alpha: selected ? 0.98 : 0.9),
-            fontSize: 14,
-            fontWeight: selected ? FontWeight.w600 : FontWeight.w500,
+            color: Colors.white.withValues(alpha: enabled ? 0.98 : 0.72),
+            fontSize: 16,
+            fontWeight: FontWeight.w600,
           ),
+        ),
+      ),
+    );
+
+    return AnimatedScale(
+      duration: const Duration(milliseconds: 170),
+      curve: Curves.easeOutCubic,
+      scale: enabled ? 1.0 : 0.995,
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: enabled ? onTap : null,
+          borderRadius: BorderRadius.circular(18),
+          splashColor: Colors.white.withValues(alpha: 0.08),
+          highlightColor: Colors.white.withValues(alpha: 0.04),
+          child: button,
         ),
       ),
     );
@@ -348,6 +696,7 @@ class _DailyQuestionsPageState extends State<DailyQuestionsPage> {
         filter: ImageFilter.blur(sigmaX: 18, sigmaY: 18),
         child: Container(
           width: panelW,
+          margin: const EdgeInsets.only(top: 12),
           padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 24),
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(28),
@@ -369,45 +718,92 @@ class _DailyQuestionsPageState extends State<DailyQuestionsPage> {
 }
 
 class _DailyQuestion {
-  const _DailyQuestion({required this.prompt, required this.options});
+  const _DailyQuestion({
+    required this.prompt,
+    required this.options,
+    required this.category,
+    required this.emoji,
+  });
 
   factory _DailyQuestion.fromJson(Map<String, dynamic> json) {
     final prompt = (json['question'] as String?)?.trim() ?? '';
+    final category = (json['category'] as String?)?.trim().toLowerCase() ?? '';
+    final emoji = (json['emoji'] as String?)?.trim() ?? '';
     final optionsRaw = json['options'];
     if (prompt.isEmpty || optionsRaw is! List) return _DailyQuestion.fallback(prompt);
+    if (!_DailyQuestion.validCategories.contains(category)) {
+      return _DailyQuestion.fallback(prompt);
+    }
     final options = optionsRaw
         .whereType<String>()
         .map((e) => e.trim())
         .where((e) => e.isNotEmpty)
         .toList();
     if (options.length < 2) return _DailyQuestion.fallback(prompt);
-    return _DailyQuestion(prompt: prompt, options: options.take(4).toList());
+    return _DailyQuestion(
+      prompt: prompt,
+      options: _DailyQuestion.withNotSure(options.take(4).toList()),
+      category: category,
+      emoji: emoji.isEmpty ? '🌿' : emoji,
+    );
   }
 
   factory _DailyQuestion.fallback(String prompt) => _DailyQuestion(
         prompt: prompt.isEmpty ? 'Take a quiet moment.' : prompt,
-        options: const ['Not yet', 'Maybe', 'Yes'],
+        options: _DailyQuestion.withNotSure(
+          const ['Not yet', 'Maybe', 'Yes'],
+        ),
+        category: 'reflection',
+        emoji: '🌿',
       );
+
+  static const Set<String> validCategories = <String>{
+    'state',
+    'need',
+    'reflection',
+    'action',
+  };
+
+  static List<String> withNotSure(List<String> options) {
+    final cleaned = options
+        .map((e) => e.trim())
+        .where((e) => e.isNotEmpty)
+        .toList();
+    if (!cleaned.any((e) => e.toLowerCase() == 'not sure')) {
+      cleaned.add('Not sure');
+    }
+    return cleaned;
+  }
 
   final String prompt;
   final List<String> options;
+  final String category;
+  final String emoji;
 }
 
 const List<_DailyQuestion> _fallbackQuestions = <_DailyQuestion>[
   _DailyQuestion(
     prompt: 'How are you feeling right now?',
-    options: ['Calm', 'Okay', 'Heavy'],
+    options: ['Calm', 'Okay', 'Heavy', 'Not sure'],
+    category: 'state',
+    emoji: '😌',
   ),
   _DailyQuestion(
     prompt: 'What do you need more of today?',
-    options: ['Rest', 'Focus', 'Connection'],
+    options: ['Rest', 'Focus', 'Connection', 'Not sure'],
+    category: 'need',
+    emoji: '🤍',
   ),
   _DailyQuestion(
     prompt: 'What is one thing on your mind?',
-    options: ['Work', 'People', 'Myself'],
+    options: ['Work', 'People', 'Myself', 'Not sure'],
+    category: 'reflection',
+    emoji: '🪞',
   ),
   _DailyQuestion(
     prompt: 'What would help you feel grounded?',
-    options: ['Quiet time', 'A short walk', 'A deep breath'],
+    options: ['Quiet time', 'A short walk', 'A deep breath', 'Not sure'],
+    category: 'action',
+    emoji: '🌱',
   ),
 ];

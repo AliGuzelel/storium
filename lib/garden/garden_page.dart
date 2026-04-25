@@ -9,12 +9,23 @@ import 'package:provider/provider.dart';
 import '../localization/app_strings.dart';
 import '../providers/settings_manager.dart';
 import '../utils/app_asset_precache.dart';
+import '../widgets/immersive_back_button.dart';
 import 'garden_models.dart';
 import 'garden_storage.dart';
 import 'widgets/garden_plant_page.dart' show PlantPage;
 import 'widgets/garden_sky_layer.dart';
 import 'widgets/garden_sky_theme.dart';
 import 'widgets/garden_watering_can.dart';
+
+/// Forget-Me-Not matures after two waters (phases 0→1→3). Others advance one phase per water.
+int _nextGardenPhaseAfterWater(String plantId, int currentPhase) {
+  if (plantId == 'forget_me_not') {
+    if (currentPhase <= 0) return 1;
+    if (currentPhase < 3) return 3;
+    return 3;
+  }
+  return (currentPhase + 1).clamp(0, 3);
+}
 
 class GardenPage extends StatefulWidget {
   const GardenPage({super.key});
@@ -237,9 +248,7 @@ class _GardenPageState extends State<GardenPage> with TickerProviderStateMixin {
     final now = DateTime.now();
 
     if (slot.currentPhase >= 3) {
-      final cooldown = id == 'forget_me_not'
-          ? const Duration(hours: 8)
-          : GardenStorage.randomWaterCooldown(_rng);
+      final cooldown = GardenStorage.randomWaterCooldown(_rng);
       final mature = _state.copyWithSlot(
         id,
         GardenPlantSlot(
@@ -271,14 +280,12 @@ class _GardenPageState extends State<GardenPage> with TickerProviderStateMixin {
       return;
     }
 
-    final nextPhase = (slot.currentPhase + 1).clamp(0, 3);
+    final nextPhase = _nextGardenPhaseAfterWater(id, slot.currentPhase);
     final completed = Set<String>.from(_state.completedPlantTypes);
     if (nextPhase >= 3) {
       completed.add(id);
     }
-    final cooldown = id == 'forget_me_not'
-        ? const Duration(hours: 8)
-        : GardenStorage.randomWaterCooldown(_rng);
+    final cooldown = GardenStorage.randomWaterCooldown(_rng);
     final updated = _state
         .copyWithSlot(
           id,
@@ -465,21 +472,6 @@ class _GardenPageState extends State<GardenPage> with TickerProviderStateMixin {
 
     return Scaffold(
       backgroundColor: const Color(0xFF5A9CE0),
-      appBar: AppBar(
-        backgroundColor: Colors.white,
-        surfaceTintColor: Colors.transparent,
-        foregroundColor: const Color(0xFF1E1E1E),
-        iconTheme: const IconThemeData(color: Color(0xFF1E1E1E)),
-        title: Text(
-          t(context, 'garden_title'),
-          style: const TextStyle(
-            fontFamily: 'Cinzel',
-            fontSize: 20,
-            color: Color(0xFF1E1E1E),
-          ),
-        ),
-        elevation: 0,
-      ),
       // Z-order: sky (gradient → clouds → sun → birds), then plants + soil on top.
       body: Stack(
         fit: StackFit.expand,
@@ -510,10 +502,13 @@ class _GardenPageState extends State<GardenPage> with TickerProviderStateMixin {
                           final option = GardenPlantOption.choices[index];
                           final slot = _state.slotFor(option.id);
                           return PlantPage(
-                            imagePath: option.imagePath,
+                            imagePath: option.resolvedImagePath(
+                              slot.currentPhase,
+                            ),
                             plantImageHeight: option.plantImageHeight,
                             plantImageWidthFactor: option.plantImageWidthFactor,
                             bottomOffset: option.bottomOffset,
+                            plantPhaseScaleFactor: option.plantPhaseScaleFactor,
                             currentPhase: slot.currentPhase,
                             glowEpoch: _glowEpochByPlant[option.id] ?? 0,
                             glowTint: glowTint,
@@ -528,8 +523,8 @@ class _GardenPageState extends State<GardenPage> with TickerProviderStateMixin {
                         child: _buildPageDots(),
                       ),
                       Positioned(
-                        top: 10,
-                        left: 12,
+                        top: 12,
+                        left: 62,
                         child: Container(
                           padding: const EdgeInsets.symmetric(
                             horizontal: 10,
@@ -637,6 +632,7 @@ class _GardenPageState extends State<GardenPage> with TickerProviderStateMixin {
               onPick: _onReplacePick,
               onDismiss: () => setState(() => _showReplacePicker = false),
             ),
+          if (Navigator.canPop(context)) const ImmersiveBackButton(),
         ],
       ),
     );

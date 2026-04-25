@@ -1,74 +1,110 @@
 [
   {
     "question": "How are you feeling right now?",
+    "category": "state",
+    "emoji": "😌",
     "options": ["Calm", "Okay", "Heavy"]
   },
   {
     "question": "What do you need more of today?",
+    "category": "need",
+    "emoji": "🤍",
     "options": ["Rest", "Focus", "Connection"]
   },
   {
     "question": "What feels heavy today?",
+    "category": "state",
+    "emoji": "🌫️",
     "options": ["Work", "Thoughts", "Uncertainty"]
   },
   {
     "question": "What feels light today?",
+    "category": "state",
+    "emoji": "🌤️",
     "options": ["My mood", "My energy", "My thoughts"]
   },
   {
     "question": "What is one thing on your mind?",
+    "category": "reflection",
+    "emoji": "🪞",
     "options": ["Work", "People", "Myself"]
   },
   {
     "question": "What would help you feel grounded?",
+    "category": "action",
+    "emoji": "🌱",
     "options": ["A short walk", "Deep breaths", "Quiet time"]
   },
   {
     "question": "What can you be gentle with today?",
+    "category": "need",
+    "emoji": "🤲",
     "options": ["My pace", "My mistakes", "My emotions"]
   },
   {
     "question": "What are you grateful for today?",
+    "category": "reflection",
+    "emoji": "✨",
     "options": ["A person", "A moment", "A small comfort"]
   },
   {
     "question": "What are you proud of today?",
+    "category": "reflection",
+    "emoji": "💛",
     "options": ["Trying", "Showing up", "Setting a boundary"]
   },
   {
     "question": "What can you let go of today?",
+    "category": "action",
+    "emoji": "🍃",
     "options": ["Pressure", "Perfection", "Overthinking"]
   },
   {
     "question": "What is asking for your attention?",
+    "category": "reflection",
+    "emoji": "👀",
     "options": ["My body", "My emotions", "My priorities"]
   },
   {
     "question": "Where do you need more patience?",
+    "category": "need",
+    "emoji": "🕊️",
     "options": ["With myself", "With others", "With progress"]
   },
   {
     "question": "What boundary do you need today?",
+    "category": "need",
+    "emoji": "🛡️",
     "options": ["Less noise", "Less pressure", "More space"]
   },
   {
     "question": "What would make today a little easier?",
+    "category": "action",
+    "emoji": "🧩",
     "options": ["A clear plan", "A break", "A kind talk"]
   },
   {
     "question": "What is one kind thing you can do for yourself?",
+    "category": "action",
+    "emoji": "🌷",
     "options": ["Rest", "Eat well", "Speak kindly to myself"]
   },
   {
     "question": "What do you want less of today?",
+    "category": "state",
+    "emoji": "🎈",
     "options": ["Rush", "Worry", "Distraction"]
   },
   {
     "question": "What do you want to protect your energy from?",
+    "category": "need",
+    "emoji": "🔋",
     "options": ["Negativity", "Overwork", "Comparison"]
   },
   {
     "question": "What matters most to you right now?",
+    "category": "reflection",
+    "emoji": "🧭",
     "options": ["Health", "Peace", "Relationships"]
   }
 ]

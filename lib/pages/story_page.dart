@@ -854,123 +854,175 @@ class _StoryPageState extends State<StoryPage> {
 
   final Map<int, Map<String, dynamic>> _anxietyScenes = {
     1: {
-      'image': 'assets/images/stories/depression_1.png',
+      'image': 'assets/images/stories/anxiety/anxiety1.png',
       'text':
-          "You wake up.\n\nNothing feels wrong.\n\nThe room is quiet.\n\nStill... something feels off.",
+          "You're mid-conversation.\n\nEveryone's talking at once.\n\nYou say something small.\n\nIt lands… and then moves on.",
       'choices': [
-        {'text': "Continue", 'nextScene': 2, 'stat': 'anxiety'},
+        {'text': "Continue", 'nextScene': 2, 'stat': 'none'},
       ],
     },
     2: {
-      'image': 'assets/images/stories/depression_2.png',
-      'text': "You check your phone.\n\nNo new messages.\n\nYou pause.",
+      'image': 'assets/images/stories/anxiety/anxiety2.png',
+      'text':
+          "No one reacts.\n\nWhich should be normal.\n\nBut your mind holds onto it.\n\nReplays it anyway.",
       'choices': [
-        {'text': "Check again", 'nextScene': 3, 'stat': 'anxiety'},
-        {'text': "Put it down", 'nextScene': 3, 'stat': 'calm'},
-        {'text': "Open social media", 'nextScene': 3, 'stat': 'anxiety'},
+        {'text': "Continue", 'nextScene': 3, 'stat': 'none'},
       ],
     },
     3: {
-      'image': 'assets/images/stories/depression_3.png',
+      'image': 'assets/images/stories/anxiety/anxiety3.png',
       'text':
-          "It starts small.\n\n'Did I forget something?'\n\nYou try to ignore it.\n\nIt stays.",
+          "\"That sounded off.\"\n\nYou weren’t thinking that a second ago.\n\nNow it feels obvious.\n\nLike you missed it in real time.",
       'choices': [
-        {'text': "...", 'nextScene': 4, 'stat': 'anxiety'},
+        {'text': "Go over it", 'nextScene': 4, 'stat': 'anxiety'},
+        {'text': "Stay in the moment", 'nextScene': 5, 'stat': 'calm'},
       ],
     },
     4: {
-      'image': 'assets/images/stories/depression_4.png',
-      'text': "You're getting ready.\n\nYour mind keeps drifting.",
+      'image': 'assets/images/stories/anxiety/anxiety4a.png',
+      'text':
+          "You replay the tone.\n\nThen the wording.\n\nThen their faces.\n\nIt keeps changing.",
       'choices': [
-        {'text': "Play music", 'nextScene': 5, 'stat': 'calm'},
-        {'text': "Stay in silence", 'nextScene': 5, 'stat': 'anxiety'},
-        {'text': "Rush everything", 'nextScene': 5, 'stat': 'anxiety'},
+        {'text': "Continue", 'nextScene': 6, 'stat': 'none'},
       ],
     },
     5: {
-      'image': 'assets/images/stories/depression_5.png',
+      'image': 'assets/images/stories/anxiety/anxiety4b.png',
       'text':
-          "You remember something you said.\n\n'Why did I say it like that?'\n\nIt didn't matter then.\n\nNow it does.",
+          "You nod along.\n\nTry to listen again.\n\nIt’s harder now.\n\nYou’re split in two.",
       'choices': [
-        {'text': "Continue", 'nextScene': 6, 'stat': 'anxiety'},
+        {'text': "Continue", 'nextScene': 6, 'stat': 'none'},
       ],
     },
     6: {
-      'image': 'assets/images/stories/depression_6.png',
+      'image': 'assets/images/stories/anxiety/anxiety5.png',
       'text':
-          "You're around people.\n\nEverything feels normal.\n\nBut your thoughts aren't.",
+          "They’re still talking.\n\nYou’re still there.\n\nBut not fully.\n\nSomething pulled you inward.",
       'choices': [
-        {'text': "Stay quiet", 'nextScene': 7, 'stat': 'anxiety'},
-        {'text': "Act normal", 'nextScene': 7, 'stat': 'anxiety'},
-        {'text': "Avoid eye contact", 'nextScene': 7, 'stat': 'anxiety'},
+        {'text': "Continue", 'nextScene': 7, 'stat': 'none'},
       ],
     },
     7: {
-      'image': 'assets/images/stories/depression_7.png',
+      'image': 'assets/images/stories/anxiety/anxiety6.png',
       'text':
-          "It builds.\n\n'They noticed.'\n'That sounded weird.'\n'Why am I like this?'\n\nYou can't stop it.",
+          "You adjust how you're sitting.\n\nThen your hands.\n\nThen your face.\n\nIt starts feeling unnatural.",
       'choices': [
-        {'text': "Keep going", 'nextScene': 8, 'stat': 'anxiety'},
+        {'text': "Continue", 'nextScene': 8, 'stat': 'none'},
       ],
     },
     8: {
-      'image': 'assets/images/stories/depression_8.png',
-      'text': "You try to distract yourself.",
+      'image': 'assets/images/stories/anxiety/anxiety7.png',
+      'text':
+          "Someone laughs.\n\nYou smile a second late.\n\nIt feels noticeable.\n\nEven if it isn’t.",
       'choices': [
-        {'text': "Use your phone", 'nextScene': 9, 'stat': 'anxiety'},
-        {'text': "Listen to music", 'nextScene': 9, 'stat': 'calm'},
-        {'text': "Do nothing", 'nextScene': 9, 'stat': 'anxiety'},
+        {'text': "Stay longer", 'nextScene': 9, 'stat': 'calm'},
+        {'text': "Leave early", 'nextScene': 10, 'stat': 'anxiety'},
       ],
     },
     9: {
-      'image': 'assets/images/stories/depression_9.png',
+      'image': 'assets/images/stories/anxiety/anxiety8a.png',
       'text':
-          "You try to focus.\n\nYou can't.\n\nEvery few seconds-\nanother thought.",
+          "You stay.\n\nIt gets slightly louder inside.\n\nHarder to follow what’s real.\n\nAnd what you’re adding.",
       'choices': [
-        {'text': "...", 'nextScene': 10, 'stat': 'anxiety'},
+        {'text': "Continue", 'nextScene': 11, 'stat': 'none'},
       ],
     },
     10: {
-      'image': 'assets/images/stories/depression_10.png',
+      'image': 'assets/images/stories/anxiety/anxiety8b.png',
       'text':
-          "It's not one thought anymore.\n\nIt's many.\n\nLoud.\n\nStacked.\n\nUnclear.",
+          "You make an excuse.\n\nIt sounds normal enough.\n\nBut you keep replaying it.\n\nOn the way out.",
       'choices': [
-        {'text': "Continue", 'nextScene': 11, 'stat': 'anxiety'},
+        {'text': "Continue", 'nextScene': 11, 'stat': 'none'},
       ],
     },
     11: {
-      'image': 'assets/images/stories/depression_11.png',
+      'image': 'assets/images/stories/anxiety/anxiety9.png',
       'text':
-          "You're finally alone.\n\nThe day is over.\n\nYour mind isn't.",
+          "You’re alone now.\n\nIt should feel easier.\n\nIt doesn’t.\n\nIt just gets quieter around you.",
       'choices': [
-        {'text': "Scroll", 'nextScene': 12, 'stat': 'anxiety'},
-        {'text': "Close your eyes", 'nextScene': 12, 'stat': 'calm'},
-        {'text': "Sit in silence", 'nextScene': 12, 'stat': 'calm'},
+        {'text': "Continue", 'nextScene': 12, 'stat': 'none'},
       ],
     },
     12: {
-      'image': 'assets/images/stories/depression_12.png',
+      'image': 'assets/images/stories/anxiety/anxiety10.png',
       'text':
-          "This is the worst part.\n\nEverything hits.\n\n'What if something goes wrong?'\n'What if I messed up?'\n\nIt feels real.",
+          "Without the noise,\nit gets clearer.\n\nEvery small moment from before\nstarts lining up.",
       'choices': [
-        {'text': "...", 'nextScene': 13, 'stat': 'anxiety'},
+        {'text': "Continue", 'nextScene': 13, 'stat': 'none'},
       ],
     },
     13: {
-      'image': 'assets/images/stories/depression_13.png',
-      'text': "You notice your breathing.\n\nFast.\n\nShallow.",
+      'image': 'assets/images/stories/anxiety/anxiety11.png',
+      'text':
+          "You keep walking.\n\nNot really going anywhere.\n\nJust… not stopping.\n\nLike stopping might catch up to you.",
       'choices': [
-        {'text': "Take a deep breath", 'nextScene': 14, 'stat': 'calm'},
-        {'text': "Ignore it", 'nextScene': 14, 'stat': 'anxiety'},
-        {'text': "Look around you", 'nextScene': 14, 'stat': 'calm'},
+        {'text': "Continue", 'nextScene': 14, 'stat': 'none'},
       ],
     },
     14: {
-      'image': 'assets/images/stories/depression_14.png',
+      'image': 'assets/images/stories/anxiety/anxiety12.png',
       'text':
-          "It doesn't disappear.\n\nBut it softens.\n\nA little.\n\nFor now... that's enough.",
+          "You reach for your phone.\n\nUnlock it.\n\nDon’t open anything.\n\nLock it again.",
       'choices': [
-        {'text': "Finish", 'nextScene': -1, 'stat': 'calm'},
+        {'text': "Check something", 'nextScene': 15, 'stat': 'anxiety'},
+        {'text': "Put it away", 'nextScene': 16, 'stat': 'calm'},
+      ],
+    },
+    15: {
+      'image': 'assets/images/stories/anxiety/anxiety13a.png',
+      'text':
+          "You open a chat.\n\nScroll up.\n\nLooking for a moment that felt wrong.\n\nYou find one.",
+      'choices': [
+        {'text': "Continue", 'nextScene': 17, 'stat': 'none'},
+      ],
+    },
+    16: {
+      'image': 'assets/images/stories/anxiety/anxiety13b.png',
+      'text':
+          "You keep it in your pocket.\n\nBut your mind fills the gap.\n\nReconstructing things anyway.\n\nWorse than before.",
+      'choices': [
+        {'text': "Continue", 'nextScene': 17, 'stat': 'none'},
+      ],
+    },
+    17: {
+      'image': 'assets/images/stories/anxiety/anxiety14.png',
+      'text':
+          "You’re home now.\n\nThe day is quieter.\n\nBut your head isn’t.\n\nIt’s more focused now.",
+      'choices': [
+        {'text': "Continue", 'nextScene': 18, 'stat': 'none'},
+      ],
+    },
+    18: {
+      'image': 'assets/images/stories/anxiety/anxiety15.png',
+      'text':
+          "You notice your breathing.\n\nThen your heartbeat.\n\nIt feels slightly off.\n\nNow it’s all you can feel.",
+      'choices': [
+        {'text': "Continue", 'nextScene': 19, 'stat': 'none'},
+      ],
+    },
+    19: {
+      'image': 'assets/images/stories/anxiety/anxiety16.png',
+      'text':
+          "You lie down.\n\nIt gets louder in the dark.\n\nEvery thought feels unfinished.\n\nLike something needs fixing.",
+      'choices': [
+        {'text': "Try to sleep", 'nextScene': 20, 'stat': 'calm'},
+        {'text': "Stay awake", 'nextScene': 21, 'stat': 'anxiety'},
+      ],
+    },
+    20: {
+      'image': 'assets/images/stories/anxiety/anxiety17a.png',
+      'text':
+          "You close your eyes.\n\nYour body slows down.\n\nYour mind doesn’t.\n\nIt keeps going without you.",
+      'choices': [
+        {'text': "Continue", 'nextScene': -1, 'stat': 'none'},
+      ],
+    },
+    21: {
+      'image': 'assets/images/stories/anxiety/anxiety17b.png',
+      'text':
+          "You stay up.\n\nSwitching between thoughts and nothing.\n\nTime passes without moving.\n\nMorning doesn’t feel far.",
+      'choices': [
+        {'text': "Continue", 'nextScene': -1, 'stat': 'none'},
       ],
     },
   };
@@ -1244,14 +1296,6 @@ class _StoryPageState extends State<StoryPage> {
     final bool hasImage = imagePath != null && imagePath.isNotEmpty;
 
     return GradientScaffold(
-      appBar: AppBar(
-        title: Text(
-          widget.storyTitle,
-          style: const TextStyle(fontFamily: 'Cinzel'),
-        ),
-        backgroundColor: Colors.white.withOpacity(0.04),
-        elevation: 0,
-      ),
       body: Column(
         children: [
           Expanded(

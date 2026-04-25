@@ -1,4 +1,7 @@
+import 'dart:convert';
+
 import 'package:flutter/foundation.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import '../garden/garden_storage.dart';
 import '../models/user_session.dart';
@@ -53,9 +56,61 @@ class UserSessionCloudSync {
         await AchievementService().importFromRemoteString(achRaw);
       }
 
+      final mySpaceRaw = _stringField(fields, 'mySpaceJson');
+      if (mySpaceRaw != null) {
+        await _hydrateMySpacePrefs(mySpaceRaw);
+      }
+
+      final dailyRaw = _stringField(fields, 'dailyCheckinJson');
+      if (dailyRaw != null) {
+        await _hydrateDailyCheckinPrefs(dailyRaw);
+      }
+
       await StoryProgressService().load();
     } catch (e, st) {
       debugPrint('UserSessionCloudSync.hydrateIfSignedIn: $e\n$st');
     }
+  }
+
+  static Future<void> _hydrateMySpacePrefs(String raw) async {
+    try {
+      final decoded = jsonDecode(raw);
+      if (decoded is! List) return;
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString('my_space_saved_images_v2', raw);
+    } catch (_) {}
+  }
+
+  static Future<void> _hydrateDailyCheckinPrefs(String raw) async {
+    try {
+      final decoded = jsonDecode(raw);
+      if (decoded is! Map) return;
+      final map = Map<String, dynamic>.from(decoded);
+      final prefs = await SharedPreferences.getInstance();
+
+      final selectedDate = map['selectedDate'] as String?;
+      if (selectedDate != null && selectedDate.isNotEmpty) {
+        await prefs.setString('daily_questions_selected_date', selectedDate);
+      }
+      final lastCompleted = map['lastCompletedDate'] as String?;
+      if (lastCompleted != null && lastCompleted.isNotEmpty) {
+        await prefs.setString('daily_questions_last_completed_date', lastCompleted);
+      }
+      final selectedQuestions = (map['selectedQuestions'] as List<dynamic>?)
+          ?.whereType<String>()
+          .toList();
+      if (selectedQuestions != null && selectedQuestions.isNotEmpty) {
+        await prefs.setStringList('daily_questions_selected_list', selectedQuestions);
+      }
+      final previousQuestions = (map['previousQuestions'] as List<dynamic>?)
+          ?.whereType<String>()
+          .toList();
+      if (previousQuestions != null && previousQuestions.isNotEmpty) {
+        await prefs.setStringList(
+          'daily_questions_previous_selected_list',
+          previousQuestions,
+        );
+      }
+    } catch (_) {}
   }
 }

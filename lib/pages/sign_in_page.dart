@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../models/user_session.dart';
+import '../providers/saved_images_store.dart';
 import '../providers/settings_manager.dart';
 import '../services/auth_service.dart';
 import '../services/story_progress_service.dart';
@@ -48,6 +49,8 @@ class _SignInPageState extends State<SignInPage> {
 
   Future<void> _submit() async {
     if (!_formKey.currentState!.validate()) return;
+    final settingsManager = Provider.of<SettingsManager>(context, listen: false);
+    final savedImagesStore = Provider.of<SavedImagesStore>(context, listen: false);
 
     setState(() {
       _isLoading = true;
@@ -85,8 +88,9 @@ class _SignInPageState extends State<SignInPage> {
 
       await UserSession.saveCurrentUser();
       await UserSessionCloudSync.hydrateIfSignedIn(
-        settingsManager: Provider.of<SettingsManager>(context, listen: false),
+        settingsManager: settingsManager,
       );
+      await savedImagesStore.load();
       await _storyProgressService.seedAnnouncedWithCurrentlyUnlocked();
       if (!mounted) return;
 
@@ -120,12 +124,6 @@ class _SignInPageState extends State<SignInPage> {
     final bool isSignup = !_isLogin;
 
     return GradientScaffold(
-      appBar: AppBar(
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        title: const Text('Storium', style: TextStyle(fontFamily: 'Cinzel')),
-        centerTitle: true,
-      ),
       body: Center(
         child: SingleChildScrollView(
           physics: const BouncingScrollPhysics(),

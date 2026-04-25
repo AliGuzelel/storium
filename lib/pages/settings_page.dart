@@ -191,14 +191,6 @@ class _SettingsPageState extends State<SettingsPage> {
     final languageLabel = settings.language == 'tr' ? 'Turkce' : 'English';
 
     return GradientScaffold(
-      appBar: AppBar(
-        title: Text(
-          t(context, 'settings'),
-          style: const TextStyle(fontFamily: 'Cinzel'),
-        ),
-        backgroundColor: Colors.white.withOpacity(0.04),
-        elevation: 0,
-      ),
       body: SafeArea(
         child: SingleChildScrollView(
           padding: const EdgeInsets.fromLTRB(22, 18, 22, 24),

@@ -26,8 +26,9 @@ class _BlueCloudEffectState extends State<BlueCloudEffect> {
     final o = s ? 0.52 : 1.0;
     final sz = s ? 0.82 : 1.0;
     final sp = s ? 0.88 : 1.0;
+    // Fewer blobs + lower blur than early builds — MaskFilter blur was the main GPU cost app-wide.
     _backgroundLayer = List<_CloudBlob>.generate(
-      s ? 4 : 9,
+      s ? 3 : 5,
       (_) => _CloudBlob.random(
         rng: rng,
         minSize: 160 * sz,
@@ -39,7 +40,7 @@ class _BlueCloudEffectState extends State<BlueCloudEffect> {
       ),
     );
     _midLayer = List<_CloudBlob>.generate(
-      s ? 5 : 11,
+      s ? 4 : 6,
       (_) => _CloudBlob.random(
         rng: rng,
         minSize: 110 * sz,
@@ -51,7 +52,7 @@ class _BlueCloudEffectState extends State<BlueCloudEffect> {
       ),
     );
     _frontLayer = List<_CloudBlob>.generate(
-      s ? 5 : 12,
+      s ? 4 : 7,
       (_) => _CloudBlob.random(
         rng: rng,
         minSize: 70 * sz,
@@ -118,10 +119,9 @@ class _CloudPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     _paintAtmosphericHaze(canvas, size);
-    _paintLayer(canvas, size, background, blur: subtle ? 22 : 30);
-    _paintLayer(canvas, size, mid, blur: subtle ? 18 : 24);
-    _paintLayer(canvas, size, front, blur: subtle ? 14 : 18);
-    _paintDither(canvas, size);
+    _paintLayer(canvas, size, background, blur: subtle ? 12 : 16, drawOutline: false);
+    _paintLayer(canvas, size, mid, blur: subtle ? 10 : 13, drawOutline: false);
+    _paintLayer(canvas, size, front, blur: subtle ? 8 : 10, drawOutline: true);
   }
 
   void _paintAtmosphericHaze(Canvas canvas, Size size) {
@@ -152,6 +152,7 @@ class _CloudPainter extends CustomPainter {
     Size size,
     List<_CloudBlob> layer, {
     required double blur,
+    required bool drawOutline,
   }) {
     final paint = Paint()..style = PaintingStyle.fill;
     for (final blob in layer) {
@@ -169,17 +170,19 @@ class _CloudPainter extends CustomPainter {
       final h = blob.size * blob.heightScale;
       _drawCloudBlob(canvas, Offset(x, y), w, h, paint);
 
-      final outlinePaint = Paint()
-        ..style = PaintingStyle.stroke
-        ..strokeWidth = subtle ? 0.9 : 1.2
-        ..color = const Color(
-          0xFFFFFFFF,
-        ).withValues(
-          alpha: (blob.opacity * 0.38 * (subtle ? 0.65 : 1.0))
-              .clamp(0.02, 0.08),
-        )
-        ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 4);
-      _drawCloudBlob(canvas, Offset(x, y), w, h, outlinePaint);
+      if (drawOutline) {
+        final outlinePaint = Paint()
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = subtle ? 0.9 : 1.2
+          ..color = const Color(
+            0xFFFFFFFF,
+          ).withValues(
+            alpha: (blob.opacity * 0.38 * (subtle ? 0.65 : 1.0))
+                .clamp(0.02, 0.08),
+          )
+          ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 3);
+        _drawCloudBlob(canvas, Offset(x, y), w, h, outlinePaint);
+      }
     }
   }
 
@@ -207,31 +210,6 @@ class _CloudPainter extends CustomPainter {
       ),
       paint,
     );
-  }
-
-  void _paintDither(Canvas canvas, Size size) {
-    final a = subtle ? 0.65 : 1.0;
-    final light = Paint()
-      ..style = PaintingStyle.fill
-      ..color = Colors.white.withValues(alpha: 0.018 * a);
-    final dark = Paint()
-      ..style = PaintingStyle.fill
-      ..color = const Color(0xFF5D8DB0).withValues(alpha: 0.012 * a);
-    var count = (size.width * size.height * 0.0009).round().clamp(250, 1100);
-    if (subtle) {
-      count = (count * 0.38).round().clamp(90, 420);
-    }
-    for (int i = 0; i < count; i++) {
-      final x = _hash(i * 197 + 11) * size.width;
-      final y = _hash(i * 283 + 23) * size.height;
-      final d = 0.7 + _hash(i * 109 + 31) * 0.7;
-      canvas.drawRect(Rect.fromLTWH(x, y, d, d), i.isEven ? light : dark);
-    }
-  }
-
-  double _hash(int n) {
-    final x = (n * 1103515245 + 12345) & 0x7fffffff;
-    return x / 0x7fffffff;
   }
 
   @override

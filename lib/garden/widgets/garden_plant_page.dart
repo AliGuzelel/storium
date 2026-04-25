@@ -14,11 +14,13 @@ class PlantPage extends StatelessWidget {
     this.plantAmbientMotion = true,
     this.plantImageWidthFactor = 0.88,
     this.bottomOffset = 0,
+    this.plantPhaseScaleFactor = 1.0,
     this.onTap,
   });
 
   final String imagePath;
   final int currentPhase;
+  final double plantPhaseScaleFactor;
   final int glowEpoch;
   final Color glowTint;
   final bool plantAmbientMotion;
@@ -45,6 +47,7 @@ class PlantPage extends StatelessWidget {
                 child: PlantWidget(
                   imagePath: imagePath,
                   currentPhase: currentPhase,
+                  phaseScaleFactor: plantPhaseScaleFactor,
                   glowEpoch: glowEpoch,
                   glowTint: glowTint,
                   ambientMotion: plantAmbientMotion,

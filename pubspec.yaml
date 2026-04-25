@@ -34,6 +34,11 @@ flutter:
     - assets/images/stories/
     - assets/images/stories/grief/
     - assets/images/plants/
+    - assets/images/plants/forget_me_not/
+    - assets/images/plants/camellia/
+    - assets/images/plants/rose/
+    - assets/images/plants/iris/
+    - assets/images/plants/ranunculus/
     - assets/data/
     - assets/collection_images/
     - assets/collection_images/animals/

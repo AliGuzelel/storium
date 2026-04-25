@@ -1,11 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart' show Ticker;
 
-/// One large cumulus-style cloud built from smooth [Path] geometry (no circles),
-/// drifting horizontally with a seamless loop.
-class CloudWidget extends StatefulWidget {
-  const CloudWidget({
-    super.key,
+/// Drifting cloud configuration (shared by [GardenCloudsBand]).
+class GardenCloudLayerSpec {
+  const GardenCloudLayerSpec({
     required this.travelDuration,
     required this.verticalFraction,
     this.horizontalPhase = 0,
@@ -15,22 +13,88 @@ class CloudWidget extends StatefulWidget {
   });
 
   final Duration travelDuration;
-
-  /// Vertical anchor in the parent (0 = top, 1 = bottom).
   final double verticalFraction;
-
   final double horizontalPhase;
   final double opacity;
   final double scale;
-
-  /// 0, 1, or 2 for alternate silhouettes.
   final int shape;
-
-  @override
-  State<CloudWidget> createState() => _CloudWidgetState();
 }
 
-class _CloudWidgetState extends State<CloudWidget>
+/// Default cloud field for the garden sky (matches prior [CloudWidget] set).
+const List<GardenCloudLayerSpec> kGardenCloudLayerSpecs = [
+  GardenCloudLayerSpec(
+    travelDuration: Duration(seconds: 54),
+    verticalFraction: 0.07,
+    horizontalPhase: 0.05,
+    opacity: 0.068,
+    scale: 0.54,
+    shape: 2,
+  ),
+  GardenCloudLayerSpec(
+    travelDuration: Duration(seconds: 46),
+    verticalFraction: 0.20,
+    horizontalPhase: 0.32,
+    opacity: 0.076,
+    scale: 0.70,
+    shape: 1,
+  ),
+  GardenCloudLayerSpec(
+    travelDuration: Duration(seconds: 60),
+    verticalFraction: 0.36,
+    horizontalPhase: 0.69,
+    opacity: 0.072,
+    scale: 1.06,
+    shape: 0,
+  ),
+  GardenCloudLayerSpec(
+    travelDuration: Duration(seconds: 42),
+    verticalFraction: 0.53,
+    horizontalPhase: 0.46,
+    opacity: 0.062,
+    scale: 0.84,
+    shape: 1,
+  ),
+  GardenCloudLayerSpec(
+    travelDuration: Duration(seconds: 50),
+    verticalFraction: 0.70,
+    horizontalPhase: 0.10,
+    opacity: 0.058,
+    scale: 0.60,
+    shape: 2,
+  ),
+  GardenCloudLayerSpec(
+    travelDuration: Duration(seconds: 38),
+    verticalFraction: 0.12,
+    horizontalPhase: 0.86,
+    opacity: 0.066,
+    scale: 0.94,
+    shape: 0,
+  ),
+  GardenCloudLayerSpec(
+    travelDuration: Duration(seconds: 48),
+    verticalFraction: 0.46,
+    horizontalPhase: 0.60,
+    opacity: 0.064,
+    scale: 0.78,
+    shape: 1,
+  ),
+];
+
+/// All drifting clouds in **one** ticker + **one** [CustomPaint] (avoids 7× setState/frame).
+/// No [ImageFiltered] blur here — full-band blur over animated content was the main GPU cost on Sky/blue.
+class GardenCloudsBand extends StatefulWidget {
+  const GardenCloudsBand({
+    super.key,
+    this.specs = kGardenCloudLayerSpecs,
+  });
+
+  final List<GardenCloudLayerSpec> specs;
+
+  @override
+  State<GardenCloudsBand> createState() => _GardenCloudsBandState();
+}
+
+class _GardenCloudsBandState extends State<GardenCloudsBand>
     with SingleTickerProviderStateMixin {
   late Ticker _ticker;
   Duration _elapsed = Duration.zero;
@@ -42,20 +106,18 @@ class _CloudWidgetState extends State<CloudWidget>
       setState(() => _elapsed = elapsed);
     });
     _ticker.start();
-    WidgetsBinding.instance.addPostFrameCallback((_) => _ensureTickerRunning());
+    WidgetsBinding.instance.addPostFrameCallback((_) => _ensureTicker());
   }
 
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    _ensureTickerRunning();
+    _ensureTicker();
   }
 
-  void _ensureTickerRunning() {
+  void _ensureTicker() {
     if (!mounted) return;
-    if (TickerMode.of(context) && !_ticker.isActive) {
-      _ticker.start();
-    }
+    if (TickerMode.of(context) && !_ticker.isActive) _ticker.start();
   }
 
   @override
@@ -66,23 +128,16 @@ class _CloudWidgetState extends State<CloudWidget>
 
   @override
   Widget build(BuildContext context) {
+    final elapsedSec = _elapsed.inMicroseconds / 1e6;
     return LayoutBuilder(
       builder: (context, c) {
-        final h = c.maxHeight;
-        final w = c.maxWidth;
-        final elapsedSec = _elapsed.inMicroseconds / 1e6;
         return RepaintBoundary(
           child: CustomPaint(
-            painter: _PathCloudPainter(
+            painter: _BatchCloudPainter(
               elapsedSec: elapsedSec,
-              travelDuration: widget.travelDuration,
-              horizontalPhase: widget.horizontalPhase.clamp(0.0, 0.999),
-              verticalY: h * widget.verticalFraction,
-              opacity: widget.opacity,
-              scale: widget.scale,
-              shapeIndex: widget.shape,
+              specs: widget.specs,
             ),
-            size: Size(w, h),
+            size: Size(c.maxWidth, c.maxHeight),
           ),
         );
       },
@@ -90,7 +145,73 @@ class _CloudWidgetState extends State<CloudWidget>
   }
 }
 
-/// Organic cumulus outline in unit space [0,1]×[0,1], then mapped to [rect].
+void _paintDriftingCloud(
+  Canvas canvas,
+  Size size,
+  double elapsedSec,
+  GardenCloudLayerSpec spec,
+) {
+  final verticalY = size.height * spec.verticalFraction;
+  final horizontalPhase = spec.horizontalPhase.clamp(0.0, 0.999);
+  final shapeIndex = spec.shape;
+
+  final cloudW = size.width * 0.42 * spec.scale;
+  final cloudH = cloudW * 0.48;
+  final travel = size.width + cloudW * 1.35;
+  final durationSec = spec.travelDuration.inMicroseconds / 1e6;
+  final speed = durationSec > 0 ? travel / durationSec : 0.0;
+  final phasePx = horizontalPhase * travel;
+  final drift = (elapsedSec * speed + phasePx) % travel;
+  final x = -cloudW * 0.35 + drift;
+  final cy = verticalY - cloudH * 0.35;
+  final rect = Rect.fromLTWH(x, cy, cloudW, cloudH);
+
+  final path = _cumulusPath(rect, shapeIndex);
+
+  final fill = Paint()
+    ..shader = LinearGradient(
+      begin: Alignment.topCenter,
+      end: Alignment.bottomCenter,
+      colors: [
+        Colors.white.withValues(alpha: spec.opacity * 0.98),
+        Colors.white.withValues(alpha: spec.opacity * 0.76),
+        Colors.white.withValues(alpha: spec.opacity * 0.30),
+      ],
+      stops: const [0.0, 0.48, 1.0],
+    ).createShader(rect)
+    ..style = PaintingStyle.fill;
+
+  canvas.drawPath(path, fill);
+
+  final rim = Paint()
+    ..color = Colors.white.withValues(alpha: spec.opacity * 0.20)
+    ..style = PaintingStyle.stroke
+    ..strokeWidth = 0.7;
+  canvas.drawPath(path, rim);
+}
+
+class _BatchCloudPainter extends CustomPainter {
+  _BatchCloudPainter({
+    required this.elapsedSec,
+    required this.specs,
+  });
+
+  final double elapsedSec;
+  final List<GardenCloudLayerSpec> specs;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    if (size.width <= 0 || size.height <= 0) return;
+    for (final spec in specs) {
+      _paintDriftingCloud(canvas, size, elapsedSec, spec);
+    }
+  }
+
+  @override
+  bool shouldRepaint(covariant _BatchCloudPainter oldDelegate) =>
+      oldDelegate.elapsedSec != elapsedSec || oldDelegate.specs != specs;
+}
+
 Path _cumulusPath(Rect rect, int variant) {
   final w = rect.width;
   final h = rect.height;
@@ -280,72 +401,4 @@ Path _pathVariantC(double l, double t, double w, double h) {
   );
   p.close();
   return p;
-}
-
-class _PathCloudPainter extends CustomPainter {
-  _PathCloudPainter({
-    required this.elapsedSec,
-    required this.travelDuration,
-    required this.horizontalPhase,
-    required this.verticalY,
-    required this.opacity,
-    required this.scale,
-    required this.shapeIndex,
-  });
-
-  /// Monotonic clock time for smooth wrap (no snap at loop).
-  final double elapsedSec;
-  final Duration travelDuration;
-  final double horizontalPhase;
-  final double verticalY;
-  final double opacity;
-  final double scale;
-  final int shapeIndex;
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final cloudW = size.width * 0.42 * scale;
-    final cloudH = cloudW * 0.48;
-    final travel = size.width + cloudW * 1.35;
-    final durationSec = travelDuration.inMicroseconds / 1e6;
-    final speed = durationSec > 0 ? travel / durationSec : 0.0;
-    final phasePx = horizontalPhase * travel;
-    final drift = (elapsedSec * speed + phasePx) % travel;
-    final x = -cloudW * 0.35 + drift;
-    final cy = verticalY - cloudH * 0.35;
-    final rect = Rect.fromLTWH(x, cy, cloudW, cloudH);
-
-    final path = _cumulusPath(rect, shapeIndex);
-
-    final fill = Paint()
-      ..shader = LinearGradient(
-        begin: Alignment.topCenter,
-        end: Alignment.bottomCenter,
-        colors: [
-          Colors.white.withValues(alpha: opacity * 0.98),
-          Colors.white.withValues(alpha: opacity * 0.76),
-          Colors.white.withValues(alpha: opacity * 0.30),
-        ],
-        stops: const [0.0, 0.48, 1.0],
-      ).createShader(rect)
-      ..style = PaintingStyle.fill;
-
-    canvas.drawPath(path, fill);
-
-    final rim = Paint()
-      ..color = Colors.white.withValues(alpha: opacity * 0.20)
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 0.7;
-    canvas.drawPath(path, rim);
-  }
-
-  @override
-  bool shouldRepaint(covariant _PathCloudPainter oldDelegate) =>
-      oldDelegate.elapsedSec != elapsedSec ||
-      oldDelegate.travelDuration != travelDuration ||
-      oldDelegate.horizontalPhase != horizontalPhase ||
-      oldDelegate.verticalY != verticalY ||
-      oldDelegate.opacity != opacity ||
-      oldDelegate.scale != scale ||
-      oldDelegate.shapeIndex != shapeIndex;
 }

@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 
 import '../providers/saved_images_store.dart';
 import '../theme/ui_tokens.dart';
+import '../widgets/safe_asset_image.dart';
 import 'collection_constants.dart';
 
 void _showTransientTopMessage(BuildContext context, String message) {
@@ -137,14 +138,9 @@ class _AnimalGalleryViewerPageState extends State<AnimalGalleryViewerPage> {
                                 maxHeight: maxImgH,
                                 maxWidth: c.maxWidth,
                               ),
-                              child: Image.asset(
+                              child: SafeAssetImage(
                                 path,
                                 fit: BoxFit.contain,
-                                errorBuilder: (_, __, ___) => Icon(
-                                  Icons.broken_image_outlined,
-                                  size: 56,
-                                  color: Colors.white.withValues(alpha: 0.45),
-                                ),
                               ),
                             ),
                             if (hasCaption) ...[

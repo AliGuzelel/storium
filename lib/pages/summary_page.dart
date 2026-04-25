@@ -61,16 +61,6 @@ class _SummaryPageState extends State<SummaryPage> {
     final moodMessage = _moodMessageForScore(widget.score);
 
     return GradientScaffold(
-      appBar: AppBar(
-        title: Text(
-          t(context, 'summary'),
-          textAlign: TextAlign.center,
-          style: const TextStyle(fontFamily: 'Cinzel'),
-        ),
-        centerTitle: true,
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-      ),
       body: SafeArea(
         child: LayoutBuilder(
           builder: (context, constraints) {

@@ -10,7 +10,9 @@ import '../services/auth_service.dart';
 import '../services/achievement_service.dart';
 import '../services/story_progress_service.dart';
 import '../utils/app_strings.dart';
+import '../widgets/localized_text.dart';
 import '../widgets/achievement_card.dart';
+import '../widgets/achievement_popup.dart';
 import '../widgets/gradient_scaffold.dart';
 
 class ProfilePage extends StatefulWidget {
@@ -31,6 +33,7 @@ class _ProfilePageState extends State<ProfilePage> {
   final ImagePicker _imagePicker = ImagePicker();
 
   StoryProgressData _storyStats = const StoryProgressData();
+  AchievementState _achievementState = AchievementState.empty();
   List<AchievementModel> _achievements = const [];
   String? _avatarUrl;
 
@@ -68,13 +71,12 @@ class _ProfilePageState extends State<ProfilePage> {
   }
 
   Future<void> _refreshAchievements() async {
-    final storyState = await _achievementService.syncWithStoryProgress(
-      _storyStats,
-    );
+    final storyState = await _achievementService.loadState();
 
     if (!mounted) return;
 
     setState(() {
+      _achievementState = storyState;
       _achievements = _achievementService.buildAchievementModels(storyState);
     });
   }
@@ -192,7 +194,7 @@ class _ProfilePageState extends State<ProfilePage> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text("Username", style: _labelStyle),
+                          Text(t(context, 'username'), style: _labelStyle),
                           const SizedBox(height: 6),
                           TextField(
                             controller: _usernameController,
@@ -200,7 +202,7 @@ class _ProfilePageState extends State<ProfilePage> {
                             decoration: InputDecoration(
                               isDense: true,
                               border: InputBorder.none,
-                              hintText: "Enter name",
+                              hintText: t(context, 'enter_name'),
                               hintStyle: _valueStyle.copyWith(
                                 color: Colors.white.withOpacity(0.45),
                                 fontWeight: FontWeight.w500,
@@ -215,7 +217,7 @@ class _ProfilePageState extends State<ProfilePage> {
                             ),
                           ),
                           const SizedBox(height: 4),
-                          Text(
+                          LocalizedText(
                             "Story explorer finding calm one choice at a time.",
                             maxLines: 2,
                             overflow: TextOverflow.ellipsis,
@@ -240,7 +242,7 @@ class _ProfilePageState extends State<ProfilePage> {
                           ),
                           const SizedBox(width: 8),
                           Text(
-                            isEditing ? "Save" : "Edit",
+                            isEditing ? t(context, 'save') : t(context, 'edit'),
                             style: const TextStyle(
                               fontFamily: 'Poppins',
                               fontSize: 14,
@@ -263,7 +265,7 @@ class _ProfilePageState extends State<ProfilePage> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text("Details", style: _titleStyle),
+                    Text(t(context, 'details'), style: _titleStyle),
                     const SizedBox(height: 12),
 
                     Row(
@@ -278,7 +280,7 @@ class _ProfilePageState extends State<ProfilePage> {
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Text("Gender", style: _labelStyle),
+                              Text(t(context, 'gender'), style: _labelStyle),
                               const SizedBox(height: 6),
                               _buildGenderDropdown(),
                             ],
@@ -301,7 +303,7 @@ class _ProfilePageState extends State<ProfilePage> {
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Text("Date of Birth", style: _labelStyle),
+                              Text(t(context, 'date_of_birth'), style: _labelStyle),
                               const SizedBox(height: 6),
                               _buildCalendar(),
                             ],
@@ -324,10 +326,10 @@ class _ProfilePageState extends State<ProfilePage> {
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Text("Email", style: _labelStyle),
+                              Text(t(context, 'email'), style: _labelStyle),
                               const SizedBox(height: 6),
                               Text(
-                                _user?.email ?? "Not available",
+                                _user?.email ?? t(context, 'not_available'),
                                 style: _valueStyle,
                               ),
                             ],
@@ -350,7 +352,7 @@ class _ProfilePageState extends State<ProfilePage> {
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Text("Mood", style: _labelStyle),
+                              Text(t(context, 'mood'), style: _labelStyle),
                               const SizedBox(height: 6),
                               _buildMoodChip(),
                             ],
@@ -370,12 +372,12 @@ class _ProfilePageState extends State<ProfilePage> {
                 child: Row(
                   children: [
                     _statChip(
-                      label: "Stories Completed",
-                      value: "${_storyStats.finishedStories.length}",
+                      label: t(context, 'stories_completed'),
+                      value: "${_achievementState.stats.storiesCompleted}",
                     ),
                     const SizedBox(width: 10),
                     _statChip(
-                      label: "Last Story",
+                      label: t(context, 'last_story'),
                       value: _prettyStoryName(_storyStats.lastStoryPlayed),
                     ),
                   ],
@@ -394,13 +396,13 @@ class _ProfilePageState extends State<ProfilePage> {
                 ),
               ),
               const SizedBox(height: 6),
-              Text(
+              LocalizedText(
                 "Unlocked through your journey in Storium.",
                 style: _labelStyle,
               ),
               const SizedBox(height: 12),
 
-              _buildBadgesGrid(),
+              _buildAchievementsSections(),
             ],
           ),
         ),
@@ -565,8 +567,8 @@ class _ProfilePageState extends State<ProfilePage> {
                     Icons.photo_library_rounded,
                     color: Colors.white,
                   ),
-                  title: const Text(
-                    'Choose from device',
+                  title: Text(
+                    t(context, 'choose_from_device'),
                     style: TextStyle(
                       fontFamily: 'Poppins',
                       color: Colors.white,
@@ -582,8 +584,8 @@ class _ProfilePageState extends State<ProfilePage> {
                     Icons.person_outline_rounded,
                     color: Colors.white,
                   ),
-                  title: const Text(
-                    'Use default avatar',
+                  title: Text(
+                    t(context, 'use_default_avatar'),
                     style: TextStyle(
                       fontFamily: 'Poppins',
                       color: Colors.white,
@@ -688,7 +690,7 @@ class _ProfilePageState extends State<ProfilePage> {
                 color: Colors.white.withOpacity(0.9),
               ),
               hint: Text(
-                "Select gender",
+                t(context, 'select_gender'),
                 style: _valueStyle.copyWith(
                   color: Colors.white.withOpacity(0.65),
                   fontWeight: FontWeight.w500,
@@ -702,7 +704,14 @@ class _ProfilePageState extends State<ProfilePage> {
                   .map(
                     (value) => DropdownMenuItem<String>(
                       value: value,
-                      child: Text(value, style: _valueStyle),
+                      child: Text(
+                        value == 'Male'
+                            ? t(context, 'male')
+                            : value == 'Female'
+                                ? t(context, 'female')
+                                : t(context, 'other'),
+                        style: _valueStyle,
+                      ),
                     ),
                   )
                   .toList(),
@@ -716,7 +725,7 @@ class _ProfilePageState extends State<ProfilePage> {
   Widget _buildCalendar() {
     String text;
     if (dateOfBirth == null) {
-      text = "Pick a date";
+      text = t(context, 'pick_a_date');
     } else {
       text = "${dateOfBirth!.day}/${dateOfBirth!.month}/${dateOfBirth!.year}";
     }
@@ -820,13 +829,13 @@ class _ProfilePageState extends State<ProfilePage> {
     final String moodEmoji;
 
     if (calmScore == 0 && anxietyScore == 0) {
-      moodLabel = "Based on last story";
+      moodLabel = t(context, 'based_on_last_story');
       moodEmoji = "😐";
     } else if (calmScore >= anxietyScore) {
-      moodLabel = "Calm";
+      moodLabel = t(context, 'calm');
       moodEmoji = "🙂";
     } else {
-      moodLabel = "Anxious";
+      moodLabel = t(context, 'anxious');
       moodEmoji = "😟";
     }
 
@@ -849,33 +858,91 @@ class _ProfilePageState extends State<ProfilePage> {
     );
   }
 
-  Widget _buildBadgesGrid() {
+  Widget _buildAchievementsSections() {
     final items = _achievements;
 
     if (items.isEmpty) {
       return _glass(
         radius: 20,
-        child: Center(child: Text("No achievements yet.", style: _labelStyle)),
+        child: Center(child: Text(t(context, 'no_achievements_yet'), style: _labelStyle)),
       );
     }
+    final grouped = <AchievementSection, List<AchievementModel>>{
+      for (final section in AchievementSection.values) section: <AchievementModel>[],
+    };
+    for (final item in items) {
+      grouped[item.section]!.add(item);
+    }
+    final sectionOrder = AchievementSection.values;
+    return Column(
+      children: [
+        for (final section in sectionOrder) ...[
+          if (grouped[section]!.isNotEmpty) _buildSectionTitle(section),
+          if (grouped[section]!.isNotEmpty) const SizedBox(height: 10),
+          if (grouped[section]!.isNotEmpty)
+            GridView.count(
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              crossAxisCount: 3,
+              mainAxisSpacing: 14,
+              crossAxisSpacing: 14,
+              childAspectRatio: 0.92,
+              children: grouped[section]!
+                  .map(
+                    (achievement) => AchievementCard(
+                      achievement: achievement,
+                      onTap: () => _showBadgeDialog(achievement),
+                    ),
+                  )
+                  .toList(),
+            ),
+          if (section != sectionOrder.last && grouped[section]!.isNotEmpty)
+            const SizedBox(height: 18),
+        ],
+      ],
+    );
+  }
 
-    return GridView.count(
-      shrinkWrap: true,
-      physics: const NeverScrollableScrollPhysics(),
-      crossAxisCount: 3,
-      mainAxisSpacing: 18,
-      crossAxisSpacing: 18,
-      childAspectRatio: 0.92,
-      children: items.map((achievement) {
-        return AchievementCard(
-          achievement: achievement,
-          onTap: () => _showBadgeDialog(achievement),
-        );
-      }).toList(),
+  Widget _buildSectionTitle(AchievementSection section) {
+    String label;
+    switch (section) {
+      case AchievementSection.stories:
+        label = 'Stories';
+        break;
+      case AchievementSection.emotions:
+        label = 'Emotions';
+        break;
+      case AchievementSection.garden:
+        label = 'Garden';
+        break;
+      case AchievementSection.activity:
+        label = 'Activity';
+        break;
+    }
+    return Align(
+      alignment: Alignment.centerLeft,
+      child: LocalizedText(
+        label,
+        style: TextStyle(
+          fontFamily: 'Cinzel',
+          fontSize: 17,
+          fontWeight: FontWeight.w700,
+          color: Colors.white.withOpacity(0.92),
+        ),
+      ),
     );
   }
 
   void _showBadgeDialog(AchievementModel achievement) {
+    if (!achievement.unlocked) {
+      showAchievementPopup(
+        context,
+        achievement.title,
+        achievement.hint,
+        icon: Icons.lock_rounded,
+      );
+      return;
+    }
     showDialog(
       context: context,
       builder: (context) {
@@ -899,13 +966,14 @@ class _ProfilePageState extends State<ProfilePage> {
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Text(
+                    Icon(
                       achievement.icon,
-                      style: const TextStyle(fontSize: 34),
+                      size: 36,
+                      color: Colors.white.withOpacity(0.95),
                     ),
                     const SizedBox(height: 10),
                     Text(
-                      achievement.unlocked ? "🏅 Achieved!" : "🔒 Locked",
+                      achievement.unlocked ? "🏅 ${t(context, 'achieved')}" : "🔒 ${t(context, 'locked')}",
                       style: TextStyle(
                         fontFamily: 'Cinzel',
                         fontSize: 20,
@@ -914,7 +982,7 @@ class _ProfilePageState extends State<ProfilePage> {
                       ),
                     ),
                     const SizedBox(height: 10),
-                    Text(
+                    LocalizedText(
                       achievement.title,
                       textAlign: TextAlign.center,
                       style: TextStyle(
@@ -925,10 +993,8 @@ class _ProfilePageState extends State<ProfilePage> {
                       ),
                     ),
                     const SizedBox(height: 10),
-                    Text(
-                      achievement.unlocked
-                          ? achievement.description
-                          : "This badge is still locked.\nKeep exploring stories to unlock it 💫",
+                    LocalizedText(
+                      achievement.description,
                       textAlign: TextAlign.center,
                       style: TextStyle(
                         fontFamily: 'Poppins',
@@ -948,7 +1014,7 @@ class _ProfilePageState extends State<ProfilePage> {
   }
 
   String _prettyStoryName(String? raw) {
-    if (raw == null || raw.trim().isEmpty) return "None";
+    if (raw == null || raw.trim().isEmpty) return t(context, 'none');
 
     switch (raw.toLowerCase()) {
       case 'depression':

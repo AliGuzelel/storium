@@ -25,6 +25,7 @@ class _CherryBlossomEffectState extends State<CherryBlossomEffect> {
   late List<_PetalParticle> _petals;
   ui.Image? _blossomImage;
   int _loadGeneration = 0;
+  bool _retryScheduled = false;
 
   void _rebuildPetals() {
     final rng = math.Random(27);
@@ -38,6 +39,7 @@ class _CherryBlossomEffectState extends State<CherryBlossomEffect> {
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(_lifecycleObserver);
     _rebuildPetals();
     _loadBlossomImage();
   }
@@ -64,6 +66,7 @@ class _CherryBlossomEffectState extends State<CherryBlossomEffect> {
       setState(() {
         _blossomImage?.dispose();
         _blossomImage = frame.image;
+        _retryScheduled = false;
       });
     } catch (e, st) {
       debugPrint('CherryBlossomEffect asset load failed: $e\n$st');
@@ -72,15 +75,38 @@ class _CherryBlossomEffectState extends State<CherryBlossomEffect> {
           _blossomImage?.dispose();
           _blossomImage = null;
         });
+        _scheduleRetry();
       }
     }
   }
 
+  void _scheduleRetry() {
+    if (_retryScheduled || !mounted) return;
+    _retryScheduled = true;
+    Future<void>.delayed(const Duration(seconds: 2), () {
+      if (!mounted) return;
+      _retryScheduled = false;
+      if (_blossomImage == null) {
+        _loadBlossomImage();
+      }
+    });
+  }
+
   @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(_lifecycleObserver);
     _blossomImage?.dispose();
     super.dispose();
   }
+
+  late final WidgetsBindingObserver _lifecycleObserver = _SimpleLifecycleObserver(
+    onResumed: () {
+      if (!mounted) return;
+      if (_blossomImage == null) {
+        _loadBlossomImage();
+      }
+    },
+  );
 
   @override
   Widget build(BuildContext context) {
@@ -129,7 +155,6 @@ class _CherryBlossomPainter extends CustomPainter {
   void paint(Canvas canvas, Size size) {
     final image = blossomImage;
     if (image == null) return;
-
     final src = Rect.fromLTWH(
       0,
       0,
@@ -223,6 +248,18 @@ class _CherryBlossomPainter extends CustomPainter {
         oldDelegate.petals != petals ||
         oldDelegate.blossomImage != blossomImage ||
         oldDelegate.subtle != subtle;
+  }
+}
+
+class _SimpleLifecycleObserver with WidgetsBindingObserver {
+  _SimpleLifecycleObserver({required this.onResumed});
+  final VoidCallback onResumed;
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      onResumed();
+    }
   }
 }
 

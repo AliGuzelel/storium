@@ -21,10 +21,10 @@ class GardenSkyLayer extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final gradient = gardenSkyGradient(themeColor, brightness);
+    final gradient = gardenSkyGradient('blue', brightness);
 
     return KeyedSubtree(
-      key: ValueKey<String>('garden_sky_$themeColor'),
+      key: const ValueKey<String>('garden_sky_blue'),
       child: LayoutBuilder(
         builder: (context, constraints) {
           final h = constraints.maxHeight;
@@ -47,7 +47,7 @@ class GardenSkyLayer extends StatelessWidget {
                 ),
               ),
               Positioned.fill(
-                child: GardenThemeParticlesLayer(themeColor: themeColor),
+                child: GardenThemeParticlesLayer(themeColor: 'blue'),
               ),
               const GardenSunWidget(),
               Align(

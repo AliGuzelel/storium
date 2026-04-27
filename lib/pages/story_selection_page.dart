@@ -4,6 +4,7 @@ import '../utils/app_strings.dart';
 import '../models/story_progress.dart';
 import '../services/story_progress_service.dart';
 import '../widgets/gradient_scaffold.dart';
+import '../widgets/localized_text.dart';
 import 'definition_page.dart';
 
 class StorySelectionPage extends StatefulWidget {
@@ -170,7 +171,7 @@ class _StorySelectionPageState extends State<StorySelectionPage>
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
+                  LocalizedText(
                     title,
                     style: const TextStyle(
                       fontFamily: 'Poppins',
@@ -180,7 +181,7 @@ class _StorySelectionPageState extends State<StorySelectionPage>
                     ),
                   ),
                   const SizedBox(height: 4),
-                  Text(
+                  LocalizedText(
                     desc,
                     style: TextStyle(
                       fontFamily: 'Poppins',
@@ -221,7 +222,7 @@ class _StorySelectionPageState extends State<StorySelectionPage>
         borderRadius: BorderRadius.circular(999),
         border: Border.all(color: Colors.white.withOpacity(0.18), width: 1),
       ),
-      child: Text(
+      child: LocalizedText(
         text,
         style: TextStyle(
           fontFamily: 'Poppins',
@@ -336,7 +337,7 @@ class _StorySelectionPageState extends State<StorySelectionPage>
                       const SizedBox(height: 14),
                       _storyCard(
                         context,
-                        title: 'Too Loud Inside',
+                        title: t(context, 'too_loud_inside'),
                         topic: 'Anxiety',
                         resumeStoryId: 'too_loud_inside',
                         emoji: '🧠',

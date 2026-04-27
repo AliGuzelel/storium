@@ -8,6 +8,7 @@ import '../widgets/app_button.dart';
 import '../widgets/app_glass.dart';
 import '../widgets/achievement_popup.dart';
 import '../widgets/gradient_scaffold.dart';
+import '../widgets/localized_text.dart';
 import 'story_page.dart';
 
 class SummaryPage extends StatefulWidget {
@@ -101,7 +102,7 @@ class _SummaryPageState extends State<SummaryPage> {
                           ),
                         ),
                         const SizedBox(height: 12),
-                        Text(
+                        LocalizedText(
                           moodMessage,
                           textAlign: TextAlign.center,
                           style: TextStyle(
@@ -146,7 +147,7 @@ class _SummaryPageState extends State<SummaryPage> {
                         if (widget.topic == 'Grief' &&
                             widget.griefStayedEnding != null) ...[
                           const SizedBox(height: 18),
-                          Text(
+                          LocalizedText(
                             widget.griefStayedEnding!
                                 ? "You didn't run from it.\n\nYou stayed.\n\nEven when it felt heavy,\neven when it hurt more than expected.\n\nThat doesn't make it easier.\nBut it makes it real.\n\nGrief isn't something you fix.\n\nSometimes, it's something you learn\nto sit with.\n\nAnd today, you did."
                                 : "You kept moving.\n\nYou didn't stop long enough to face it.\n\nAnd maybe that's all you could do today.\n\nGrief doesn't follow rules.\n\nIt doesn't wait until you're ready.\n\nAvoiding it doesn't mean you're weak.\n\nIt just means… it still feels like too much.\n\nAnd that's okay.",
@@ -163,7 +164,7 @@ class _SummaryPageState extends State<SummaryPage> {
 
                         if (!(widget.topic == 'Grief' &&
                             widget.griefStayedEnding != null)) ...[
-                          Text(
+                          LocalizedText(
                             _autoSummary(
                               widget.mood,
                               widget.score,
@@ -183,9 +184,9 @@ class _SummaryPageState extends State<SummaryPage> {
                         Row(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Expanded(child: _kvColumn('Mood', widget.mood)),
+                            Expanded(child: _kvColumn(t(context, 'mood'), widget.mood)),
                             Expanded(
-                              child: _kvColumn('Emotion', widget.emotion),
+                              child: _kvColumn(t(context, 'emotion'), widget.emotion),
                             ),
                           ],
                         ),
@@ -209,7 +210,7 @@ class _SummaryPageState extends State<SummaryPage> {
                           ],
                         ),
                         const SizedBox(height: 10),
-                        Text(
+                        LocalizedText(
                           "Storium reflects fictional emotional patterns and is not a diagnostic tool.",
                           textAlign: TextAlign.center,
                           style: TextStyle(
@@ -267,7 +268,7 @@ class _SummaryPageState extends State<SummaryPage> {
   Widget _kvColumn(String k, String v) => Column(
     crossAxisAlignment: CrossAxisAlignment.center,
     children: [
-      Text(
+      LocalizedText(
         k,
         textAlign: TextAlign.center,
         style: const TextStyle(
@@ -277,7 +278,7 @@ class _SummaryPageState extends State<SummaryPage> {
         ),
       ),
       const SizedBox(height: 4),
-      Text(
+      LocalizedText(
         v,
         textAlign: TextAlign.center,
         style: const TextStyle(

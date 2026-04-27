@@ -50,22 +50,34 @@ class StoryProgressService {
     _foldCurrentSessionIntoMap(progress, merged);
     merged.removeWhere((_, scene) => scene < 1);
 
+    List<InProgressStory> toSortedList(Map<String, int> source) {
+      return source.entries
+          .where((e) => e.value >= 1)
+          .map(
+            (e) => InProgressStory(storyId: e.key, sceneIndex: e.value),
+          )
+          .toList()
+        ..sort(
+          (a, b) => StoryResumeCatalog.displayTitleForId(
+            a.storyId,
+          ).compareTo(StoryResumeCatalog.displayTitleForId(b.storyId)),
+        );
+    }
+
     final finished =
         StoryResumeCatalog.storyIdsForFinishedTopics(progress.finishedStories);
-    merged.removeWhere((storyId, _) => finished.contains(storyId));
+    final strict = Map<String, int>.from(merged)
+      ..removeWhere((storyId, _) => finished.contains(storyId));
+    final strictList = toSortedList(strict);
+    if (strictList.isNotEmpty) return strictList;
 
-    final list = merged.entries
-        .where((e) => e.value >= 1)
-        .map(
-          (e) => InProgressStory(storyId: e.key, sceneIndex: e.value),
-        )
-        .toList()
-      ..sort(
-        (a, b) => StoryResumeCatalog.displayTitleForId(a.storyId).compareTo(
-          StoryResumeCatalog.displayTitleForId(b.storyId),
-        ),
-      );
-    return list;
+    // Fallback: if completion flags are stale/inconsistent, still surface
+    // resumable story entries so Continue never appears empty incorrectly.
+    return toSortedList(merged);
+  }
+
+  Future<List<InProgressStory>> fetchUnfinishedStories() {
+    return loadContinuableStories();
   }
 
   /// If the user signs in, copy `guest` prefs into `uid` when uid has no file yet.
@@ -204,6 +216,9 @@ class StoryProgressService {
     if (storyId != null && currentScene > 0) {
       inProgress[storyId] = currentScene;
     }
+    final finished = <String>[
+      ...current.finishedStories.where((t) => t != normalizedTopic),
+    ];
 
     final next = current.copyWith(
       currentStoryTitle: storyTitle,
@@ -215,6 +230,7 @@ class StoryProgressService {
       lastPlayedAt: DateTime.now(),
       lastStoryPlayed: normalizedTopic,
       inProgressStories: inProgress,
+      finishedStories: finished,
     );
 
     await save(next);
@@ -227,6 +243,7 @@ class StoryProgressService {
     required int calm,
     required int anxiety,
     String? resumeStoryId,
+    bool resumedFromSavedProgress = false,
   }) async {
     final current = await load();
     final normalizedTopic = _normalizeTopic(topic, storyTitle);
@@ -260,7 +277,27 @@ class StoryProgressService {
     await save(next);
 
     final beforeState = await _achievementService.loadState();
-    final afterState = await _achievementService.syncWithStoryProgress(next);
+    final total = StoryResumeCatalog.titles.length;
+    final calmPercent = (calm + anxiety) == 0
+        ? 0
+        : ((calm / (calm + anxiety)) * 100).round();
+    final anxietyPercent = (calm + anxiety) == 0
+        ? 0
+        : ((anxiety / (calm + anxiety)) * 100).round();
+    final storyIdForAchievements = (storyId ?? normalizedTopic).toLowerCase();
+    final snapshotStoryIds = next.finishedStories
+        .map((topic) => StoryResumeCatalog.storyIdFromNormalizedTopic(topic))
+        .whereType<String>()
+        .toSet()
+      ..add(storyIdForAchievements);
+    await _achievementService.syncCompletedStories(snapshotStoryIds);
+    await _achievementService.completeStory(storyIdForAchievements);
+    final afterState = await _achievementService.incrementStoryCount(
+      totalStoriesInCatalog: total,
+      calmPercent: calmPercent,
+      anxietyPercent: anxietyPercent,
+      finishedInOneSession: !resumedFromSavedProgress,
+    );
     final rawUnlocked = _getNewlyUnlockedAchievements(beforeState, afterState);
     return _filterAndRememberAnnounced(rawUnlocked);
   }
@@ -296,8 +333,7 @@ class StoryProgressService {
   /// Prevents replaying all historical achievement popups after sign-in
   /// by seeding announced IDs with already unlocked achievements.
   Future<void> seedAnnouncedWithCurrentlyUnlocked() async {
-    final progress = await load();
-    final syncedState = await _achievementService.syncWithStoryProgress(progress);
+    final syncedState = await _achievementService.loadState();
     final announced = await _loadAnnouncedAchievementIds();
     final unlockedIds = syncedState.achievements.entries
         .where((entry) => entry.value)
@@ -420,6 +456,13 @@ class StoryProgressService {
     if (fields == null) return null;
 
     final extraInProgress = _inProgressFromFirestoreRawFields(fields);
+    final legacyCompletedStoryIds = _finishedStoryIdsFromLegacyCompletedStories(
+      fields['completedStories'],
+    );
+    final legacyFinishedTopics = legacyCompletedStoryIds
+        .map(_topicFromStoryId)
+        .whereType<String>()
+        .toSet();
 
     final rawProgress =
         (fields['storyProgressJson'] as Map<String, dynamic>?)?['stringValue']
@@ -429,20 +472,28 @@ class StoryProgressService {
       try {
         final progressJson = jsonDecode(rawProgress) as Map<String, dynamic>;
         final base = StoryProgressData.fromJson(progressJson);
-        if (extraInProgress.isEmpty) return base;
+        if (extraInProgress.isEmpty && legacyFinishedTopics.isEmpty) return base;
+        final mergedFinished = {
+          ...base.finishedStories,
+          ...legacyFinishedTopics,
+        }.toList();
         return base.copyWith(
           inProgressStories: _mergeInProgressSceneMaps(
             base.inProgressStories,
             extraInProgress,
           ),
+          finishedStories: mergedFinished,
         );
       } catch (_) {
         /* fall through: still return partial data from extra fields */
       }
     }
 
-    if (extraInProgress.isEmpty) return null;
-    return StoryProgressData(inProgressStories: extraInProgress);
+    if (extraInProgress.isEmpty && legacyFinishedTopics.isEmpty) return null;
+    return StoryProgressData(
+      inProgressStories: extraInProgress,
+      finishedStories: legacyFinishedTopics.toList(),
+    );
   }
 
   /// Merges `inProgressStories` stored as separate Firestore fields (not only inside
@@ -462,6 +513,7 @@ class StoryProgressService {
     add(_parseFirestoreDocumentMap(fields['in_progress_stories']));
     add(_parseInProgressFromJsonStringField(fields['inProgressStories']));
     add(_parseInProgressFromJsonStringField(fields['inProgressStoriesJson']));
+    add(_parseLegacyStoryProgressMap(fields['storyProgress']));
 
     final blob = _decodeStoryProgressStringField(fields['storyProgressJson']);
     if (blob != null) {
@@ -501,6 +553,35 @@ class StoryProgressService {
 
   int? _parseSceneValue(Object? rawScene) {
     return _parseFirestoreInt(rawScene) ?? _parseLooseInt(rawScene);
+  }
+
+  Map<String, int> _parseLegacyStoryProgressMap(Object? rawStoryProgress) {
+    if (rawStoryProgress is! Map) return const <String, int>{};
+    final parsed = _parseFirestoreDocumentMap(rawStoryProgress);
+    if (parsed.isEmpty) return const <String, int>{};
+    final out = <String, int>{};
+    parsed.forEach((rawKey, scene) {
+      if (scene < 1) return;
+      final storyId = _toStoryId(rawKey);
+      if (storyId == null || storyId.isEmpty) return;
+      final prev = out[storyId] ?? 0;
+      out[storyId] = scene > prev ? scene : prev;
+    });
+    return out;
+  }
+
+  Set<String> _finishedStoryIdsFromLegacyCompletedStories(Object? rawCompleted) {
+    if (rawCompleted is! Map) return const <String>{};
+    final parsed = _parseFirestoreDocumentMap(rawCompleted);
+    final out = <String>{};
+    parsed.forEach((rawKey, value) {
+      if (value != 1) return;
+      final storyId = _toStoryId(rawKey);
+      if (storyId != null && storyId.isNotEmpty) {
+        out.add(storyId);
+      }
+    });
+    return out;
   }
 
   Map<String, int> _parseInProgressFromJsonStringField(Object? rawField) {
@@ -578,6 +659,9 @@ class StoryProgressService {
 
       final doubleValue = m['doubleValue'];
       if (doubleValue is num) return doubleValue.round();
+
+      final boolValue = m['booleanValue'];
+      if (boolValue is bool) return boolValue ? 1 : 0;
     }
     return null;
   }
@@ -587,6 +671,30 @@ class StoryProgressService {
     if (raw is double) return raw.round();
     if (raw is String) return int.tryParse(raw);
     return null;
+  }
+
+  String? _toStoryId(String rawKey) {
+    final normalized = rawKey.trim().toLowerCase();
+    if (normalized.isEmpty) return null;
+    if (StoryResumeCatalog.titles.containsKey(normalized)) return normalized;
+    return StoryResumeCatalog.storyIdFromNormalizedTopic(normalized);
+  }
+
+  String? _topicFromStoryId(String storyId) {
+    switch (storyId) {
+      case 'the_day_after':
+        return 'grief';
+      case 'what_still_remains':
+        return 'depression';
+      case 'alone_again':
+        return 'loneliness';
+      case 'almost_there':
+        return 'failure';
+      case 'too_loud_inside':
+        return 'anxiety';
+      default:
+        return null;
+    }
   }
 
   String _prefsKeyForUser() {

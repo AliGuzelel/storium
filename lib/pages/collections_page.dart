@@ -39,16 +39,20 @@ class CollectionsPage extends StatelessWidget {
                     label: label,
                     placeholderColor: tint,
                     previewAssetPath: switch (label) {
+                      'Animals' => kAnimalsCollectionGridPreviewAsset,
                       'Space' => kSpaceCollectionGridPreviewAsset,
                       'Nature' => kNatureCollectionGridPreviewAsset,
                       'Art' => kArtCollectionGridPreviewAsset,
                       'Ocean' => kOceanCollectionGridPreviewAsset,
+                      'Memes' => kMemesCollectionGridPreviewAsset,
                       _ => null,
                     },
-                    fullBleedImage: label == 'Space' ||
+                    fullBleedImage: label == 'Animals' ||
+                        label == 'Space' ||
                         label == 'Nature' ||
                         label == 'Art' ||
-                        label == 'Ocean',
+                        label == 'Ocean' ||
+                        label == 'Memes',
                     onTap: () {
                       Navigator.push(
                         context,

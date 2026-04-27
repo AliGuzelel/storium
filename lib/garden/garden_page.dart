@@ -7,9 +7,12 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 
 import '../localization/app_strings.dart';
+import '../models/user_session.dart';
 import '../providers/settings_manager.dart';
 import '../utils/app_asset_precache.dart';
+import '../services/achievement_service.dart';
 import '../widgets/immersive_back_button.dart';
+import '../widgets/localized_text.dart';
 import 'garden_models.dart';
 import 'garden_storage.dart';
 import 'widgets/garden_plant_page.dart' show PlantPage;
@@ -44,6 +47,8 @@ class _GardenPageState extends State<GardenPage> with TickerProviderStateMixin {
   final Map<String, int> _glowEpochByPlant = {};
   Timer? _cooldownTicker;
   static const Duration _fertilizerReduction = Duration(hours: 3);
+  final AchievementService _achievementService = AchievementService();
+  late final String _uidScope;
 
   static const _wateredToastMessage =
       'Watered. Your plant feels a little stronger.';
@@ -64,6 +69,7 @@ class _GardenPageState extends State<GardenPage> with TickerProviderStateMixin {
   @override
   void initState() {
     super.initState();
+    _uidScope = UserSession.currentUser?.uid ?? 'guest';
     _waterToastOpacity = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 240),
@@ -121,7 +127,7 @@ class _GardenPageState extends State<GardenPage> with TickerProviderStateMixin {
   }
 
   Future<void> _load() async {
-    final s = await GardenStorage.load();
+    final s = await GardenStorage.load(uidScope: _uidScope);
     if (!mounted) return;
     final idx = s.selectedPlantPageIndex
         .clamp(0, GardenPlantOption.choices.length - 1);
@@ -148,7 +154,7 @@ class _GardenPageState extends State<GardenPage> with TickerProviderStateMixin {
     if (clamped == _state.selectedPlantPageIndex) return;
     final next = _state.copyWith(selectedPlantPageIndex: clamped);
     try {
-      await GardenStorage.save(next);
+      await GardenStorage.save(next, uidScope: _uidScope);
       if (mounted) setState(() => _state = next);
     } catch (e, st) {
       debugPrint('GardenStorage.save (page): $e\n$st');
@@ -158,7 +164,7 @@ class _GardenPageState extends State<GardenPage> with TickerProviderStateMixin {
   Future<void> _resetPlantSlot(String plantId) async {
     final next = _state.copyWithSlot(plantId, const GardenPlantSlot());
     try {
-      await GardenStorage.save(next);
+      await GardenStorage.save(next, uidScope: _uidScope);
     } catch (e, st) {
       debugPrint('GardenStorage.save (reset): $e\n$st');
       if (!mounted) return;
@@ -258,7 +264,7 @@ class _GardenPageState extends State<GardenPage> with TickerProviderStateMixin {
         ),
       );
       try {
-        await GardenStorage.save(mature);
+        await GardenStorage.save(mature, uidScope: _uidScope);
       } catch (e, st) {
         debugPrint('GardenStorage.save (water): $e\n$st');
         if (!mounted) return;
@@ -285,6 +291,7 @@ class _GardenPageState extends State<GardenPage> with TickerProviderStateMixin {
     if (nextPhase >= 3) {
       completed.add(id);
     }
+    final unlockedMatureNow = slot.currentPhase < 3 && nextPhase >= 3;
     final cooldown = GardenStorage.randomWaterCooldown(_rng);
     final updated = _state
         .copyWithSlot(
@@ -298,7 +305,7 @@ class _GardenPageState extends State<GardenPage> with TickerProviderStateMixin {
         .copyWith(completedPlantTypes: completed);
 
     try {
-      await GardenStorage.save(updated);
+      await GardenStorage.save(updated, uidScope: _uidScope);
     } catch (e, st) {
       debugPrint('GardenStorage.save (water): $e\n$st');
       if (!mounted) return;
@@ -314,6 +321,9 @@ class _GardenPageState extends State<GardenPage> with TickerProviderStateMixin {
       _state = updated;
       _bumpGlow(id);
     });
+    if (unlockedMatureNow) {
+      unawaited(_achievementService.incrementPlantCount());
+    }
     _syncCooldownTicker();
     if (!mounted) return;
     unawaited(_presentWaterToast());
@@ -324,7 +334,7 @@ class _GardenPageState extends State<GardenPage> with TickerProviderStateMixin {
     if (_state.fertilizerCount <= 0) {
       if (!mounted) return;
       ScaffoldMessenger.maybeOf(context)?.showSnackBar(
-        const SnackBar(content: Text('No fertilizer left.')),
+        SnackBar(content: Text(t(context, 'no_fertilizer_left'))),
       );
       return;
     }
@@ -333,7 +343,7 @@ class _GardenPageState extends State<GardenPage> with TickerProviderStateMixin {
     if (slot.isMature || next == null || !now.isBefore(next)) {
       if (!mounted) return;
       ScaffoldMessenger.maybeOf(context)?.showSnackBar(
-        const SnackBar(content: Text('No growth time to reduce.')),
+        SnackBar(content: Text(t(context, 'no_growth_time_to_reduce'))),
       );
       return;
     }
@@ -347,7 +357,7 @@ class _GardenPageState extends State<GardenPage> with TickerProviderStateMixin {
         )
         .copyWith(fertilizerCount: (_state.fertilizerCount - 1).clamp(0, 999999));
     try {
-      await GardenStorage.save(updated);
+      await GardenStorage.save(updated, uidScope: _uidScope);
     } catch (e, st) {
       debugPrint('GardenStorage.save (fertilizer): $e\n$st');
       if (!mounted) return;
@@ -365,7 +375,7 @@ class _GardenPageState extends State<GardenPage> with TickerProviderStateMixin {
     });
     _syncCooldownTicker();
     ScaffoldMessenger.maybeOf(context)?.showSnackBar(
-      const SnackBar(content: Text('Growth time reduced')),
+      SnackBar(content: Text(t(context, 'growth_time_reduced'))),
     );
   }
 
@@ -538,7 +548,7 @@ class _GardenPageState extends State<GardenPage> with TickerProviderStateMixin {
                             ),
                           ),
                           child: Text(
-                            'Fertilizer: ${_state.fertilizerCount}',
+                            '${t(context, 'fertilizer')}: ${_state.fertilizerCount}',
                             style: TextStyle(
                               fontFamily: 'Poppins',
                               fontSize: 12,
@@ -585,7 +595,7 @@ class _GardenPageState extends State<GardenPage> with TickerProviderStateMixin {
                                       countdown,
                                       const SizedBox(height: 16),
                                     ],
-                                    Text(
+                                    LocalizedText(
                                       _currentPlant.name,
                                       textAlign: TextAlign.center,
                                       style: const TextStyle(
@@ -595,7 +605,7 @@ class _GardenPageState extends State<GardenPage> with TickerProviderStateMixin {
                                       ),
                                     ),
                                     const SizedBox(height: 8),
-                                    Text(
+                                    LocalizedText(
                                       _currentPlant.description,
                                       textAlign: TextAlign.center,
                                       style: TextStyle(
@@ -856,7 +866,7 @@ class _PlantOptionCard extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
+                  LocalizedText(
                     option.name,
                     style: const TextStyle(
                       fontFamily: 'Cinzel',
@@ -866,7 +876,7 @@ class _PlantOptionCard extends StatelessWidget {
                     ),
                   ),
                   const SizedBox(height: 4),
-                  Text(
+                  LocalizedText(
                     option.description,
                     style: TextStyle(
                       fontFamily: 'Poppins',

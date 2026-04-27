@@ -19,6 +19,7 @@ dependencies:
   image_picker: ^1.1.2
   provider: ^6.1.2
   google_fonts: ^8.0.2
+  translator: ^1.0.4+1
 
 dev_dependencies:
   flutter_test:
@@ -37,6 +38,7 @@ flutter:
     - assets/images/plants/forget_me_not/
     - assets/images/plants/camellia/
     - assets/images/plants/rose/
+    - assets/images/plants/allium/
     - assets/images/plants/iris/
     - assets/images/plants/ranunculus/
     - assets/data/
@@ -46,6 +48,7 @@ flutter:
     - assets/collection_images/nature/
     - assets/collection_images/art/
     - assets/collection_images/ocean/
+    - assets/collection_images/memes/
 
   fonts:
     - family: Poppins

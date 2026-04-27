@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../services/story_progress_service.dart';
 import '../utils/story_resume_catalog.dart';
 import '../widgets/gradient_scaffold.dart';
+import '../widgets/localized_text.dart';
 import 'summary_page.dart';
 
 class StoryPage extends StatefulWidget {
@@ -28,6 +29,7 @@ class _StoryPageState extends State<StoryPage> {
   int calm = 0, anxiety = 0;
   int choicesMade = 0;
   int currentScene = 1;
+  bool _startedFromResume = false;
   late final Map<int, Map<String, dynamic>> storyScenes;
 
   String? _resolvedSceneImagePath(String? path) {
@@ -1088,6 +1090,7 @@ class _StoryPageState extends State<StoryPage> {
     }
 
     if (sceneToUse != null && storyScenes.containsKey(sceneToUse)) {
+      _startedFromResume = sceneToUse > 1;
       setState(() {
         currentScene = sceneToUse!;
         if (topicMatches) {
@@ -1117,6 +1120,7 @@ class _StoryPageState extends State<StoryPage> {
       currentChoicesMade: choicesMade,
       resumeStoryId: sid,
     );
+    _startedFromResume = false;
   }
 
   Future<void> _goToSummary() async {
@@ -1134,6 +1138,7 @@ class _StoryPageState extends State<StoryPage> {
       calm: calm,
       anxiety: anxiety,
       resumeStoryId: widget.resumeStoryId,
+      resumedFromSavedProgress: _startedFromResume,
     );
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -1243,7 +1248,7 @@ class _StoryPageState extends State<StoryPage> {
   }
 
   Widget _glassChoiceButton({
-    required String label,
+    required Widget label,
     required VoidCallback onTap,
   }) {
     return ClipRRect(
@@ -1271,15 +1276,7 @@ class _StoryPageState extends State<StoryPage> {
             splashColor: Colors.white.withOpacity(0.10),
             highlightColor: Colors.white.withOpacity(0.06),
             child: Center(
-              child: Text(
-                label,
-                textAlign: TextAlign.center,
-                style: const TextStyle(
-                  fontFamily: 'Poppins',
-                  fontSize: 16,
-                  color: Colors.white,
-                ),
-              ),
+              child: label,
             ),
           ),
         ),
@@ -1340,8 +1337,8 @@ class _StoryPageState extends State<StoryPage> {
                 ),
                 child: Column(
                   children: [
-                    Text(
-                      scene['text'],
+                    LocalizedText(
+                      scene['text'] as String,
                       textAlign: TextAlign.center,
                       style: TextStyle(
                         fontFamily: 'Poppins',
@@ -1361,7 +1358,15 @@ class _StoryPageState extends State<StoryPage> {
                       return Padding(
                         padding: const EdgeInsets.symmetric(vertical: 7),
                         child: _glassChoiceButton(
-                          label: choice['text'] as String,
+                          label: LocalizedText(
+                            choice['text'] as String,
+                            textAlign: TextAlign.center,
+                            style: const TextStyle(
+                              fontFamily: 'Poppins',
+                              fontSize: 16,
+                              color: Colors.white,
+                            ),
+                          ),
                           onTap: () => _chooseOption(
                             statStr,
                             choice['nextScene'] as int,

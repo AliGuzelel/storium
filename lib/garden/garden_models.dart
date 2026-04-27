@@ -63,6 +63,26 @@ class GardenPersistedState {
 
   static List<String> get allPlantIds =>
       GardenPlantOption.choices.map((e) => e.id).toList();
+  static const Map<String, String> _legacyPlantIdMap = {'lavender': 'allium'};
+
+  static String _normalizePlantId(String id) => _legacyPlantIdMap[id] ?? id;
+  static Iterable<String> _legacyAliasesFor(String id) sync* {
+    for (final entry in _legacyPlantIdMap.entries) {
+      if (entry.value == id) yield entry.key;
+    }
+  }
+  static Map<String, dynamic> _slotJsonForPlantId(
+    Map<String, dynamic> rawSlots,
+    String id,
+  ) {
+    final direct = rawSlots[id];
+    if (direct is Map) return Map<String, dynamic>.from(direct);
+    for (final legacy in _legacyAliasesFor(id)) {
+      final legacySlot = rawSlots[legacy];
+      if (legacySlot is Map) return Map<String, dynamic>.from(legacySlot);
+    }
+    return const <String, dynamic>{};
+  }
 
   static int _clampPageIndex(int i) {
     final n = GardenPlantOption.choices.length;
@@ -127,13 +147,14 @@ class GardenPersistedState {
     final slots = <String, GardenPlantSlot>{
       for (final id in allPlantIds)
         id: GardenPlantSlot.fromJson(
-          Map<String, dynamic>.from(
-            rawSlots[id] as Map? ?? const {},
-          ),
+          _slotJsonForPlantId(rawSlots, id),
         ),
     };
     final rawDone = json['completedPlantTypes'] as List<dynamic>? ?? const [];
-    final completed = rawDone.map((e) => e.toString()).toSet();
+    final completed = rawDone
+        .map((e) => _normalizePlantId(e.toString()))
+        .toSet()
+      ..removeWhere((id) => !allPlantIds.contains(id));
     final page = (json['selectedPlantPageIndex'] as num?)?.toInt() ?? 0;
     final fertilizer = (json['fertilizerCount'] as num?)?.toInt() ?? 0;
     return GardenPersistedState(
@@ -212,16 +233,17 @@ class GardenPlantOption {
       plantPhaseScaleFactor: 1.45,
     ),
     GardenPlantOption(
-      id: 'lavender',
-      name: 'Lavender',
-      description: 'peace that settles without asking',
+      id: 'allium',
+      name: 'Allium',
+      description: 'It rises slowly, holding itself together in quiet balance.',
       images: {
-        0: 'assets/images/plants/lavender.png',
-        1: 'assets/images/plants/lavender.png',
-        2: 'assets/images/plants/lavender.png',
+        0: 'assets/images/plants/allium/allium_seed.png',
+        1: 'assets/images/plants/allium/allium_grow.png',
+        2: 'assets/images/plants/allium/allium_full.png',
       },
       plantImageHeight: 216,
-      bottomOffset: 14,
+      bottomOffset: 0,
+      plantPhaseScaleFactor: 1.35,
     ),
     GardenPlantOption(
       id: 'rose',

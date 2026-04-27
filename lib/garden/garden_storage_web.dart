@@ -18,8 +18,10 @@ class GardenStorage {
   static const _nextWaterKey = 'garden_next_water_ms';
   static const _completedKey = 'garden_completed_types';
   static const _schemaKey = 'garden_plant_schema_int';
+  static const _stateJsonKey = 'garden_state_json_v2';
   static const _selectedPageKey = 'garden_selected_plant_page';
   static const _fertilizerCountKey = 'garden_fertilizer_count';
+  static const _legacyAlliumId = 'lavender';
 
   static const int currentSchema = 4;
 
@@ -33,17 +35,30 @@ class GardenStorage {
     if (raw == null || raw.isEmpty) return {};
     return raw
         .split(',')
-        .map((e) => e.trim())
+        .map((e) {
+          final id = e.trim();
+          return id == _legacyAlliumId ? 'allium' : id;
+        })
         .where((e) => e.isNotEmpty)
         .toSet();
   }
 
-  static GardenPlantSlot _readSlot(String id) {
-    final stageRaw = _storage[_slotStageKey(id)];
+  static GardenPlantSlot _readSlot(String id, String scope) {
+    String k(String base) => '${base}_$scope';
+    final fallbackId = id == 'allium' ? _legacyAlliumId : null;
+    final stageRaw =
+        _storage[k(_slotStageKey(id))] ??
+        (fallbackId == null ? null : _storage[k(_slotStageKey(fallbackId))]);
     final parsed = int.tryParse(stageRaw ?? '');
     final phase = (parsed ?? 0).clamp(0, 3);
-    final lastMs = int.tryParse(_storage[_slotLastKey(id)] ?? '');
-    final nextMs = int.tryParse(_storage[_slotNextKey(id)] ?? '');
+    final lastMs = int.tryParse(
+      _storage[k(_slotLastKey(id))] ??
+          (fallbackId == null ? '' : _storage[k(_slotLastKey(fallbackId))] ?? ''),
+    );
+    final nextMs = int.tryParse(
+      _storage[k(_slotNextKey(id))] ??
+          (fallbackId == null ? '' : _storage[k(_slotNextKey(fallbackId))] ?? ''),
+    );
     return GardenPlantSlot(
       currentPhase: phase,
       lastWateredAt: lastMs == null
@@ -55,11 +70,12 @@ class GardenStorage {
     );
   }
 
-  static bool _hasLegacyKeys() {
-    return _storage[_plantIdKey] != null ||
-        _storage[_stageKey] != null ||
-        _storage[_lastWaterKey] != null ||
-        _storage[_nextWaterKey] != null;
+  static bool _hasLegacyKeys(String scope) {
+    String k(String base) => '${base}_$scope';
+    return _storage[k(_plantIdKey)] != null ||
+        _storage[k(_stageKey)] != null ||
+        _storage[k(_lastWaterKey)] != null ||
+        _storage[k(_nextWaterKey)] != null;
   }
 
   static void _purgeObsoleteSlots() {
@@ -79,70 +95,95 @@ class GardenStorage {
     }
   }
 
-  static Future<GardenPersistedState> load() async {
-    final schemaRaw = _storage[_schemaKey];
-    final schema = int.tryParse(schemaRaw ?? '') ?? 0;
-    if (schema < currentSchema) {
-      _purgeObsoleteSlots();
-      final completed = _parseCompleted(_storage[_completedKey]);
-      final filtered = completed
-          .where(GardenPersistedState.allPlantIds.contains)
-          .toSet();
-      final fresh = GardenPersistedState(
-        slots: {
-          for (final id in GardenPersistedState.allPlantIds)
-            id: const GardenPlantSlot(),
-        },
-        completedPlantTypes: filtered,
-        selectedPlantPageIndex: 0,
-      );
-      await save(fresh);
-      return fresh;
-    }
+  static Future<GardenPersistedState> load({String? uidScope}) async {
+    try {
+      final scope = (uidScope == null || uidScope.isEmpty) ? 'guest' : uidScope;
+      String k(String base) => '${base}_$scope';
 
-    final completed = _parseCompleted(_storage[_completedKey]);
-    final hasNew =
-        _storage[_slotStageKey(GardenPersistedState.allPlantIds.first)] != null;
-
-    if (!hasNew) {
-      if (_hasLegacyKeys()) {
-        final migrated = _migrateFromLegacy(completed);
-        await save(migrated);
-        return migrated;
+      final blob = _storage[k(_stateJsonKey)];
+      if (blob != null && blob.isNotEmpty) {
+        try {
+          return GardenPersistedState.fromJsonString(blob);
+        } catch (_) {}
       }
-      final fresh = GardenPersistedState(
+
+      final schemaRaw = _storage[k(_schemaKey)];
+      final schema = int.tryParse(schemaRaw ?? '') ?? 0;
+      if (schema < currentSchema) {
+        _purgeObsoleteSlots();
+        final completed = _parseCompleted(_storage[k(_completedKey)]);
+        final filtered = completed
+            .where(GardenPersistedState.allPlantIds.contains)
+            .toSet();
+        final fresh = GardenPersistedState(
+          slots: {
+            for (final id in GardenPersistedState.allPlantIds)
+              id: const GardenPlantSlot(),
+          },
+          completedPlantTypes: filtered,
+          selectedPlantPageIndex: 0,
+        );
+        await save(fresh, uidScope: scope);
+        return fresh;
+      }
+
+      final completed = _parseCompleted(_storage[k(_completedKey)]);
+      final hasNew =
+          _storage[k(_slotStageKey(GardenPersistedState.allPlantIds.first))] != null;
+
+      if (!hasNew) {
+        if (_hasLegacyKeys(scope)) {
+          final migrated = _migrateFromLegacy(completed, scope);
+          await save(migrated, uidScope: scope);
+          return migrated;
+        }
+        final fresh = GardenPersistedState(
+          slots: {
+            for (final id in GardenPersistedState.allPlantIds)
+              id: const GardenPlantSlot(),
+          },
+          completedPlantTypes: completed,
+          selectedPlantPageIndex: 0,
+        );
+        await save(fresh, uidScope: scope);
+        return fresh;
+      }
+
+      final slots = <String, GardenPlantSlot>{
+        for (final id in GardenPersistedState.allPlantIds) id: _readSlot(id, scope),
+      };
+      final page = (int.tryParse(_storage[k(_selectedPageKey)] ?? '') ?? 0)
+          .clamp(0, GardenPlantOption.choices.length - 1);
+      return GardenPersistedState(
+        slots: slots,
+        completedPlantTypes: completed,
+        selectedPlantPageIndex: page,
+        fertilizerCount:
+            (int.tryParse(_storage[k(_fertilizerCountKey)] ?? '') ?? 0).clamp(0, 999999),
+      );
+    } catch (e, st) {
+      debugPrint('GardenStorage.load (web): $e\n$st');
+      return GardenPersistedState(
         slots: {
           for (final id in GardenPersistedState.allPlantIds)
             id: const GardenPlantSlot(),
         },
-        completedPlantTypes: completed,
         selectedPlantPageIndex: 0,
       );
-      await save(fresh);
-      return fresh;
     }
-
-    final slots = <String, GardenPlantSlot>{
-      for (final id in GardenPersistedState.allPlantIds) id: _readSlot(id),
-    };
-    final page = (int.tryParse(_storage[_selectedPageKey] ?? '') ?? 0)
-        .clamp(0, GardenPlantOption.choices.length - 1);
-    return GardenPersistedState(
-      slots: slots,
-      completedPlantTypes: completed,
-      selectedPlantPageIndex: page,
-      fertilizerCount:
-          (int.tryParse(_storage[_fertilizerCountKey] ?? '') ?? 0).clamp(0, 999999),
-    );
   }
 
-  static GardenPersistedState _migrateFromLegacy(Set<String> completed) {
-    final plantId = _storage[_plantIdKey];
-    final stageRaw = _storage[_stageKey];
+  static GardenPersistedState _migrateFromLegacy(
+    Set<String> completed,
+    String scope,
+  ) {
+    String k(String base) => '${base}_$scope';
+    final plantId = _storage[k(_plantIdKey)];
+    final stageRaw = _storage[k(_stageKey)];
     final parsed = int.tryParse(stageRaw ?? '');
     final phase = (parsed ?? 1).clamp(0, 3);
-    final lastMs = int.tryParse(_storage[_lastWaterKey] ?? '');
-    final nextMs = int.tryParse(_storage[_nextWaterKey] ?? '');
+    final lastMs = int.tryParse(_storage[k(_lastWaterKey)] ?? '');
+    final nextMs = int.tryParse(_storage[k(_nextWaterKey)] ?? '');
 
     final slots = <String, GardenPlantSlot>{
       for (final id in GardenPersistedState.allPlantIds)
@@ -177,10 +218,13 @@ class GardenStorage {
     _storage.remove(_nextWaterKey);
   }
 
-  static Future<void> importFromRemoteJsonString(String raw) async {
+  static Future<void> importFromRemoteJsonString(
+    String raw, {
+    String? uidScope,
+  }) async {
     try {
       final state = GardenPersistedState.fromJsonString(raw);
-      await save(state, pushToCloud: false);
+      await save(state, pushToCloud: false, uidScope: uidScope);
     } catch (e, st) {
       debugPrint('GardenStorage.importFromRemoteJsonString: $e\n$st');
     }
@@ -189,49 +233,67 @@ class GardenStorage {
   static Future<void> save(
     GardenPersistedState state, {
     bool pushToCloud = true,
+    String? uidScope,
   }) async {
-    if (state.completedPlantTypes.isEmpty) {
-      _storage.remove(_completedKey);
-    } else {
-      _storage[_completedKey] = state.completedPlantTypes.join(',');
-    }
+    try {
+      final scope = (uidScope == null || uidScope.isEmpty) ? 'guest' : uidScope;
+      String k(String base) => '${base}_$scope';
 
-    for (final id in GardenPersistedState.allPlantIds) {
-      final s = state.slotFor(id);
-      _storage[_slotStageKey(id)] = '${s.currentPhase.clamp(0, 3)}';
-      if (s.lastWateredAt == null) {
-        _storage.remove(_slotLastKey(id));
+      if (state.completedPlantTypes.isEmpty) {
+        _storage.remove(k(_completedKey));
       } else {
-        _storage[_slotLastKey(id)] =
-            '${s.lastWateredAt!.millisecondsSinceEpoch}';
+        _storage[k(_completedKey)] = state.completedPlantTypes.join(',');
       }
-      if (s.nextWaterAllowedAt == null) {
-        _storage.remove(_slotNextKey(id));
-      } else {
-        _storage[_slotNextKey(id)] =
-            '${s.nextWaterAllowedAt!.millisecondsSinceEpoch}';
-      }
-    }
 
-    _storage[_selectedPageKey] =
-        '${state.selectedPlantPageIndex.clamp(0, GardenPlantOption.choices.length - 1)}';
-    _storage[_fertilizerCountKey] = '${state.fertilizerCount.clamp(0, 999999)}';
-    _storage[_schemaKey] = '$currentSchema';
-    _clearLegacy();
-
-    if (pushToCloud) {
-      final u = UserSession.currentUser;
-      if (u != null && u.uid.isNotEmpty && u.idToken.isNotEmpty) {
-        try {
-          await FirestoreUserDocumentRepository.patchStringFields(
-            uid: u.uid,
-            idToken: u.idToken,
-            stringFields: {'gardenJson': state.toJsonString()},
-          );
-        } catch (e, st) {
-          debugPrint('GardenStorage cloud push: $e\n$st');
+      for (final id in GardenPersistedState.allPlantIds) {
+        final s = state.slotFor(id);
+        _storage[k(_slotStageKey(id))] = '${s.currentPhase.clamp(0, 3)}';
+        if (s.lastWateredAt == null) {
+          _storage.remove(k(_slotLastKey(id)));
+        } else {
+          _storage[k(_slotLastKey(id))] =
+              '${s.lastWateredAt!.millisecondsSinceEpoch}';
+        }
+        if (s.nextWaterAllowedAt == null) {
+          _storage.remove(k(_slotNextKey(id)));
+        } else {
+          _storage[k(_slotNextKey(id))] =
+              '${s.nextWaterAllowedAt!.millisecondsSinceEpoch}';
         }
       }
+      // Clean legacy slot keys after lavender -> allium migration.
+      _storage.remove(k(_slotStageKey(_legacyAlliumId)));
+      _storage.remove(k(_slotLastKey(_legacyAlliumId)));
+      _storage.remove(k(_slotNextKey(_legacyAlliumId)));
+
+      _storage[k(_selectedPageKey)] =
+          '${state.selectedPlantPageIndex.clamp(0, GardenPlantOption.choices.length - 1)}';
+      _storage[k(_fertilizerCountKey)] = '${state.fertilizerCount.clamp(0, 999999)}';
+      _storage[k(_schemaKey)] = '$currentSchema';
+      _storage[k(_stateJsonKey)] = state.toJsonString();
+      _clearLegacy();
+
+      if (pushToCloud) {
+        final u = UserSession.currentUser;
+        final cloudUid = uidScope ?? u?.uid;
+        if (u != null &&
+            cloudUid != null &&
+            cloudUid.isNotEmpty &&
+            u.uid == cloudUid &&
+            u.idToken.isNotEmpty) {
+          try {
+            await FirestoreUserDocumentRepository.patchStringFields(
+              uid: cloudUid,
+              idToken: u.idToken,
+              stringFields: {'gardenJson': state.toJsonString()},
+            );
+          } catch (e, st) {
+            debugPrint('GardenStorage cloud push: $e\n$st');
+          }
+        }
+      }
+    } catch (e, st) {
+      debugPrint('GardenStorage.save (web): $e\n$st');
     }
   }
 

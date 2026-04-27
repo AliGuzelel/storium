@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter/painting.dart';
 import 'package:provider/provider.dart';
@@ -10,11 +11,17 @@ import 'providers/settings_manager.dart';
 import 'providers/saved_images_store.dart';
 import 'pages/sign_in_page.dart';
 import 'services/user_session_cloud_sync.dart';
+import 'services/achievement_service.dart';
 import 'theme/app_themes.dart';
 import 'utils/app_asset_precache.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  try {
+    await Firebase.initializeApp();
+  } catch (_) {
+    // Keep app bootable even when FlutterFire platform config is unavailable.
+  }
   _configurePersistentImageCache();
   await UserSession.loadFromStorage();
   final settingsManager = SettingsManager();
@@ -22,6 +29,7 @@ Future<void> main() async {
   await UserSessionCloudSync.hydrateIfSignedIn(
     settingsManager: settingsManager,
   );
+  await AchievementService().trackDailyVisit();
   final savedImagesStore = SavedImagesStore();
   await savedImagesStore.load();
   runApp(
@@ -78,7 +86,7 @@ class _MyAppState extends State<MyApp> {
       debugShowCheckedModeBanner: false,
       title: 'Storium',
       locale: Locale(settings.language),
-      supportedLocales: const [Locale('en'), Locale('tr')],
+      supportedLocales: const [Locale('en'), Locale('tr'), Locale('ar')],
       localizationsDelegates: const [
         GlobalMaterialLocalizations.delegate,
         GlobalWidgetsLocalizations.delegate,

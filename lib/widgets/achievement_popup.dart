@@ -1,132 +1,108 @@
+import 'dart:async';
+import 'dart:ui';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../models/achievement_model.dart';
-import '../theme/ui_tokens.dart';
-import 'app_button.dart';
-
-class AchievementPopup extends StatelessWidget {
-  final AchievementModel achievement;
-  final VoidCallback onContinue;
-
-  const AchievementPopup({
-    super.key,
-    required this.achievement,
-    required this.onContinue,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      constraints: const BoxConstraints(maxWidth: 380),
-      margin: const EdgeInsets.symmetric(horizontal: 16),
-      padding: const EdgeInsets.fromLTRB(18, 16, 18, 14),
-      decoration: BoxDecoration(
-        borderRadius: UiTokens.surfaceBorderRadius,
-        color: Colors.white.withOpacity(0.14),
-        border: Border.fromBorderSide(UiTokens.surfaceBorderSide),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.15),
-            blurRadius: 22,
-            offset: const Offset(0, 10),
-          ),
-        ],
-      ),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          const Text(
-            'Achievement Unlocked',
-            textAlign: TextAlign.center,
-            style: TextStyle(
-              fontFamily: 'Cinzel',
-              fontSize: 20,
-              fontWeight: FontWeight.w700,
-              color: Colors.white,
-            ),
-          ),
-          const SizedBox(height: 10),
-          Container(
-            width: 72,
-            height: 72,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              boxShadow: [
-                BoxShadow(
-                  color: const Color(0xFFB59BFF).withOpacity(0.35),
-                  blurRadius: 24,
-                  spreadRadius: 1,
-                ),
-              ],
-            ),
-            alignment: Alignment.center,
-            child: Text(achievement.icon, style: const TextStyle(fontSize: 44)),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            achievement.title,
-            textAlign: TextAlign.center,
-            style: const TextStyle(
-              fontFamily: 'Cinzel',
-              fontSize: 18,
-              fontWeight: FontWeight.w700,
-              color: Colors.white,
-            ),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            achievement.description,
-            textAlign: TextAlign.center,
-            style: TextStyle(
-              fontFamily: 'Poppins',
-              fontSize: 13.5,
-              height: 1.35,
-              color: Colors.white.withOpacity(0.9),
-            ),
-          ),
-          const SizedBox(height: 14),
-          SizedBox(
-            width: 160,
-            child: AppButton(label: 'Continue', onTap: onContinue),
-          ),
-        ],
-      ),
-    );
-  }
-}
 
 Future<void> showAchievementPopup(
   BuildContext context,
-  AchievementModel achievement,
-) async {
+  String title,
+  String description, {
+  IconData icon = Icons.emoji_events_rounded,
+  String? label,
+  Duration autoCloseAfter = const Duration(seconds: 2),
+}) async {
   HapticFeedback.lightImpact();
-  await showGeneralDialog<void>(
+  var closed = false;
+  Future<void>.delayed(autoCloseAfter, () {
+    if (closed || !context.mounted) return;
+    final nav = Navigator.of(context, rootNavigator: true);
+    if (nav.canPop()) {
+      closed = true;
+      nav.pop();
+    }
+  });
+  await showDialog<void>(
     context: context,
-    barrierDismissible: false,
+    barrierDismissible: true,
     barrierLabel: 'Achievement unlocked',
-    barrierColor: Colors.black.withOpacity(0.28),
-    transitionDuration: const Duration(milliseconds: 260),
-    pageBuilder: (context, animation, secondaryAnimation) {
+    barrierColor: Colors.black.withValues(alpha: 0.36),
+    builder: (ctx) {
       return Material(
         color: Colors.transparent,
-        child: SafeArea(
-          child: Align(
-            alignment: Alignment.topCenter,
-            child: Padding(
-              padding: const EdgeInsets.only(top: 14),
-              child: TweenAnimationBuilder<double>(
-                tween: Tween<double>(begin: 0.96, end: 1),
-                duration: const Duration(milliseconds: 260),
-                curve: Curves.easeOutCubic,
-                builder: (context, scale, child) {
-                  return Opacity(
-                    opacity: animation.value,
-                    child: Transform.scale(scale: scale, child: child),
-                  );
-                },
-                child: AchievementPopup(
-                  achievement: achievement,
-                  onContinue: () => Navigator.of(context).pop(),
+        child: Center(
+          child: TweenAnimationBuilder<double>(
+            tween: Tween<double>(begin: 0.95, end: 1),
+            duration: const Duration(milliseconds: 180),
+            curve: Curves.easeOutCubic,
+            builder: (context, scale, child) =>
+                Transform.scale(scale: scale, child: child),
+            child: SizedBox(
+              width: 280,
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(24),
+                child: BackdropFilter(
+                  filter: ImageFilter.blur(sigmaX: 14, sigmaY: 14),
+                  child: Container(
+                    padding: const EdgeInsets.fromLTRB(18, 16, 18, 16),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withValues(alpha: 0.16),
+                      borderRadius: BorderRadius.circular(24),
+                      border: Border.all(
+                        color: Colors.white.withValues(alpha: 0.26),
+                        width: 1,
+                      ),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withValues(alpha: 0.24),
+                          blurRadius: 20,
+                          offset: const Offset(0, 8),
+                        ),
+                      ],
+                    ),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(icon, size: 30, color: Colors.white),
+                        if (label != null) ...[
+                          const SizedBox(height: 8),
+                          Text(
+                            label,
+                            textAlign: TextAlign.center,
+                            style: TextStyle(
+                              fontFamily: 'Poppins',
+                              fontSize: 11,
+                              letterSpacing: 1.0,
+                              fontWeight: FontWeight.w700,
+                              color: Colors.white.withValues(alpha: 0.9),
+                            ),
+                          ),
+                        ],
+                        const SizedBox(height: 8),
+                        Text(
+                          title,
+                          textAlign: TextAlign.center,
+                          style: const TextStyle(
+                            fontFamily: 'Cinzel',
+                            fontSize: 18,
+                            fontWeight: FontWeight.w700,
+                            color: Colors.white,
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        Text(
+                          description,
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                            fontFamily: 'Poppins',
+                            fontSize: 13.5,
+                            color: Colors.white.withValues(alpha: 0.92),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
                 ),
               ),
             ),
@@ -134,10 +110,8 @@ Future<void> showAchievementPopup(
         ),
       );
     },
-    transitionBuilder: (context, animation, secondaryAnimation, child) {
-      return FadeTransition(opacity: animation, child: child);
-    },
   );
+  closed = true;
 }
 
 Future<void> showAchievementsSequence(
@@ -147,6 +121,12 @@ Future<void> showAchievementsSequence(
   if (achievements.isEmpty) return;
   for (final achievement in achievements) {
     if (!context.mounted) return;
-    await showAchievementPopup(context, achievement);
+    await showAchievementPopup(
+      context,
+      achievement.title,
+      achievement.description,
+      icon: achievement.icon,
+      label: 'ACHIEVED!',
+    );
   }
 }

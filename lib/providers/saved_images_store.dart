@@ -4,6 +4,7 @@ import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../models/saved_image_entry.dart';
+import '../models/user_session.dart';
 import '../services/cloud_blob_state_service.dart';
 
 /// Saved My Space items (local only).
@@ -22,9 +23,18 @@ class SavedImagesStore extends ChangeNotifier {
   List<String> get savedImages =>
       _entries.map((e) => e.path).toList(growable: false);
 
+  String _scopeSuffix() {
+    final uid = UserSession.currentUser?.uid;
+    if (uid == null || uid.isEmpty) return 'guest';
+    return uid;
+  }
+
+  String _prefsKeyV2ForUser() => '${_prefsKeyV2}_${_scopeSuffix()}';
+  String _prefsKeyLegacyForUser() => '${_prefsKeyLegacy}_${_scopeSuffix()}';
+
   Future<void> load() async {
     final prefs = await SharedPreferences.getInstance();
-    final rawV2 = prefs.getString(_prefsKeyV2);
+    final rawV2 = prefs.getString(_prefsKeyV2ForUser());
     _entries.clear();
 
     if (rawV2 != null && rawV2.isNotEmpty) {
@@ -43,7 +53,7 @@ class SavedImagesStore extends ChangeNotifier {
     }
 
     if (_entries.isEmpty) {
-      final legacy = prefs.getStringList(_prefsKeyLegacy);
+      final legacy = prefs.getStringList(_prefsKeyLegacyForUser());
       if (legacy != null && legacy.isNotEmpty) {
         for (final p in legacy) {
           final path = p.trim();
@@ -52,7 +62,7 @@ class SavedImagesStore extends ChangeNotifier {
           }
         }
         await _persist();
-        await prefs.remove(_prefsKeyLegacy);
+        await prefs.remove(_prefsKeyLegacyForUser());
       }
     }
 
@@ -90,7 +100,7 @@ class SavedImagesStore extends ChangeNotifier {
   Future<void> _persist() async {
     final prefs = await SharedPreferences.getInstance();
     final raw = jsonEncode(_entries.map((e) => e.toJson()).toList());
-    await prefs.setString(_prefsKeyV2, raw);
+    await prefs.setString(_prefsKeyV2ForUser(), raw);
     await CloudBlobStateService.push(_cloudField, raw);
   }
 

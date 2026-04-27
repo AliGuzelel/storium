@@ -1,6 +1,8 @@
 import 'dart:ui' show ImageFilter;
 
 import 'package:flutter/material.dart';
+import '../utils/app_strings.dart';
+import '../widgets/localized_text.dart';
 import '../widgets/app_button.dart';
 import '../widgets/gradient_scaffold.dart';
 import 'story_page.dart';
@@ -82,7 +84,7 @@ class _DefinitionPageState extends State<DefinitionPage>
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                Text(
+                                LocalizedText(
                                   def.title,
                                   style: TextStyle(
                                     fontFamily: 'Cinzel',
@@ -92,7 +94,7 @@ class _DefinitionPageState extends State<DefinitionPage>
                                   ),
                                 ),
                                 const SizedBox(height: 10),
-                                Text(
+                                LocalizedText(
                                   def.shortDescription,
                                   style: TextStyle(
                                     fontFamily: 'Poppins',
@@ -121,7 +123,7 @@ class _DefinitionPageState extends State<DefinitionPage>
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                Text(
+                                LocalizedText(
                                   "What it can feel like",
                                   style: TextStyle(
                                     fontFamily: 'Cinzel',
@@ -148,7 +150,7 @@ class _DefinitionPageState extends State<DefinitionPage>
                                           ),
                                         ),
                                         Expanded(
-                                          child: Text(
+                                          child: LocalizedText(
                                             s,
                                             style: TextStyle(
                                               fontFamily: 'Poppins',
@@ -174,7 +176,7 @@ class _DefinitionPageState extends State<DefinitionPage>
                               child: SizedBox(
                                 width: 200,
                                 child: AppButton(
-                                  label: "Start Story",
+                                  label: t(context, 'start_story'),
                                   height: 52,
                                   borderRadius: BorderRadius.circular(26),
                                   onTap: () {
@@ -194,8 +196,8 @@ class _DefinitionPageState extends State<DefinitionPage>
                             ),
                           ),
 
-                          Text(
-                            "Take your time. You can stop anytime.",
+                          LocalizedText(
+                            t(context, 'take_your_time_stop_anytime'),
                             textAlign: TextAlign.center,
                             style: TextStyle(
                               fontFamily: 'Poppins',
@@ -246,7 +248,7 @@ class _DefinitionPageState extends State<DefinitionPage>
         borderRadius: BorderRadius.circular(20),
         border: Border.all(color: Colors.white.withOpacity(0.25)),
       ),
-      child: Text(
+      child: LocalizedText(
         text,
         style: const TextStyle(
           fontFamily: 'Poppins',

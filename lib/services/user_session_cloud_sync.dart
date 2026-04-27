@@ -27,6 +27,8 @@ class UserSessionCloudSync {
     return v;
   }
 
+  static String _scopedKey(String base, String uid) => '${base}_$uid';
+
   static Future<void> hydrateIfSignedIn({
     SettingsManager? settingsManager,
   }) async {
@@ -48,7 +50,10 @@ class UserSessionCloudSync {
 
       final gardenRaw = _stringField(fields, 'gardenJson');
       if (gardenRaw != null) {
-        await GardenStorage.importFromRemoteJsonString(gardenRaw);
+        await GardenStorage.importFromRemoteJsonString(
+          gardenRaw,
+          uidScope: u.uid,
+        );
       }
 
       final achRaw = _stringField(fields, 'achievementStateJson');
@@ -58,12 +63,12 @@ class UserSessionCloudSync {
 
       final mySpaceRaw = _stringField(fields, 'mySpaceJson');
       if (mySpaceRaw != null) {
-        await _hydrateMySpacePrefs(mySpaceRaw);
+        await _hydrateMySpacePrefs(uid: u.uid, raw: mySpaceRaw);
       }
 
       final dailyRaw = _stringField(fields, 'dailyCheckinJson');
       if (dailyRaw != null) {
-        await _hydrateDailyCheckinPrefs(dailyRaw);
+        await _hydrateDailyCheckinPrefs(uid: u.uid, raw: dailyRaw);
       }
 
       await StoryProgressService().load();
@@ -72,16 +77,22 @@ class UserSessionCloudSync {
     }
   }
 
-  static Future<void> _hydrateMySpacePrefs(String raw) async {
+  static Future<void> _hydrateMySpacePrefs({
+    required String uid,
+    required String raw,
+  }) async {
     try {
       final decoded = jsonDecode(raw);
       if (decoded is! List) return;
       final prefs = await SharedPreferences.getInstance();
-      await prefs.setString('my_space_saved_images_v2', raw);
+      await prefs.setString(_scopedKey('my_space_saved_images_v2', uid), raw);
     } catch (_) {}
   }
 
-  static Future<void> _hydrateDailyCheckinPrefs(String raw) async {
+  static Future<void> _hydrateDailyCheckinPrefs({
+    required String uid,
+    required String raw,
+  }) async {
     try {
       final decoded = jsonDecode(raw);
       if (decoded is! Map) return;
@@ -90,24 +101,33 @@ class UserSessionCloudSync {
 
       final selectedDate = map['selectedDate'] as String?;
       if (selectedDate != null && selectedDate.isNotEmpty) {
-        await prefs.setString('daily_questions_selected_date', selectedDate);
+        await prefs.setString(
+          _scopedKey('daily_questions_selected_date', uid),
+          selectedDate,
+        );
       }
       final lastCompleted = map['lastCompletedDate'] as String?;
       if (lastCompleted != null && lastCompleted.isNotEmpty) {
-        await prefs.setString('daily_questions_last_completed_date', lastCompleted);
+        await prefs.setString(
+          _scopedKey('daily_questions_last_completed_date', uid),
+          lastCompleted,
+        );
       }
       final selectedQuestions = (map['selectedQuestions'] as List<dynamic>?)
           ?.whereType<String>()
           .toList();
       if (selectedQuestions != null && selectedQuestions.isNotEmpty) {
-        await prefs.setStringList('daily_questions_selected_list', selectedQuestions);
+        await prefs.setStringList(
+          _scopedKey('daily_questions_selected_list', uid),
+          selectedQuestions,
+        );
       }
       final previousQuestions = (map['previousQuestions'] as List<dynamic>?)
           ?.whereType<String>()
           .toList();
       if (previousQuestions != null && previousQuestions.isNotEmpty) {
         await prefs.setStringList(
-          'daily_questions_previous_selected_list',
+          _scopedKey('daily_questions_previous_selected_list', uid),
           previousQuestions,
         );
       }

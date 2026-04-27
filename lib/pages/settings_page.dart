@@ -188,7 +188,7 @@ class _SettingsPageState extends State<SettingsPage> {
   @override
   Widget build(BuildContext context) {
     final settings = context.watch<SettingsManager>();
-    final languageLabel = settings.language == 'tr' ? 'Turkce' : 'English';
+    final langCode = settings.language;
 
     return GradientScaffold(
       body: SafeArea(
@@ -302,22 +302,25 @@ class _SettingsPageState extends State<SettingsPage> {
                     const SizedBox(height: 12),
 
                     DropdownButton<String>(
-                      value: languageLabel,
+                      value: langCode,
                       dropdownColor: Colors.black,
-                      items: ["English", "Turkce"]
+                      items: const ["en", "tr", "ar"]
                           .map(
-                            (lang) => DropdownMenuItem(
-                              value: lang,
-                              child: Text(lang),
+                            (code) => DropdownMenuItem(
+                              value: code,
+                              child: Text(
+                                code == 'tr'
+                                    ? 'Turkce'
+                                    : code == 'ar'
+                                        ? 'العربية'
+                                        : 'English',
+                              ),
                             ),
                           )
                           .toList(),
                       onChanged: (value) {
                         if (value == null) return;
-                        final langCode = value == 'Turkce' ? 'tr' : 'en';
-                        context.read<SettingsManager>().updateLanguage(
-                          langCode,
-                        );
+                        context.read<SettingsManager>().updateLanguage(value);
                       },
                     ),
                   ],
@@ -340,37 +343,37 @@ class _SettingsPageState extends State<SettingsPage> {
                       children: [
                         _themeOption(
                           keyName: 'purple',
-                          label: 'Violet',
+                          label: t(context, 'theme_violet'),
                           previewColor: const Color(0xFF6A41A1),
                         ),
                         _themeOption(
                           keyName: 'blue',
-                          label: 'Sky',
+                          label: t(context, 'theme_sky'),
                           previewColor: const Color(0xFF2C5CCF),
                         ),
                         _themeOption(
                           keyName: 'green',
-                          label: 'Forest',
+                          label: t(context, 'theme_forest'),
                           previewColor: const Color(0xFF2E8B57),
                         ),
                         _themeOption(
                           keyName: 'yellow',
-                          label: 'Honey',
+                          label: t(context, 'theme_honey'),
                           previewColor: const Color(0xFFC4A86A),
                         ),
                         _themeOption(
                           keyName: 'pink',
-                          label: 'Sakura',
+                          label: t(context, 'theme_sakura'),
                           previewColor: const Color(0xFFF4A7B9),
                         ),
                         _themeOption(
                           keyName: 'red',
-                          label: 'Cherry',
+                          label: t(context, 'theme_cherry'),
                           previewColor: const Color(0xFF6D1A1A),
                         ),
                         _themeOption(
                           keyName: 'grayscale',
-                          label: 'Ash',
+                          label: t(context, 'theme_ash'),
                           previewColor: const Color(0xFFD7D7D7),
                         ),
                       ],

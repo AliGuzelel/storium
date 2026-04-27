@@ -137,7 +137,6 @@ class AuthService {
     UserProfile profile, {
     required String idToken,
   }) async {
-    final shouldWriteAvatar = _shouldWriteAvatarToCloud(profile.avatarUrl);
     final uri = _userDocUri(
       profile.uid,
       updateMaskFields: <String>[
@@ -146,7 +145,7 @@ class AuthService {
         'gender',
         'email',
         'dateOfBirth',
-        if (shouldWriteAvatar) 'avatarUrl',
+        'avatarUrl',
       ],
     );
     final body = {
@@ -158,8 +157,7 @@ class AuthService {
         'dateOfBirth': {
           'stringValue': profile.dateOfBirth?.toIso8601String() ?? '',
         },
-        if (shouldWriteAvatar)
-          'avatarUrl': {'stringValue': profile.avatarUrl ?? ''},
+        'avatarUrl': {'stringValue': profile.avatarUrl ?? ''},
       },
     };
 
@@ -358,11 +356,6 @@ class AuthService {
     final atIndex = email.indexOf('@');
     if (atIndex <= 0) return 'User';
     return email.substring(0, atIndex);
-  }
-
-  bool _shouldWriteAvatarToCloud(String? avatarUrl) {
-    if (avatarUrl == null || avatarUrl.isEmpty) return true;
-    return !avatarUrl.startsWith('data:image/');
   }
 
   Future<void> _cacheLocalAvatar(UserProfile profile) async {

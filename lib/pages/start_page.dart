@@ -1,8 +1,10 @@
+import 'dart:async';
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../models/in_progress_story.dart';
 import '../services/story_progress_service.dart';
+import '../services/achievement_service.dart';
 import '../utils/story_resume_catalog.dart';
 import '../effects/theme_effect_manager.dart';
 import '../localization/app_strings.dart';
@@ -12,6 +14,7 @@ import '../utils/theme_manager.dart';
 import '../widgets/app_gradient_background.dart';
 import '../widgets/app_button.dart';
 import '../widgets/glitch_text.dart';
+import '../widgets/localized_text.dart';
 import 'settings_page.dart';
 import 'about_mh.dart';
 import 'profile_page.dart';
@@ -32,6 +35,7 @@ class StartPage extends StatefulWidget {
 
 class _StartPageState extends State<StartPage> {
   final StoryProgressService _progressService = StoryProgressService();
+  final AchievementService _achievementService = AchievementService();
 
   @override
   Widget build(BuildContext context) {
@@ -96,7 +100,7 @@ class _StartPageState extends State<StartPage> {
                         ),
                         const SizedBox(height: 15),
                         _glassButton(
-                          label: 'Explore Collections 📖',
+                          label: t(context, 'explore_collections'),
                           onTap: () {
                             Navigator.push(
                               context,
@@ -108,7 +112,7 @@ class _StartPageState extends State<StartPage> {
                         ),
                         const SizedBox(height: 15),
                         _glassButton(
-                          label: 'Daily Check-in',
+                          label: t(context, 'daily_check_in'),
                           onTap: () {
                             Navigator.push(
                               context,
@@ -217,7 +221,7 @@ class _StartPageState extends State<StartPage> {
               const SizedBox(height: 20),
               _menuButton(
                 accent: AppThemes.secondary(settings.themeColor),
-                text: 'My Space',
+                text: t(context, 'my_space'),
                 onPressed: () {
                   Navigator.pop(context);
                   Navigator.push(
@@ -323,8 +327,8 @@ class _StartPageState extends State<StartPage> {
     );
   }
 
-  Future<List<InProgressStory>> getInProgressStories() {
-    return _progressService.loadContinuableStories();
+  Future<List<InProgressStory>> getInProgressStories() async {
+    return _progressService.fetchUnfinishedStories();
   }
 
   Future<void> showContinueList(BuildContext context) async {
@@ -395,7 +399,7 @@ class _StartPageState extends State<StartPage> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          'Continue where you left off',
+          t(context, 'continue_where_left'),
           style: TextStyle(
             fontFamily: 'Cinzel',
             fontSize: 21,
@@ -433,7 +437,7 @@ class _StartPageState extends State<StartPage> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          'Continue where you left off',
+          t(context, 'continue_where_left'),
           style: TextStyle(
             fontFamily: 'Cinzel',
             fontSize: 21,
@@ -444,7 +448,7 @@ class _StartPageState extends State<StartPage> {
         ),
         const SizedBox(height: 14),
         Text(
-          'Nothing to continue yet.',
+          t(context, 'no_unfinished_stories'),
           style: TextStyle(
             fontFamily: 'Poppins',
             fontSize: 14.5,
@@ -470,10 +474,10 @@ class _StartPageState extends State<StartPage> {
               MaterialPageRoute(builder: (_) => const StorySelectionPage()),
             );
           },
-          child: const Padding(
+          child: Padding(
             padding: EdgeInsets.symmetric(horizontal: 6, vertical: 6),
-            child: Text(
-              'Start a new story',
+            child: LocalizedText(
+              t(context, 'start_new_story'),
               style: TextStyle(fontFamily: 'Poppins', fontWeight: FontWeight.w600),
             ),
           ),
@@ -524,7 +528,7 @@ class _StartPageState extends State<StartPage> {
                     ),
                     const SizedBox(height: 2),
                     Text(
-                      'Scene ${item.sceneIndex}',
+                      '${t(context, 'scene')} ${item.sceneIndex}',
                       style: TextStyle(
                         fontFamily: 'Poppins',
                         fontSize: 13,
@@ -553,11 +557,12 @@ class _StartPageState extends State<StartPage> {
     final routeConfig = _routeConfigForStoryId(selected.storyId);
     if (routeConfig == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('This story is not available yet.')),
+        SnackBar(content: Text(t(context, 'story_not_available'))),
       );
       return;
     }
     final clampedScene = selected.sceneIndex < 1 ? 1 : selected.sceneIndex;
+    unawaited(_achievementService.trackContinueUsage());
     Navigator.push(
       context,
       MaterialPageRoute(

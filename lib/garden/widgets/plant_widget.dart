@@ -2,7 +2,6 @@ import 'dart:math' as math;
 import 'dart:ui' show lerpDouble;
 
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter/scheduler.dart';
 
 import '../../widgets/safe_asset_image.dart';
@@ -72,7 +71,8 @@ class _PlantWidgetState extends State<PlantWidget> with TickerProviderStateMixin
   void didUpdateWidget(covariant PlantWidget oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (oldWidget.imagePath != widget.imagePath) {
-      _resolveImagePath(widget.imagePath);
+      setState(() => _resolvedImagePath = widget.imagePath);
+      _imagePathPulse.forward(from: 0);
     }
     if (widget.ambientMotion != oldWidget.ambientMotion) {
       if (widget.ambientMotion) {
@@ -85,19 +85,6 @@ class _PlantWidgetState extends State<PlantWidget> with TickerProviderStateMixin
         _ambientTicker = null;
         _ambientElapsed = Duration.zero;
       }
-    }
-  }
-
-  Future<void> _resolveImagePath(String candidatePath) async {
-    final target = candidatePath.trim();
-    if (target.isEmpty) return;
-    try {
-      await rootBundle.load(target);
-      if (!mounted || _resolvedImagePath == target) return;
-      setState(() => _resolvedImagePath = target);
-      _imagePathPulse.forward(from: 0);
-    } catch (_) {
-      // Keep rendering the last successful image if a new stage asset is unavailable.
     }
   }
 

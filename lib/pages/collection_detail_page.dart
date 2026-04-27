@@ -28,6 +28,7 @@ class CollectionDetailPage extends StatelessWidget {
         'Nature' => _buildNatureFullPageGrid(context),
         'Art' => _buildArtFullPageGrid(context),
         'Ocean' => _buildOceanFullPageGrid(context),
+        'Memes' => _buildMemesFullPageGrid(context),
         _ => _buildDefaultCollectionBody(context),
       },
     );
@@ -41,6 +42,7 @@ class CollectionDetailPage extends StatelessWidget {
       placeholderColors: kAnimalPlaceholderTileColors,
       emptyIcon: Icons.image_not_supported_outlined,
       thinBorderAroundImage: true,
+      scrollable: true,
       buildViewer: (index) => AnimalGalleryViewerPage(
         initialIndex: index,
         imageAssets: kAnimalCollectionImageAssets,
@@ -113,6 +115,23 @@ class CollectionDetailPage extends StatelessWidget {
         imageAssets: kOceanCollectionImageAssets,
         captionForIndex: (_) => null,
         tilePlaceholderColors: kOceanPlaceholderTileColors,
+      ),
+    );
+  }
+
+  Widget _buildMemesFullPageGrid(BuildContext context) {
+    return _buildCollectionAssetGrid(
+      context,
+      assetPaths: kMemesCollectionImageAssets,
+      placeholderColors: kMemesPlaceholderTileColors,
+      emptyIcon: Icons.image_not_supported_outlined,
+      thinBorderAroundImage: true,
+      scrollable: true,
+      buildViewer: (index) => AnimalGalleryViewerPage(
+        initialIndex: index,
+        imageAssets: kMemesCollectionImageAssets,
+        captionForIndex: (_) => null,
+        tilePlaceholderColors: kMemesPlaceholderTileColors,
       ),
     );
   }

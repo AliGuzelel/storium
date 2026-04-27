@@ -9,10 +9,13 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import '../effects/theme_effect_manager.dart';
 import '../garden/garden_storage.dart';
+import '../localization/app_strings.dart';
+import '../models/user_session.dart';
 import '../providers/settings_manager.dart';
 import '../widgets/app_gradient_background.dart';
 import '../widgets/immersive_back_button.dart';
 import '../services/cloud_blob_state_service.dart';
+import '../widgets/localized_text.dart';
 
 class DailyQuestionsPage extends StatefulWidget {
   const DailyQuestionsPage({super.key});
@@ -65,9 +68,9 @@ class _DailyQuestionsPageState extends State<DailyQuestionsPage>
     final today = _todayStamp();
     final prefs = await SharedPreferences.getInstance();
     await _hydrateDailyStateFromCloud(prefs);
-    final lastCompleted = prefs.getString(_lastCompletedKey);
-    final selectedDate = prefs.getString(_dailyQuestionsDateKey);
-    final savedQuestions = prefs.getStringList(_dailyQuestionsListKey);
+    final lastCompleted = prefs.getString(_k(_lastCompletedKey));
+    final selectedDate = prefs.getString(_k(_dailyQuestionsDateKey));
+    final savedQuestions = prefs.getStringList(_k(_dailyQuestionsListKey));
 
     final bank = await _loadQuestionBank();
     List<_DailyQuestion> todaysQuestions;
@@ -87,22 +90,25 @@ class _DailyQuestionsPageState extends State<DailyQuestionsPage>
           selectedDate != today &&
           savedQuestions != null &&
           savedQuestions.isNotEmpty) {
-        await prefs.setStringList(_dailyQuestionsPreviousListKey, savedQuestions);
+        await prefs.setStringList(
+          _k(_dailyQuestionsPreviousListKey),
+          savedQuestions,
+        );
       }
       final previousPrompts =
-          prefs.getStringList(_dailyQuestionsPreviousListKey)?.toSet() ??
+          prefs.getStringList(_k(_dailyQuestionsPreviousListKey))?.toSet() ??
               const <String>{};
       todaysQuestions = _pickDailyQuestions(
         bank,
         avoidPrompts: previousPrompts,
       );
-      await prefs.setString(_dailyQuestionsDateKey, today);
+      await prefs.setString(_k(_dailyQuestionsDateKey), today);
       await prefs.setStringList(
-        _dailyQuestionsListKey,
+        _k(_dailyQuestionsListKey),
         todaysQuestions.map((q) => q.prompt).toList(),
       );
       if (lastCompleted != today) {
-        await prefs.remove(_lastCompletedKey);
+        await prefs.remove(_k(_lastCompletedKey));
       }
       await _pushDailyStateToCloud(prefs);
     }
@@ -226,7 +232,7 @@ class _DailyQuestionsPageState extends State<DailyQuestionsPage>
 
     setState(() => _saving = true);
     final prefs = await SharedPreferences.getInstance();
-    await prefs.setString(_lastCompletedKey, _todayStamp());
+    await prefs.setString(_k(_lastCompletedKey), _todayStamp());
     await _pushDailyStateToCloud(prefs);
     try {
       final gardenState = await GardenStorage.load();
@@ -276,17 +282,17 @@ class _DailyQuestionsPageState extends State<DailyQuestionsPage>
           .toList();
 
       if (selectedDate != null && selectedDate.isNotEmpty) {
-        await prefs.setString(_dailyQuestionsDateKey, selectedDate);
+        await prefs.setString(_k(_dailyQuestionsDateKey), selectedDate);
       }
       if (lastCompleted != null && lastCompleted.isNotEmpty) {
-        await prefs.setString(_lastCompletedKey, lastCompleted);
+        await prefs.setString(_k(_lastCompletedKey), lastCompleted);
       }
       if (selectedQuestions != null && selectedQuestions.isNotEmpty) {
-        await prefs.setStringList(_dailyQuestionsListKey, selectedQuestions);
+        await prefs.setStringList(_k(_dailyQuestionsListKey), selectedQuestions);
       }
       if (previousQuestions != null && previousQuestions.isNotEmpty) {
         await prefs.setStringList(
-          _dailyQuestionsPreviousListKey,
+          _k(_dailyQuestionsPreviousListKey),
           previousQuestions,
         );
       }
@@ -297,14 +303,22 @@ class _DailyQuestionsPageState extends State<DailyQuestionsPage>
 
   Future<void> _pushDailyStateToCloud(SharedPreferences prefs) async {
     final payload = <String, dynamic>{
-      'selectedDate': prefs.getString(_dailyQuestionsDateKey) ?? '',
-      'lastCompletedDate': prefs.getString(_lastCompletedKey) ?? '',
-      'selectedQuestions': prefs.getStringList(_dailyQuestionsListKey) ?? const [],
+      'selectedDate': prefs.getString(_k(_dailyQuestionsDateKey)) ?? '',
+      'lastCompletedDate': prefs.getString(_k(_lastCompletedKey)) ?? '',
+      'selectedQuestions': prefs.getStringList(_k(_dailyQuestionsListKey)) ?? const [],
       'previousQuestions':
-          prefs.getStringList(_dailyQuestionsPreviousListKey) ?? const [],
+          prefs.getStringList(_k(_dailyQuestionsPreviousListKey)) ?? const [],
     };
     await CloudBlobStateService.push(_cloudField, jsonEncode(payload));
   }
+
+  String _scopeSuffix() {
+    final uid = UserSession.currentUser?.uid;
+    if (uid == null || uid.isEmpty) return 'guest';
+    return uid;
+  }
+
+  String _k(String base) => '${base}_${_scopeSuffix()}';
 
   @override
   Widget build(BuildContext context) {
@@ -385,8 +399,8 @@ class _DailyQuestionsPageState extends State<DailyQuestionsPage>
       mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        const Text(
-          'Daily Check-in',
+        Text(
+          t(context, 'daily_check_in'),
           textAlign: TextAlign.center,
           style: TextStyle(
             fontSize: 24,
@@ -395,7 +409,7 @@ class _DailyQuestionsPageState extends State<DailyQuestionsPage>
           ),
         ),
         const SizedBox(height: 18),
-        Text(
+        LocalizedText(
           'You showed up today.\nThat matters more than you think.',
           textAlign: TextAlign.center,
           style: TextStyle(
@@ -406,7 +420,7 @@ class _DailyQuestionsPageState extends State<DailyQuestionsPage>
           ),
         ),
         const SizedBox(height: 18),
-        Text(
+        LocalizedText(
           '+2 added to your garden 🌱',
           textAlign: TextAlign.center,
           style: TextStyle(
@@ -417,7 +431,7 @@ class _DailyQuestionsPageState extends State<DailyQuestionsPage>
           ),
         ),
         const SizedBox(height: 18),
-        Text(
+        LocalizedText(
           "Come back tomorrow, whenever you're ready.",
           textAlign: TextAlign.center,
           style: TextStyle(
@@ -433,7 +447,7 @@ class _DailyQuestionsPageState extends State<DailyQuestionsPage>
           child: ConstrainedBox(
             constraints: const BoxConstraints(minWidth: 200, maxWidth: 320),
             child: _continueButton(
-              label: 'Continue',
+              label: t(context, 'continue'),
               enabled: true,
               onTap: () => Navigator.pop(context),
             ),
@@ -449,8 +463,8 @@ class _DailyQuestionsPageState extends State<DailyQuestionsPage>
       key: const ValueKey<String>('daily-questionnaire'),
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        const Text(
-          'Daily Check-in',
+        Text(
+          t(context, 'daily_check_in'),
           textAlign: TextAlign.left,
           style: TextStyle(
             fontSize: 24,
@@ -459,7 +473,7 @@ class _DailyQuestionsPageState extends State<DailyQuestionsPage>
           ),
         ),
         const SizedBox(height: 8),
-        Text(
+        LocalizedText(
           'A quiet moment for today',
           textAlign: TextAlign.left,
           style: TextStyle(
@@ -469,7 +483,7 @@ class _DailyQuestionsPageState extends State<DailyQuestionsPage>
           ),
         ),
         const SizedBox(height: 14),
-        Text(
+        LocalizedText(
           "There's no right answer.\nJust go with what feels closest.",
           textAlign: TextAlign.left,
           style: TextStyle(
@@ -486,7 +500,7 @@ class _DailyQuestionsPageState extends State<DailyQuestionsPage>
         ],
         const SizedBox(height: 42),
         _continueButton(
-          label: _saving ? 'Saving...' : 'Continue',
+          label: _saving ? t(context, 'saving') : t(context, 'continue'),
           enabled: canContinue,
           onTap: _completeForToday,
         ),
@@ -531,7 +545,7 @@ class _DailyQuestionsPageState extends State<DailyQuestionsPage>
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
+        LocalizedText(
           '${question.emoji} ${question.prompt}',
           textAlign: TextAlign.left,
           style: TextStyle(
@@ -607,7 +621,7 @@ class _DailyQuestionsPageState extends State<DailyQuestionsPage>
                   ]
                 : null,
           ),
-          child: Text(
+          child: LocalizedText(
             label,
             style: TextStyle(
               color: Colors.white.withValues(alpha: selected ? 0.99 : 0.92),

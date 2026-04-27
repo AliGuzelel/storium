@@ -32,6 +32,12 @@ const String kArtCollectionGridPreviewAsset =
 /// Collections grid: Ocean card full-bleed preview ([ocean19]; detail uses [ocean1]–[ocean18] only).
 const String kOceanCollectionGridPreviewAsset =
     'assets/collection_images/ocean/ocean19.jpg';
+/// Collections grid: Animals card full-bleed preview ([animal25]).
+const String kAnimalsCollectionGridPreviewAsset =
+    'assets/collection_images/animals/animal25.jpg';
+/// Collections grid: Memes card full-bleed preview ([memes21]).
+const String kMemesCollectionGridPreviewAsset =
+    'assets/collection_images/memes/memes21.jpg';
 
 /// Space collection: 12 images (3×4) in [assets/collection_images/space].
 const List<String?> kSpaceCollectionImageAssets = <String?>[
@@ -137,6 +143,30 @@ const List<String?> kOceanCollectionImageAssets = <String?>[
   'assets/collection_images/ocean/ocean18.jpg',
 ];
 
+/// Memes collection: 20 images in [assets/collection_images/memes].
+const List<String?> kMemesCollectionImageAssets = <String?>[
+  'assets/collection_images/memes/memes1.jpeg',
+  'assets/collection_images/memes/memes2.jpeg',
+  'assets/collection_images/memes/memes3.jpeg',
+  'assets/collection_images/memes/memes4.jpeg',
+  'assets/collection_images/memes/memes5.jpeg',
+  'assets/collection_images/memes/memes6.jpeg',
+  'assets/collection_images/memes/memes7.jpeg',
+  'assets/collection_images/memes/memes8.jpeg',
+  'assets/collection_images/memes/memes9.jpeg',
+  'assets/collection_images/memes/memes10.jpeg',
+  'assets/collection_images/memes/memes11.jpeg',
+  'assets/collection_images/memes/memes12.jpeg',
+  'assets/collection_images/memes/memes13.jpeg',
+  'assets/collection_images/memes/memes14.jpeg',
+  'assets/collection_images/memes/memes15.jpeg',
+  'assets/collection_images/memes/memes16.jpeg',
+  'assets/collection_images/memes/memes17.jpeg',
+  'assets/collection_images/memes/memes18.jpeg',
+  'assets/collection_images/memes/memes19.jpeg',
+  'assets/collection_images/memes/memes20.jpeg',
+];
+
 /// Muted tile colors for ocean grid fallbacks (cycles by index).
 const List<Color> kOceanPlaceholderTileColors = [
   Color(0xFF3D6B7A),
@@ -147,20 +177,42 @@ const List<Color> kOceanPlaceholderTileColors = [
   Color(0xFF4A8FA8),
 ];
 
-/// Animals collection: 12 separate cells (3×4). `null` = no image yet (colored tile).
+/// Animals collection: 24 images in [assets/collection_images/animals].
 const List<String?> kAnimalCollectionImageAssets = <String?>[
-  'assets/collection_images/animals/animal1.jpg',
-  'assets/collection_images/animals/animal2.jpg',
-  null,
-  null,
-  null,
-  null,
-  null,
-  null,
-  null,
-  null,
-  null,
-  null,
+  'assets/collection_images/animals/animal1.jpeg',
+  'assets/collection_images/animals/animal2.jpeg',
+  'assets/collection_images/animals/animal3.jpeg',
+  'assets/collection_images/animals/animal4.jpeg',
+  'assets/collection_images/animals/animal5.jpeg',
+  'assets/collection_images/animals/animal6.jpeg',
+  'assets/collection_images/animals/animal7.jpeg',
+  'assets/collection_images/animals/animal8.jpeg',
+  'assets/collection_images/animals/animal9.jpeg',
+  'assets/collection_images/animals/animal10.jpeg',
+  'assets/collection_images/animals/animal11.jpeg',
+  'assets/collection_images/animals/animal12.jpeg',
+  'assets/collection_images/animals/animal13.jpeg',
+  'assets/collection_images/animals/animal14.jpeg',
+  'assets/collection_images/animals/animal15.jpeg',
+  'assets/collection_images/animals/animal16.jpeg',
+  'assets/collection_images/animals/animal17.jpeg',
+  'assets/collection_images/animals/animal18.jpeg',
+  'assets/collection_images/animals/animal19.jpeg',
+  'assets/collection_images/animals/animal20.jpeg',
+  'assets/collection_images/animals/animal21.jpeg',
+  'assets/collection_images/animals/animal22.jpeg',
+  'assets/collection_images/animals/animal23.jpeg',
+  'assets/collection_images/animals/animal24.jpeg',
+];
+
+/// Muted tile colors for meme placeholders (used for any future empty slots).
+const List<Color> kMemesPlaceholderTileColors = [
+  Color(0xFF8A6B5A),
+  Color(0xFF9B7D68),
+  Color(0xFF7A5E4E),
+  Color(0xFFA88772),
+  Color(0xFF6B5447),
+  Color(0xFF9A745F),
 ];
 
 /// Caption shown under the image in the full-screen animal viewer only (not on the grid).

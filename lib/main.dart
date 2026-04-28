@@ -20,7 +20,7 @@ Future<void> main() async {
   try {
     await Firebase.initializeApp();
   } catch (_) {
-    // Keep app bootable even when FlutterFire platform config is unavailable.
+    
   }
   _configurePersistentImageCache();
   await UserSession.loadFromStorage();

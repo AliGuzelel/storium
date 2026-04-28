@@ -241,7 +241,7 @@ class _DailyQuestionsPageState extends State<DailyQuestionsPage>
       );
       await GardenStorage.save(boosted);
     } catch (_) {
-      // If garden storage fails, keep daily completion flow uninterrupted.
+      
     }
     if (!mounted) return;
     setState(() {
@@ -297,7 +297,7 @@ class _DailyQuestionsPageState extends State<DailyQuestionsPage>
         );
       }
     } catch (_) {
-      // Keep local prefs when cloud payload cannot be decoded.
+      
     }
   }
 

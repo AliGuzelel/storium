@@ -1,6 +1,6 @@
 import 'dart:convert';
 
-/// Persisted garden state (local cache + Firestore `gardenJson`).
+
 class GardenPlantSlot {
   const GardenPlantSlot({
     this.currentPhase = 0,
@@ -57,7 +57,7 @@ class GardenPersistedState {
 
   final Map<String, GardenPlantSlot> slots;
   final Set<String> completedPlantTypes;
-  /// Current [PageView] index for the garden (restored on load).
+  
   final int selectedPlantPageIndex;
   final int fertilizerCount;
 
@@ -189,18 +189,18 @@ class GardenPlantOption {
   final String id;
   final String name;
   final String description;
-  /// Per-stage rasters: 0=seed, 1=grow, 2=full.
+  
   final Map<int, String> images;
-  /// Multiplies [getScale] in [PlantWidget] so this plant reads larger at every phase.
+  
   final double plantPhaseScaleFactor;
-  /// Fixed layout height for the plant [Image] box ([BoxFit.contain] avoids stretch).
+  
   final double plantImageHeight;
-  /// Fraction of page width used as max width for the plant box.
+  
   final double plantImageWidthFactor;
-  /// Pushes the raster down (+Y) to cancel transparent padding under the stem in the PNG.
+  
   final double bottomOffset;
 
-  /// Maps growth level to image stage: 0=seed, 1=grow, 2=full.
+  
   static int getStage(int level) {
     if (level <= 0) return 0;
     if (level == 1) return 1;
@@ -209,7 +209,7 @@ class GardenPlantOption {
 
   String get imagePath => images[0] ?? '';
 
-  /// Resolved stage asset for [currentPhase].
+  
   String resolvedImagePath(int currentPhase) {
     final stage = getStage(currentPhase);
     return images[stage] ??

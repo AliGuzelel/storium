@@ -26,7 +26,7 @@ class _BlueCloudEffectState extends State<BlueCloudEffect> {
     final o = s ? 0.52 : 1.0;
     final sz = s ? 0.82 : 1.0;
     final sp = s ? 0.88 : 1.0;
-    // Fewer blobs + lower blur than early builds — MaskFilter blur was the main GPU cost app-wide.
+    
     _backgroundLayer = List<_CloudBlob>.generate(
       s ? 3 : 5,
       (_) => _CloudBlob.random(
@@ -109,7 +109,7 @@ class _CloudPainter extends CustomPainter {
     required this.subtle,
   });
 
-  /// Monotonic cycle count (seconds / loop duration); used with % for drift.
+  
   final double phase;
   final List<_CloudBlob> background;
   final List<_CloudBlob> mid;

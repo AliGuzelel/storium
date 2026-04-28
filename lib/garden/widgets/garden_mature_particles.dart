@@ -2,14 +2,14 @@ import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 
-/// Very subtle drifting specks for fully grown plants (phase 3).
+
 class GardenMatureParticlesPainter extends CustomPainter {
   GardenMatureParticlesPainter({
     required this.seconds,
     required this.accent,
   });
 
-  /// Monotonic time (no AnimationController loop restarts).
+  
   final double seconds;
   final Color accent;
 

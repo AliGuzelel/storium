@@ -18,12 +18,12 @@ class SummaryPage extends StatefulWidget {
   final String emotion;
   final int score;
 
-  /// Anxiety choices in this run; used so the mood bar reads full when anxiety is zero.
+  
   final int anxietyCount;
   final List<AchievementModel> newlyUnlockedAchievements;
   final String? resumeStoryId;
 
-  /// Grief story only: `true` = acceptance ending, `false` = avoidance ending (from calm vs anxiety).
+  
   final bool? griefStayedEnding;
 
   const SummaryPage({

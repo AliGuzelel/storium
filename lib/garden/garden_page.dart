@@ -20,7 +20,7 @@ import 'widgets/garden_sky_layer.dart';
 import 'widgets/garden_sky_theme.dart';
 import 'widgets/garden_watering_can.dart';
 
-/// Forget-Me-Not matures after two waters (phases 0→1→3). Others advance one phase per water.
+
 int _nextGardenPhaseAfterWater(String plantId, int currentPhase) {
   if (plantId == 'forget_me_not') {
     if (currentPhase <= 0) return 1;
@@ -482,7 +482,7 @@ class _GardenPageState extends State<GardenPage> with TickerProviderStateMixin {
 
     return Scaffold(
       backgroundColor: const Color(0xFF5A9CE0),
-      // Z-order: sky (gradient → clouds → sun → birds), then plants + soil on top.
+      
       body: Stack(
         fit: StackFit.expand,
         children: [

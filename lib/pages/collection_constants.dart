@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 
-/// Space-style insets for every collection detail grid / body.
+
 const double kCollectionDetailGridTopInset = 16;
 const double kCollectionDetailGridHorizontalInset = 4;
 
-/// Category titles for the collections grid (9 items, UI only).
+
 const List<String> kCollectionTopicLabels = [
   'Animals',
   'Space',
@@ -17,29 +17,29 @@ const List<String> kCollectionTopicLabels = [
   'Superpowers',
 ];
 
-/// Collections grid: Space card uses [space13] instead of a flat color block.
+
 const String kSpaceCollectionGridPreviewAsset =
     'assets/collection_images/space/space13.jpg';
 
-/// Collections grid: Nature card full-bleed preview ([nature15]).
+
 const String kNatureCollectionGridPreviewAsset =
     'assets/collection_images/nature/nature15.jpg';
 
-/// Collections grid: Art card full-bleed preview ([art15]; detail uses [art1]–[art14] only).
+
 const String kArtCollectionGridPreviewAsset =
     'assets/collection_images/art/art15.jpg';
 
-/// Collections grid: Ocean card full-bleed preview ([ocean19]; detail uses [ocean1]–[ocean18] only).
+
 const String kOceanCollectionGridPreviewAsset =
     'assets/collection_images/ocean/ocean19.jpg';
-/// Collections grid: Animals card full-bleed preview ([animal25]).
+
 const String kAnimalsCollectionGridPreviewAsset =
     'assets/collection_images/animals/animal25.jpg';
-/// Collections grid: Memes card full-bleed preview ([memes21]).
+
 const String kMemesCollectionGridPreviewAsset =
     'assets/collection_images/memes/memes21.jpg';
 
-/// Space collection: 12 images (3×4) in [assets/collection_images/space].
+
 const List<String?> kSpaceCollectionImageAssets = <String?>[
   'assets/collection_images/space/space1.jpg',
   'assets/collection_images/space/space2.jpg',
@@ -55,7 +55,7 @@ const List<String?> kSpaceCollectionImageAssets = <String?>[
   'assets/collection_images/space/space12.jpg',
 ];
 
-/// Muted tile colors for space grid fallbacks (cycles by index).
+
 const List<Color> kSpacePlaceholderTileColors = [
   Color(0xFF3D4F6B),
   Color(0xFF4A5D7C),
@@ -65,7 +65,7 @@ const List<Color> kSpacePlaceholderTileColors = [
   Color(0xFF455A78),
 ];
 
-/// Nature collection: 14 images in [assets/collection_images/nature] (3 columns; scroll on detail page).
+
 const List<String?> kNatureCollectionImageAssets = <String?>[
   'assets/collection_images/nature/nature1.jpg',
   'assets/collection_images/nature/nature2.jpg',
@@ -83,7 +83,7 @@ const List<String?> kNatureCollectionImageAssets = <String?>[
   'assets/collection_images/nature/nature14.jpg',
 ];
 
-/// Muted tile colors for nature grid fallbacks (cycles by index).
+
 const List<Color> kNaturePlaceholderTileColors = [
   Color(0xFF4A6B52),
   Color(0xFF5A7D62),
@@ -93,7 +93,7 @@ const List<Color> kNaturePlaceholderTileColors = [
   Color(0xFF527A5C),
 ];
 
-/// Art collection: 14 images in [assets/collection_images/art] ([art1] is png; [art2]–[art14] jpg).
+
 const List<String?> kArtCollectionImageAssets = <String?>[
   'assets/collection_images/art/art1.png',
   'assets/collection_images/art/art2.jpg',
@@ -111,7 +111,7 @@ const List<String?> kArtCollectionImageAssets = <String?>[
   'assets/collection_images/art/art14.jpg',
 ];
 
-/// Muted tile colors for art grid fallbacks (cycles by index).
+
 const List<Color> kArtPlaceholderTileColors = [
   Color(0xFF6B5A78),
   Color(0xFF7A6488),
@@ -121,7 +121,7 @@ const List<Color> kArtPlaceholderTileColors = [
   Color(0xFF756090),
 ];
 
-/// Ocean collection: 18 images in [assets/collection_images/ocean] (3 columns; scroll on detail page).
+
 const List<String?> kOceanCollectionImageAssets = <String?>[
   'assets/collection_images/ocean/ocean1.jpg',
   'assets/collection_images/ocean/ocean2.jpg',
@@ -143,7 +143,7 @@ const List<String?> kOceanCollectionImageAssets = <String?>[
   'assets/collection_images/ocean/ocean18.jpg',
 ];
 
-/// Memes collection: 20 images in [assets/collection_images/memes].
+
 const List<String?> kMemesCollectionImageAssets = <String?>[
   'assets/collection_images/memes/memes1.jpeg',
   'assets/collection_images/memes/memes2.jpeg',
@@ -167,7 +167,7 @@ const List<String?> kMemesCollectionImageAssets = <String?>[
   'assets/collection_images/memes/memes20.jpeg',
 ];
 
-/// Muted tile colors for ocean grid fallbacks (cycles by index).
+
 const List<Color> kOceanPlaceholderTileColors = [
   Color(0xFF3D6B7A),
   Color(0xFF4A7D8F),
@@ -177,7 +177,7 @@ const List<Color> kOceanPlaceholderTileColors = [
   Color(0xFF4A8FA8),
 ];
 
-/// Animals collection: 24 images in [assets/collection_images/animals].
+
 const List<String?> kAnimalCollectionImageAssets = <String?>[
   'assets/collection_images/animals/animal1.jpeg',
   'assets/collection_images/animals/animal2.jpeg',
@@ -205,7 +205,7 @@ const List<String?> kAnimalCollectionImageAssets = <String?>[
   'assets/collection_images/animals/animal24.jpeg',
 ];
 
-/// Muted tile colors for meme placeholders (used for any future empty slots).
+
 const List<Color> kMemesPlaceholderTileColors = [
   Color(0xFF8A6B5A),
   Color(0xFF9B7D68),
@@ -215,7 +215,7 @@ const List<Color> kMemesPlaceholderTileColors = [
   Color(0xFF9A745F),
 ];
 
-/// Caption shown under the image in the full-screen animal viewer only (not on the grid).
+
 String? animalCollectionViewerCaption(int index) {
   switch (index) {
     case 0:
@@ -227,7 +227,7 @@ String? animalCollectionViewerCaption(int index) {
   }
 }
 
-/// Muted tile colors for empty animal slots (cycles by index).
+
 const List<Color> kAnimalPlaceholderTileColors = [
   Color(0xFF5A7D6A),
   Color(0xFF6B8E7E),
@@ -237,7 +237,7 @@ const List<Color> kAnimalPlaceholderTileColors = [
   Color(0xFF6A8F7E),
 ];
 
-/// Soft placeholder tints behind each card (no images).
+
 const List<Color> kCollectionPlaceholderColors = [
   Color(0xFF6B8E7E),
   Color(0xFF5C6B9A),

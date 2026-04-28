@@ -51,7 +51,7 @@ void _showTransientTopMessage(BuildContext context, String message) {
   });
 }
 
-/// Full-screen swipeable gallery for a fixed-slot collection (e.g. Animals, Space).
+
 class AnimalGalleryViewerPage extends StatefulWidget {
   const AnimalGalleryViewerPage({
     super.key,
@@ -62,11 +62,11 @@ class AnimalGalleryViewerPage extends StatefulWidget {
   });
 
   final int initialIndex;
-  /// Defaults to [kAnimalCollectionImageAssets] when omitted.
+  
   final List<String?>? imageAssets;
-  /// Defaults to [animalCollectionViewerCaption] when omitted.
+  
   final String? Function(int index)? captionForIndex;
-  /// Colors for empty slots; defaults to [kAnimalPlaceholderTileColors].
+  
   final List<Color>? tilePlaceholderColors;
 
   @override

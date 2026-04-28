@@ -29,7 +29,7 @@ class SettingsManager extends ChangeNotifier {
     notifyListeners();
   }
 
-  /// Reload from disk cache (e.g. after Firestore hydration wrote prefs).
+  
   Future<void> reloadFromDisk() async {
     final loaded = await _service.loadSettings();
     final normalizedTheme = AppThemes.normalizeThemeColor(loaded.themeColor);

@@ -43,7 +43,7 @@ class StoryProgressService {
     return _hydrateInProgressIfNeeded(_stripInProgressForFinishedStories(local));
   }
 
-  /// Stories with scene &gt; 0 that are not marked finished (for Continue UI).
+  
   Future<List<InProgressStory>> loadContinuableStories() async {
     final progress = await load();
     final merged = Map<String, int>.from(progress.inProgressStories);
@@ -71,8 +71,8 @@ class StoryProgressService {
     final strictList = toSortedList(strict);
     if (strictList.isNotEmpty) return strictList;
 
-    // Fallback: if completion flags are stale/inconsistent, still surface
-    // resumable story entries so Continue never appears empty incorrectly.
+    
+    
     return toSortedList(merged);
   }
 
@@ -80,7 +80,7 @@ class StoryProgressService {
     return loadContinuableStories();
   }
 
-  /// If the user signs in, copy `guest` prefs into `uid` when uid has no file yet.
+  
   Future<void> _migrateGuestProgressIfNeeded() async {
     final user = UserSession.currentUser;
     if (user == null || user.uid.isEmpty) return;
@@ -160,9 +160,9 @@ class StoryProgressService {
     return data.copyWith(inProgressStories: map);
   }
 
-  /// Ensures the active session ([currentScene] / [currentTopic]) is reflected in
-  /// [merged], so Continue and disk state stay aligned (avoids "resume works but
-  /// Continue list is empty" when the map was non-empty or missing this story).
+  
+  
+  
   void _foldCurrentSessionIntoMap(
     StoryProgressData data,
     Map<String, int> merged,
@@ -302,7 +302,7 @@ class StoryProgressService {
     return _filterAndRememberAnnounced(rawUnlocked);
   }
 
-  /// Clears saved mid-story progress so the next open starts at scene 1 (e.g. Summary "Replay").
+  
   Future<void> discardStoryProgress({
     required String resumeStoryId,
     required String storyTitle,
@@ -330,8 +330,8 @@ class StoryProgressService {
     await save(next);
   }
 
-  /// Prevents replaying all historical achievement popups after sign-in
-  /// by seeding announced IDs with already unlocked achievements.
+  
+  
   Future<void> seedAnnouncedWithCurrentlyUnlocked() async {
     final syncedState = await _achievementService.loadState();
     final announced = await _loadAnnouncedAchievementIds();
@@ -485,7 +485,7 @@ class StoryProgressService {
           finishedStories: mergedFinished,
         );
       } catch (_) {
-        /* fall through: still return partial data from extra fields */
+        
       }
     }
 
@@ -496,8 +496,8 @@ class StoryProgressService {
     );
   }
 
-  /// Merges `inProgressStories` stored as separate Firestore fields (not only inside
-  /// [storyProgressJson]).
+  
+  
   Map<String, int> _inProgressFromFirestoreRawFields(
     Map<String, dynamic> fields,
   ) {

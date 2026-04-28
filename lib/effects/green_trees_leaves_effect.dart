@@ -17,7 +17,7 @@ class _GreenTreeSceneEffectState extends State<GreenTreeSceneEffect> {
   static const int _leafCountFull = 56;
   static const int _leafCountSubtle = 18;
 
-  /// Baseline loop length (matches prior AnimationController duration).
+  
   static const double _loopSec = 26;
 
   late List<_LeafParticle> _leaves;
@@ -97,7 +97,7 @@ class _GreenLeavesPainter extends CustomPainter {
     required this.subtle,
   });
 
-  /// Monotonic “cycle” index (seconds / loop); modulo in paint keeps leaves smooth.
+  
   final double t;
   final List<_LeafParticle> leaves;
   final bool subtle;

@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../theme/app_themes.dart';
 
-/// Three-stop vertical sky: top (deeper) → mid (theme) → bottom (soft).
+
 LinearGradient gardenSkyGradient(String themeColor, Brightness brightness) {
   final colors = gardenSkyThreeStops(themeColor, brightness);
   return LinearGradient(

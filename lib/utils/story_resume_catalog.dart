@@ -1,4 +1,4 @@
-/// Stable story ids for resume / continue flows (matches Firestore keys when used).
+
 abstract final class StoryResumeCatalog {
   static const Map<String, String> titles = {
     'too_loud_inside': 'Too Loud Inside',
@@ -27,7 +27,7 @@ abstract final class StoryResumeCatalog {
     return storyIdFromNormalizedTopic(topic);
   }
 
-  /// Matches [StoryProgressService] normalized topics (e.g. grief, anxiety).
+  
   static String? storyIdFromNormalizedTopic(String topic) {
     switch (topic.trim().toLowerCase()) {
       case 'grief':

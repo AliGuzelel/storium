@@ -2,7 +2,7 @@ import 'dart:ui' show ImageFilter;
 
 import 'package:flutter/material.dart';
 
-/// Warm sun: clearly visible on light and dark skies, still soft-edged (no hard disc).
+
 class GardenSunWidget extends StatefulWidget {
   const GardenSunWidget({super.key});
 
@@ -36,7 +36,7 @@ class _GardenSunWidgetState extends State<GardenSunWidget>
         fit: StackFit.expand,
         clipBehavior: Clip.none,
         children: [
-          // Full-bleed radial wash from upper-right — no cropped box (avoids vertical seam).
+          
           Positioned.fill(
             child: DecoratedBox(
               decoration: BoxDecoration(
@@ -70,7 +70,7 @@ class _GardenSunWidgetState extends State<GardenSunWidget>
             child: Stack(
               clipBehavior: Clip.none,
               children: [
-                // Broad warm halo — reads on dark themes.
+                
                 Positioned(
                   top: 6,
                   right: -4,
@@ -97,7 +97,7 @@ class _GardenSunWidgetState extends State<GardenSunWidget>
                     ),
                   ),
                 ),
-                // Bright core — strong focal point.
+                
                 Positioned(
                   top: 36,
                   right: 22,

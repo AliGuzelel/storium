@@ -84,9 +84,9 @@ class _CollectionGridCard extends StatelessWidget {
 
   final String label;
   final Color placeholderColor;
-  /// When set, shown in the top preview area instead of the gradient placeholder.
+  
   final String? previewAssetPath;
-  /// Entire tile is only [previewAssetPath] (no title strip, no glass split).
+  
   final bool fullBleedImage;
   final VoidCallback onTap;
 

@@ -2,7 +2,7 @@ import 'dart:convert';
 
 import 'package:shared_preferences/shared_preferences.dart';
 
-/// Sentinel for [UserProfile.copyWith] — omit means "keep current [avatarUrl]".
+
 class _AvatarUrlUnset {
   const _AvatarUrlUnset();
 }
@@ -50,8 +50,8 @@ class UserProfile {
     );
   }
 
-  /// Stored in [UserSession] prefs. Large `data:image/` URLs are omitted here
-  /// and kept under `avatar_cache_<uid>` so SharedPreferences stays within limits.
+  
+  
   Map<String, dynamic> toJson() {
     final a = avatarUrl;
     final storableAvatar =

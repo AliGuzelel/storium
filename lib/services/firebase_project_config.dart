@@ -1,4 +1,4 @@
-/// Shared Firebase project identifiers (REST + Auth).
+
 class FirebaseProjectConfig {
   static const String apiKey = 'AIzaSyAlISRVS8IBLbRJy-0whlGJ0dWLvX3UuBg';
   static const String projectId = 'storium-6083e';

@@ -5,7 +5,7 @@ import 'package:flutter/scheduler.dart' show Ticker;
 
 import '../../theme/app_themes.dart';
 
-/// Subtle theme-specific atmosphere (petals, leaves, dust, etc.). Lightweight.
+
 class GardenThemeParticlesLayer extends StatefulWidget {
   const GardenThemeParticlesLayer({super.key, required this.themeColor});
 

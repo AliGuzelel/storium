@@ -3,7 +3,7 @@ import 'package:provider/provider.dart';
 
 import '../providers/saved_images_store.dart';
 
-/// Full-screen swipeable view for all saved My Space images.
+
 class MySpaceImageViewerPage extends StatefulWidget {
   const MySpaceImageViewerPage({
     super.key,

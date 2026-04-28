@@ -3,7 +3,7 @@ import 'package:flutter/foundation.dart';
 import '../models/user_session.dart';
 import 'firestore_user_document_repository.dart';
 
-/// Small helper for storing feature JSON blobs under `users/{uid}`.
+
 class CloudBlobStateService {
   CloudBlobStateService._();
 

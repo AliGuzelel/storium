@@ -7,7 +7,7 @@ import '../models/saved_image_entry.dart';
 import '../models/user_session.dart';
 import '../services/cloud_blob_state_service.dart';
 
-/// Saved My Space items (local only).
+
 class SavedImagesStore extends ChangeNotifier {
   SavedImagesStore();
 
@@ -19,7 +19,7 @@ class SavedImagesStore extends ChangeNotifier {
 
   List<SavedImageEntry> get entries => List<SavedImageEntry>.unmodifiable(_entries);
 
-  /// Paths only (convenience).
+  
   List<String> get savedImages =>
       _entries.map((e) => e.path).toList(growable: false);
 
@@ -71,8 +71,8 @@ class SavedImagesStore extends ChangeNotifier {
     notifyListeners();
   }
 
-  /// Add path with optional caption.
-  /// Returns `true` if a new entry was saved, `false` if path was empty or already saved.
+  
+  
   Future<bool> add(String imagePath, {String? caption}) async {
     final path = imagePath.trim();
     if (path.isEmpty) return false;
@@ -137,7 +137,7 @@ class SavedImagesStore extends ChangeNotifier {
         ..addAll(byPath.values);
       await _persist();
     } catch (_) {
-      // Ignore malformed cloud payload and keep local entries.
+      
     }
   }
 }

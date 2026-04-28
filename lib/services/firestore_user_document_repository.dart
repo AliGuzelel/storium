@@ -5,7 +5,7 @@ import 'package:http/http.dart' as http;
 
 import 'firebase_project_config.dart';
 
-/// Reads / patches fields on `users/{uid}` via Firestore REST (same doc as profile).
+
 class FirestoreUserDocumentRepository {
   FirestoreUserDocumentRepository._();
 
@@ -82,7 +82,7 @@ class FirestoreUserDocumentRepository {
     return {'stringValue': value.toString()};
   }
 
-  /// GET full user document; returns decoded `fields` map or null.
+  
   static Future<Map<String, dynamic>?> fetchFields({
     required String uid,
     required String idToken,
@@ -120,7 +120,7 @@ class FirestoreUserDocumentRepository {
     return _decodeFirestoreValue(fields[fieldPath]);
   }
 
-  /// Patch one or more string fields (JSON blobs, etc.).
+  
   static Future<bool> patchStringFields({
     required String uid,
     required String idToken,
@@ -169,7 +169,7 @@ class FirestoreUserDocumentRepository {
     return true;
   }
 
-  /// Patch one or more fields with mixed Firestore types (map/int/bool/string/list).
+  
   static Future<bool> patchDynamicFields({
     required String uid,
     required String idToken,

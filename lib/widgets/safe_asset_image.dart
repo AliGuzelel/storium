@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-/// [Image.asset] with a consistent [errorBuilder] so missing assets never crash.
+
 class SafeAssetImage extends StatelessWidget {
   const SafeAssetImage(
     this.assetName, {

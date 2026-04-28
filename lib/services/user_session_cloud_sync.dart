@@ -11,10 +11,10 @@ import 'firestore_user_document_repository.dart';
 import 'settings_service.dart';
 import 'story_progress_service.dart';
 
-/// Pulls `users/{uid}` optional JSON blobs after login / cold start.
-///
-/// Firestore fields: `settingsJson`, `gardenJson`, `achievementStateJson`,
-/// `storyProgressJson` (story service already consumes the last on [StoryProgressService.load]).
+
+
+
+
 class UserSessionCloudSync {
   UserSessionCloudSync._();
 

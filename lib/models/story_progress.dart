@@ -7,7 +7,7 @@ class StoryProgressData {
   final int currentChoicesMade;
   final DateTime? lastPlayedAt;
   final List<String> finishedStories;
-  /// Per-story last scene index (storyId → scene). Synced inside [storyProgressJson].
+  
   final Map<String, int> inProgressStories;
   final int totalChoicesMade;
   final String? lastStoryPlayed;

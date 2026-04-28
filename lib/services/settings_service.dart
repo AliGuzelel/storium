@@ -37,7 +37,7 @@ class SettingsService {
       );
     }
 
-    // Backward compatibility: load old JSON blob once, then migrate.
+    
     final raw = prefs.getString(_settingsKey);
     if (raw != null && raw.isNotEmpty) {
       try {
@@ -46,7 +46,7 @@ class SettingsService {
         await _saveStructured(prefs, legacy);
         return legacy;
       } catch (_) {
-        // If legacy blob is malformed, fall through to defaults.
+        
       }
     }
 
@@ -56,12 +56,12 @@ class SettingsService {
   Future<void> saveSettings(SettingsModel settings) async {
     final prefs = await SharedPreferences.getInstance();
     await _saveStructured(prefs, settings);
-    // Keep JSON blob as compatibility snapshot for older builds.
+    
     await prefs.setString(_settingsKey, jsonEncode(settings.toJson()));
     await _pushToFirestore(settings);
   }
 
-  /// Writes prefs from a Firestore JSON blob (no extra cloud write).
+  
   Future<void> importFromRemoteString(String jsonStr) async {
     final map = jsonDecode(jsonStr) as Map<String, dynamic>;
     final settings = SettingsModel.fromJson(map);

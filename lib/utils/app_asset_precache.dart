@@ -5,8 +5,8 @@ import '../effects/cherry_blossom_effect.dart';
 import '../garden/garden_models.dart';
 import '../pages/collection_constants.dart';
 
-/// Best-effort precache for garden + pink theme raster assets to avoid decode
-/// spikes and reduce "Unable to load asset" flashes after long sessions.
+
+
 Future<void>? _precacheFuture;
 
 Future<void> precacheStoriumRasterAssets(BuildContext context) async {

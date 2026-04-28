@@ -81,9 +81,9 @@ class AuthService {
     try {
       data = await _readProfile(uid: uid, idToken: idToken);
     } on AuthServiceException catch (e) {
-      // Do not block authentication when profile document is temporarily
-      // unavailable (e.g. Firestore permission/config hiccup). We'll recover
-      // with a local fallback profile and attempt to write it back.
+      
+      
+      
       if (e.code != 'profile-read-failed') rethrow;
       data = null;
     }
@@ -103,8 +103,8 @@ class AuthService {
       try {
         await _saveProfile(fallbackProfile, idToken: idToken);
       } on AuthServiceException catch (e) {
-        // Keep sign-in usable even when cloud profile writes fail.
-        // Other services can retry persistence later in the session.
+        
+        
         if (e.code != 'profile-save-failed') rethrow;
       }
       return fallbackProfile;

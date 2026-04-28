@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../widgets/safe_asset_image.dart';
 
-/// Floating watering-can control: soft radial halo, tap scale, light droplet hint.
+
 class GardenWateringCan extends StatefulWidget {
   const GardenWateringCan({
     super.key,

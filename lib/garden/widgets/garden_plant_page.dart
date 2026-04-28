@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 
 import 'plant_widget.dart';
 
-/// One [PageView] page: plant anchored so its base meets the soil line.
+
 class PlantPage extends StatelessWidget {
   const PlantPage({
     super.key,

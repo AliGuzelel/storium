@@ -1,5 +1,5 @@
-// Web-only implementation; not used on VM/tests.
-// ignore_for_file: avoid_web_libraries_in_flutter, deprecated_member_use
+
+
 
 import 'dart:html' as html;
 import 'dart:math' as math;
@@ -10,7 +10,7 @@ import '../models/user_session.dart';
 import '../services/firestore_user_document_repository.dart';
 import 'garden_models.dart';
 
-/// Loads / saves garden progress via [window.localStorage] (browser only).
+
 class GardenStorage {
   static const _plantIdKey = 'garden_plant_id';
   static const _stageKey = 'garden_stage';
@@ -261,7 +261,7 @@ class GardenStorage {
               '${s.nextWaterAllowedAt!.millisecondsSinceEpoch}';
         }
       }
-      // Clean legacy slot keys after lavender -> allium migration.
+      
       _storage.remove(k(_slotStageKey(_legacyAlliumId)));
       _storage.remove(k(_slotLastKey(_legacyAlliumId)));
       _storage.remove(k(_slotNextKey(_legacyAlliumId)));
@@ -297,7 +297,7 @@ class GardenStorage {
     }
   }
 
-  /// Temporary: fixed short cooldown for testing (restore 8–24h random later).
+  
   static Duration randomWaterCooldown(math.Random rng) {
     return const Duration(seconds: 5);
   }

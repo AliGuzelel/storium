@@ -36,7 +36,7 @@ class BaseParticleEffect extends StatefulWidget {
   final bool strokeShape;
   final double sizeMultiplier;
   final double opacityMultiplier;
-  /// Lighter density, motion, and contrast for secondary screens.
+  
   final bool subtle;
 
   @override
@@ -168,7 +168,7 @@ class _BaseParticlePainter extends CustomPainter {
     required this.config,
   });
 
-  /// Monotonically increasing — avoids phase jumps from repeating0→1 loops.
+  
   final double seconds;
   final List<_Particle> particles;
   final BaseParticleEffect config;

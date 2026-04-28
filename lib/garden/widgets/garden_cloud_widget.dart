@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart' show Ticker;
 
-/// Drifting cloud configuration (shared by [GardenCloudsBand]).
+
 class GardenCloudLayerSpec {
   const GardenCloudLayerSpec({
     required this.travelDuration,
@@ -20,7 +20,7 @@ class GardenCloudLayerSpec {
   final int shape;
 }
 
-/// Default cloud field for the garden sky (matches prior [CloudWidget] set).
+
 const List<GardenCloudLayerSpec> kGardenCloudLayerSpecs = [
   GardenCloudLayerSpec(
     travelDuration: Duration(seconds: 54),
@@ -80,8 +80,8 @@ const List<GardenCloudLayerSpec> kGardenCloudLayerSpecs = [
   ),
 ];
 
-/// All drifting clouds in **one** ticker + **one** [CustomPaint] (avoids 7× setState/frame).
-/// No [ImageFiltered] blur here — full-band blur over animated content was the main GPU cost on Sky/blue.
+
+
 class GardenCloudsBand extends StatefulWidget {
   const GardenCloudsBand({
     super.key,

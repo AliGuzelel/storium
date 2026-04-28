@@ -7,7 +7,7 @@ import '../models/user_session.dart';
 import '../services/firestore_user_document_repository.dart';
 import 'garden_models.dart';
 
-/// Loads / saves garden progress via [SharedPreferences] (VM, mobile, desktop).
+
 class GardenStorage {
   static const _plantIdKey = 'garden_plant_id';
   static const _stageKey = 'garden_stage';
@@ -20,7 +20,7 @@ class GardenStorage {
   static const _fertilizerCountKey = 'garden_fertilizer_count';
   static const _legacyAlliumId = 'lavender';
 
-  /// Bump when the persisted plant catalog or slot format changes.
+  
   static const int currentSchema = 4;
 
   static String _scopeSuffix([String? uidOverride]) {
@@ -211,7 +211,7 @@ class GardenStorage {
         try {
           return GardenPersistedState.fromJsonString(rawBlob);
         } catch (_) {
-          // Corrupt blob should not block fallback loaders.
+          
         }
       }
 
@@ -232,7 +232,7 @@ class GardenStorage {
           completedPlantTypes: filtered,
           selectedPlantPageIndex: 0,
         );
-        // Do not overwrite cloud with a synthetic fresh state.
+        
         await save(fresh, pushToCloud: false, uidScope: scopeSuffix);
         return fresh;
       }
@@ -250,7 +250,7 @@ class GardenStorage {
       if (!hasNewSlots) {
         if (_hasLegacyKeys(prefs, scopeSuffix)) {
           final migrated = _migrateFromLegacy(prefs, completed, scopeSuffix);
-          // Never upload legacy-migrated synthetic state automatically.
+          
           await save(migrated, pushToCloud: false, uidScope: scopeSuffix);
           return migrated;
         }
@@ -262,7 +262,7 @@ class GardenStorage {
           completedPlantTypes: completed,
           selectedPlantPageIndex: 0,
         );
-        // Do not overwrite cloud with a synthetic fresh state.
+        
         await save(fresh, pushToCloud: false, uidScope: scopeSuffix);
         return fresh;
       }
@@ -338,7 +338,7 @@ class GardenStorage {
     await prefs.remove(_kForSuffix(_nextWaterKey, scopeSuffix));
   }
 
-  /// Apply remote JSON from Firestore (writes local cache only).
+  
   static Future<void> importFromRemoteJsonString(
     String raw, {
     String? uidScope,
@@ -369,7 +369,7 @@ class GardenStorage {
         slots[id] = r;
         continue;
       }
-      // Same phase: keep the newest watering metadata when available.
+      
       final lTime = l.lastWateredAt;
       final rTime = r.lastWateredAt;
       if (rTime != null && (lTime == null || rTime.isAfter(lTime))) {
@@ -433,7 +433,7 @@ class GardenStorage {
           );
         }
       }
-      // Clean legacy slot keys after lavender -> allium migration.
+      
       await prefs.remove(_slotStageKeyWithSuffix(_legacyAlliumId, scopeSuffix));
       await prefs.remove(_slotLastKeyWithSuffix(_legacyAlliumId, scopeSuffix));
       await prefs.remove(_slotNextKeyWithSuffix(_legacyAlliumId, scopeSuffix));
@@ -478,7 +478,7 @@ class GardenStorage {
     }
   }
 
-  /// Temporary: fixed short cooldown for testing (restore 8–24h random later).
+  
   static Duration randomWaterCooldown(math.Random rng) {
     return const Duration(seconds: 5);
   }

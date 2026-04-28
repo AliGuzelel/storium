@@ -3,7 +3,7 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
 
-/// Bird silhouettes: variable gaps, flock size, speed, and vertical band.
+
 class BirdsWidget extends StatefulWidget {
   const BirdsWidget({super.key});
 

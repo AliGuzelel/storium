@@ -6,7 +6,7 @@ import 'garden_sky_theme.dart';
 import 'garden_sun_widget.dart';
 import 'garden_theme_particles.dart';
 
-/// Base stack: gradient → drifting clouds (single paint pass) → particles → sun → birds.
+
 class GardenSkyLayer extends StatelessWidget {
   const GardenSkyLayer({
     super.key,

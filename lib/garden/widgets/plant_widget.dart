@@ -8,7 +8,7 @@ import '../../widgets/safe_asset_image.dart';
 import '../garden_plant_phase_visuals.dart';
 import 'garden_mature_particles.dart';
 
-/// Plant display: phase-based scale/opacity on one image, idle sway, mature particles.
+
 class PlantWidget extends StatefulWidget {
   const PlantWidget({
     super.key,
@@ -25,9 +25,9 @@ class PlantWidget extends StatefulWidget {
 
   final String imagePath;
   final int currentPhase;
-  /// Applied to [getScale] so some plants (e.g. Forget-Me-Not) read larger at every phase.
+  
   final double phaseScaleFactor;
-  /// Retained for parent API compatibility (watering feedback no longer draws a halo).
+  
   final bool ambientMotion;
   final int glowEpoch;
   final Color glowTint;
@@ -95,7 +95,7 @@ class _PlantWidgetState extends State<PlantWidget> with TickerProviderStateMixin
     super.dispose();
   }
 
-  /// Subtle bump when the raster path swaps (e.g. Forget-Me-Not stage art).
+  
   double get _imagePathChangeScale {
     if (!_imagePathPulse.isAnimating) {
       return 1.0;
@@ -107,7 +107,7 @@ class _PlantWidgetState extends State<PlantWidget> with TickerProviderStateMixin
     return lerpDouble(1.05, 1.0, (t - 0.5) / 0.5)!;
   }
 
-  /// Slight stage-swap fade to smooth image transitions.
+  
   double get _imagePathChangeOpacity {
     if (!_imagePathPulse.isAnimating) {
       return 1.0;

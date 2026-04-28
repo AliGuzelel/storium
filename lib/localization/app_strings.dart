@@ -350,7 +350,7 @@ String translate(BuildContext context, String key) {
 
 String t(BuildContext context, String key) => translate(context, key);
 
-/// For async gaps and callbacks: [context.watch] is only valid during [State.build].
+
 String tRead(BuildContext context, String key) {
   final lang = context.read<SettingsManager>().language;
   return translations[lang]?[key] ?? translations['en']?[key] ?? key;

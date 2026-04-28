@@ -1,4 +1,4 @@
-/// One item saved to My Space (asset path + optional caption).
+
 class SavedImageEntry {
   const SavedImageEntry({
     required this.path,

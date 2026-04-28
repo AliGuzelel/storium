@@ -12,7 +12,7 @@ class GradientScaffold extends StatelessWidget {
   final bool breathe;
   final Duration speed;
   final double amplitude;
-  /// Softer theme particles behind content (main/start uses full effect elsewhere).
+  
   final bool subtleThemeOverlay;
   final bool showBackButton;
 

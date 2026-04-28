@@ -64,8 +64,8 @@ class _AppGradientBackgroundState extends State<AppGradientBackground>
     }
   }
 
-  /// Breathe drives a full [setState] every frame; skip for themes that stack
-  /// heavy effects (blue clouds) so we do not rebuild the whole subtree at 60fps.
+  
+  
   bool get _gradientBreatheActive {
     if (!widget.breathe) return false;
     final c = _settings?.themeColor;

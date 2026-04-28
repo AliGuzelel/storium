@@ -4,9 +4,9 @@ import 'package:flutter/material.dart';
 
 import '../theme/ui_tokens.dart';
 
-/// Glass-style button using only [GestureDetector] (no [InkWell] splash).
-/// Avoids ticker / ink-highlight crashes when [onTap] is async or rebuilds
-/// happen quickly (e.g. garden cooldown timer + [setState]).
+
+
+
 class AppButton extends StatefulWidget {
   final String label;
   final VoidCallback? onTap;

@@ -18,7 +18,7 @@ class StoryPage extends StatefulWidget {
   final String storyTitle;
   final String topic;
   final int? initialSceneIndex;
-  /// Stable catalog id (e.g. the_day_after). Keeps progress correct when [storyTitle] is localized.
+  
   final String? resumeStoryId;
 
   @override

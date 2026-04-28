@@ -287,7 +287,7 @@ class AchievementService {
     }
   }
 
-  /// Backward-compatible import for legacy `achievementStateJson` blob.
+  
   Future<void> importFromRemoteString(String jsonStr) async {
     try {
       final parsed = AchievementState.fromJson(
@@ -365,7 +365,7 @@ class AchievementService {
     return current;
   }
 
-  /// Reconciles unique story IDs from progress snapshots (prevents stats mismatch).
+  
   Future<void> syncCompletedStories(Iterable<String> storyIds) async {
     final normalized = storyIds
         .map((e) => e.trim().toLowerCase())
@@ -395,7 +395,7 @@ class AchievementService {
     await saveState(next);
   }
 
-  /// No unlocked achievement is ever overwritten from true to false.
+  
   Future<AchievementState> updateAchievementsSafely({
     required AchievementState state,
     required Map<String, bool> nextAchievements,
@@ -464,8 +464,8 @@ class AchievementService {
     final remote = await fetchUserDataFromFirestore();
     final local = await loadState();
     final state = _mergePreferUnlocked(local, remote);
-    // Fallback safety: even if transaction is unavailable, keep unique completion
-    // locally (and via REST save) so achievements still unlock.
+    
+    
     final storySet = state.completedStoriesList.map((e) => e.toLowerCase()).toSet()
       ..add(normalizedId);
     final normalizedCompletedList = storySet.toList()..sort();
@@ -501,7 +501,7 @@ class AchievementService {
     int? anxietyPercent,
     bool finishedInOneSession = false,
   }) async {
-    // Backward-compat path: evaluate unlocks without incrementing storiesCompleted.
+    
     final state = await loadState();
     final unlocked = checkAndUnlockAchievements(
       userData: state,

@@ -4,8 +4,8 @@ import 'package:provider/provider.dart';
 import '../effects/theme_effect_manager.dart';
 import '../providers/settings_manager.dart';
 
-/// Puts the current theme’s background effect behind [child] at reduced
-/// intensity. Skips yellow (no global overlay). Non-interactive.
+
+
 class ThemedSubtleEffect extends StatelessWidget {
   const ThemedSubtleEffect({super.key, required this.child});
 

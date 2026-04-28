@@ -146,7 +146,7 @@ class _CherryBlossomPainter extends CustomPainter {
   final ui.Image? blossomImage;
   final bool subtle;
 
-  /// Horizontal drift per full animation loop (0→1), as fraction of width (leftward).
+  
   static const double _windDriftPerLoop = 0.09;
 
   static double _wrapUnit(double v) => v - v.floorToDouble();
@@ -184,7 +184,7 @@ class _CherryBlossomPainter extends CustomPainter {
           m;
       final driftWave = math.sin((t * math.pi * 2) + p.phase) * p.driftX;
 
-      // Smooth right → left carry + slow gusts (normalized 0–1 space).
+      
       final steadyWind =
           cycles * _windDriftPerLoop * (0.92 + p.windStrength * 4.5);
       final slowGust = math.sin(time * 0.10 + p.windOffset * 1.2) * 0.014;

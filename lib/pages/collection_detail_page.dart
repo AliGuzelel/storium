@@ -8,7 +8,7 @@ import '../widgets/safe_asset_image.dart';
 import 'animal_gallery_viewer_page.dart';
 import 'collection_constants.dart';
 
-/// Placeholder detail for a collection category (navigation only for now).
+
 class CollectionDetailPage extends StatelessWidget {
   const CollectionDetailPage({super.key, required this.title});
 
@@ -34,7 +34,7 @@ class CollectionDetailPage extends StatelessWidget {
     );
   }
 
-  /// Fills all space below the app bar; rows stretch so the grid reaches the bottom.
+  
   Widget _buildAnimalsFullPageGrid(BuildContext context) {
     return _buildCollectionAssetGrid(
       context,
@@ -143,7 +143,7 @@ class CollectionDetailPage extends StatelessWidget {
     required IconData emptyIcon,
     required bool thinBorderAroundImage,
     required Widget Function(int index) buildViewer,
-    /// When true, grid scrolls vertically; tile size matches Space ([_collectionGridRowCount] rows in viewport).
+    
     bool scrollable = false,
   }) {
     return LayoutBuilder(
@@ -163,7 +163,7 @@ class CollectionDetailPage extends StatelessWidget {
 
         final cellW = (innerW - (cc - 1) * cs) / cc;
         final cellH = (innerH - (rc - 1) * ms) / rc;
-        /// Same cell geometry as Space so scrollable collections (e.g. Nature) fill the width and row height.
+        
         final childAspectRatio = (cellW / cellH).clamp(0.01, 100.0);
         Widget cellImage(String path) {
           final core = SafeAssetImage(

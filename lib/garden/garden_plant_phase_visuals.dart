@@ -1,4 +1,4 @@
-// Visual simulation of growth when using a single image per plant.
+
 
 double getScale(int phase) {
   switch (phase.clamp(0, 3)) {
@@ -30,6 +30,6 @@ double getOpacity(int phase) {
   }
 }
 
-/// Shared duration for phase scale/opacity transitions (calm, readable).
+
 Duration get gardenPlantPhaseTransitionDuration =>
     const Duration(milliseconds: 520);

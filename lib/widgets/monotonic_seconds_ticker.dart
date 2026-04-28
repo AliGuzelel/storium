@@ -1,8 +1,8 @@
 import 'package:flutter/scheduler.dart';
 import 'package:flutter/widgets.dart';
 
-/// Drives [builder] every frame with [seconds] from a [Ticker] — monotonic,
-/// no AnimationController 0→1 restarts.
+
+
 class MonotonicSecondsTicker extends StatefulWidget {
   const MonotonicSecondsTicker({super.key, required this.builder});
 

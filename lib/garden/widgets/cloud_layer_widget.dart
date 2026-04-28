@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 
 import '../../widgets/monotonic_seconds_ticker.dart';
 
-/// Drifting soft clouds (Canvas only — no SVG).
+
 class CloudLayerWidget extends StatefulWidget {
   const CloudLayerWidget({super.key});
 

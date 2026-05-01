@@ -44,7 +44,10 @@ class CollectionsPage extends StatelessWidget {
                       'Nature' => kNatureCollectionGridPreviewAsset,
                       'Art' => kArtCollectionGridPreviewAsset,
                       'Ocean' => kOceanCollectionGridPreviewAsset,
+                      'Music' => kMusicCollectionGridPreviewAsset,
                       'Memes' => kMemesCollectionGridPreviewAsset,
+                      'Languages' => kLanguagesCollectionGridPreviewAsset,
+                      'Cities' => kCitiesCollectionGridPreviewAsset,
                       _ => null,
                     },
                     fullBleedImage: label == 'Animals' ||
@@ -52,7 +55,10 @@ class CollectionsPage extends StatelessWidget {
                         label == 'Nature' ||
                         label == 'Art' ||
                         label == 'Ocean' ||
-                        label == 'Memes',
+                        label == 'Music' ||
+                        label == 'Memes' ||
+                        label == 'Languages' ||
+                        label == 'Cities',
                     onTap: () {
                       Navigator.push(
                         context,

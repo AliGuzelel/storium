@@ -129,11 +129,10 @@ class _GardenPageState extends State<GardenPage> with TickerProviderStateMixin {
   Future<void> _load() async {
     final s = await GardenStorage.load(uidScope: _uidScope);
     if (!mounted) return;
-    final idx = s.selectedPlantPageIndex
-        .clamp(0, GardenPlantOption.choices.length - 1);
+    final synced = s.copyWith(selectedPlantPageIndex: 0);
     setState(() {
-      _state = s;
-      _pageIndex = idx;
+      _state = synced;
+      _pageIndex = 0;
       _loading = false;
     });
     WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -141,8 +140,8 @@ class _GardenPageState extends State<GardenPage> with TickerProviderStateMixin {
       unawaited(precacheStoriumRasterAssets(context));
       if (_pageController.hasClients) {
         final cur = _pageController.page?.round() ?? 0;
-        if (cur != idx) {
-          _pageController.jumpToPage(idx);
+        if (cur != 0) {
+          _pageController.jumpToPage(0);
         }
       }
     });

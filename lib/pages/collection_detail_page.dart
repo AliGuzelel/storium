@@ -28,7 +28,10 @@ class CollectionDetailPage extends StatelessWidget {
         'Nature' => _buildNatureFullPageGrid(context),
         'Art' => _buildArtFullPageGrid(context),
         'Ocean' => _buildOceanFullPageGrid(context),
+        'Music' => _buildMusicFullPageGrid(context),
         'Memes' => _buildMemesFullPageGrid(context),
+        'Languages' => _buildLanguagesFullPageGrid(context),
+        'Cities' => _buildCitiesFullPageGrid(context),
         _ => _buildDefaultCollectionBody(context),
       },
     );
@@ -132,6 +135,57 @@ class CollectionDetailPage extends StatelessWidget {
         imageAssets: kMemesCollectionImageAssets,
         captionForIndex: (_) => null,
         tilePlaceholderColors: kMemesPlaceholderTileColors,
+      ),
+    );
+  }
+
+  Widget _buildMusicFullPageGrid(BuildContext context) {
+    return _buildCollectionAssetGrid(
+      context,
+      assetPaths: kMusicCollectionImageAssets,
+      placeholderColors: kMusicPlaceholderTileColors,
+      emptyIcon: Icons.image_not_supported_outlined,
+      thinBorderAroundImage: true,
+      scrollable: true,
+      buildViewer: (index) => AnimalGalleryViewerPage(
+        initialIndex: index,
+        imageAssets: kMusicCollectionImageAssets,
+        captionForIndex: (_) => null,
+        tilePlaceholderColors: kMusicPlaceholderTileColors,
+      ),
+    );
+  }
+
+  Widget _buildLanguagesFullPageGrid(BuildContext context) {
+    return _buildCollectionAssetGrid(
+      context,
+      assetPaths: kLanguagesCollectionImageAssets,
+      placeholderColors: kLanguagesPlaceholderTileColors,
+      emptyIcon: Icons.image_not_supported_outlined,
+      thinBorderAroundImage: true,
+      scrollable: true,
+      buildViewer: (index) => AnimalGalleryViewerPage(
+        initialIndex: index,
+        imageAssets: kLanguagesCollectionImageAssets,
+        captionForIndex: (_) => null,
+        tilePlaceholderColors: kLanguagesPlaceholderTileColors,
+      ),
+    );
+  }
+
+  Widget _buildCitiesFullPageGrid(BuildContext context) {
+    return _buildCollectionAssetGrid(
+      context,
+      assetPaths: kCitiesCollectionImageAssets,
+      placeholderColors: kCitiesPlaceholderTileColors,
+      emptyIcon: Icons.image_not_supported_outlined,
+      thinBorderAroundImage: true,
+      scrollable: true,
+      buildViewer: (index) => AnimalGalleryViewerPage(
+        initialIndex: index,
+        imageAssets: kCitiesCollectionImageAssets,
+        captionForIndex: (_) => null,
+        tilePlaceholderColors: kCitiesPlaceholderTileColors,
       ),
     );
   }

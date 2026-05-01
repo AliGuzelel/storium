@@ -297,7 +297,7 @@ class _StoryPageState extends State<StoryPage> {
 
   final Map<int, Map<String, dynamic>> _failureScenes = {
     1: {
-      'image': 'assets/images/stories/depression_1.png',
+      'image': 'assets/images/stories/failure/failure1.png',
       'text':
           "You stare at your screen. The deadline is tomorrow. The cursor blinks, waiting. You’ve started this assignment three times already.",
       'choices': [
@@ -315,7 +315,7 @@ class _StoryPageState extends State<StoryPage> {
     },
 
     2: {
-      'image': 'assets/images/stories/depression_2.png',
+      'image': 'assets/images/stories/failure/failure2.png',
       'text':
           "You take a breath and type a single sentence. It’s not perfect — but it’s something.",
       'choices': [
@@ -325,7 +325,7 @@ class _StoryPageState extends State<StoryPage> {
     },
 
     3: {
-      'image': 'assets/images/stories/depression_3.png',
+      'image': 'assets/images/stories/failure/failure3.png',
       'text':
           "Your mind spirals. \"What if I fail? What if everyone else is doing better than me?\" The pressure builds.",
       'choices': [
@@ -343,7 +343,7 @@ class _StoryPageState extends State<StoryPage> {
     },
 
     4: {
-      'image': 'assets/images/stories/depression_4.png',
+      'image': 'assets/images/stories/failure/failure4.png',
       'text':
           "You remind yourself: this doesn’t have to be perfect. It just has to be done.",
       'choices': [
@@ -357,7 +357,7 @@ class _StoryPageState extends State<StoryPage> {
     },
 
     5: {
-      'image': 'assets/images/stories/depression_5.png',
+      'image': 'assets/images/stories/failure/failure5.png',
       'text':
           "Time passes. You feel stuck. The fear of doing it wrong is stopping you from doing anything at all.",
       'choices': [
@@ -367,7 +367,7 @@ class _StoryPageState extends State<StoryPage> {
     },
 
     6: {
-      'image': 'assets/images/stories/depression_6.png',
+      'image': 'assets/images/stories/failure/failure6.png',
       'text':
           "You make progress. Not fast, not perfect — but real. The weight feels slightly lighter.",
       'choices': [
@@ -381,7 +381,7 @@ class _StoryPageState extends State<StoryPage> {
     },
 
     7: {
-      'image': 'assets/images/stories/depression_7.png',
+      'image': 'assets/images/stories/failure/failure7.png',
       'text':
           "You sit back, feeling behind. The fear is still there. But so is the chance to try again.",
       'choices': [
@@ -395,7 +395,7 @@ class _StoryPageState extends State<StoryPage> {
     },
 
     8: {
-      'image': 'assets/images/stories/depression_8.png',
+      'image': 'assets/images/stories/failure/failure8.png',
       'text':
           "You continue. Slowly, steadily. The work starts to take shape. It’s not perfect — but it’s yours.",
       'choices': [
@@ -409,7 +409,7 @@ class _StoryPageState extends State<StoryPage> {
     },
 
     9: {
-      'image': 'assets/images/stories/depression_9.png',
+      'image': 'assets/images/stories/failure/failure9.png',
       'text':
           "Doubt lingers. But even now, you’ve done more than you thought you could.",
       'choices': [
@@ -427,7 +427,7 @@ class _StoryPageState extends State<StoryPage> {
     },
 
     10: {
-      'image': 'assets/images/stories/depression_10.png',
+      'image': 'assets/images/stories/failure/failure10.png',
       'text':
           "You look at what you've done. It’s not perfect. But it’s something real — something you actually made.",
       'choices': [
@@ -440,7 +440,7 @@ class _StoryPageState extends State<StoryPage> {
       ],
     },
     11: {
-      'image': 'assets/images/stories/depression_11.png',
+      'image': 'assets/images/stories/failure/failure11.png',
       'text':
           "For a second, the pressure fades. Not completely — but enough. You realize you didn’t avoid it this time.",
       'choices': [
@@ -453,7 +453,7 @@ class _StoryPageState extends State<StoryPage> {
       ],
     },
     12: {
-      'image': 'assets/images/stories/depression_12.png',
+      'image': 'assets/images/stories/failure/failure12.png',
       'text':
           "Tomorrow will still come. There will still be expectations, deadlines, and doubt. But today, you showed up — even if it didn’t feel like enough.",
       'choices': [
@@ -881,7 +881,7 @@ class _StoryPageState extends State<StoryPage> {
       ],
     },
     4: {
-      'image': 'assets/images/stories/anxiety/anxiety4a.png',
+      'image': 'assets/images/stories/anxiety/anxiety4.png',
       'text':
           "You replay the tone.\n\nThen the wording.\n\nThen their faces.\n\nIt keeps changing.",
       'choices': [
@@ -889,7 +889,7 @@ class _StoryPageState extends State<StoryPage> {
       ],
     },
     5: {
-      'image': 'assets/images/stories/anxiety/anxiety4b.png',
+      'image': 'assets/images/stories/anxiety/anxiety5.png',
       'text':
           "You nod along.\n\nTry to listen again.\n\nIt’s harder now.\n\nYou’re split in two.",
       'choices': [
@@ -897,7 +897,7 @@ class _StoryPageState extends State<StoryPage> {
       ],
     },
     6: {
-      'image': 'assets/images/stories/anxiety/anxiety5.png',
+      'image': 'assets/images/stories/anxiety/anxiety6.png',
       'text':
           "They’re still talking.\n\nYou’re still there.\n\nBut not fully.\n\nSomething pulled you inward.",
       'choices': [
@@ -905,7 +905,7 @@ class _StoryPageState extends State<StoryPage> {
       ],
     },
     7: {
-      'image': 'assets/images/stories/anxiety/anxiety6.png',
+      'image': 'assets/images/stories/anxiety/anxiety7.png',
       'text':
           "You adjust how you're sitting.\n\nThen your hands.\n\nThen your face.\n\nIt starts feeling unnatural.",
       'choices': [
@@ -913,7 +913,7 @@ class _StoryPageState extends State<StoryPage> {
       ],
     },
     8: {
-      'image': 'assets/images/stories/anxiety/anxiety7.png',
+      'image': 'assets/images/stories/anxiety/anxiety8.png',
       'text':
           "Someone laughs.\n\nYou smile a second late.\n\nIt feels noticeable.\n\nEven if it isn’t.",
       'choices': [
@@ -922,7 +922,7 @@ class _StoryPageState extends State<StoryPage> {
       ],
     },
     9: {
-      'image': 'assets/images/stories/anxiety/anxiety8a.png',
+      'image': 'assets/images/stories/anxiety/anxiety9.png',
       'text':
           "You stay.\n\nIt gets slightly louder inside.\n\nHarder to follow what’s real.\n\nAnd what you’re adding.",
       'choices': [
@@ -930,7 +930,7 @@ class _StoryPageState extends State<StoryPage> {
       ],
     },
     10: {
-      'image': 'assets/images/stories/anxiety/anxiety8b.png',
+      'image': 'assets/images/stories/anxiety/anxiety10.png',
       'text':
           "You make an excuse.\n\nIt sounds normal enough.\n\nBut you keep replaying it.\n\nOn the way out.",
       'choices': [
@@ -938,7 +938,7 @@ class _StoryPageState extends State<StoryPage> {
       ],
     },
     11: {
-      'image': 'assets/images/stories/anxiety/anxiety9.png',
+      'image': 'assets/images/stories/anxiety/anxiety11.png',
       'text':
           "You’re alone now.\n\nIt should feel easier.\n\nIt doesn’t.\n\nIt just gets quieter around you.",
       'choices': [
@@ -946,7 +946,7 @@ class _StoryPageState extends State<StoryPage> {
       ],
     },
     12: {
-      'image': 'assets/images/stories/anxiety/anxiety10.png',
+      'image': 'assets/images/stories/anxiety/anxiety12.png',
       'text':
           "Without the noise,\nit gets clearer.\n\nEvery small moment from before\nstarts lining up.",
       'choices': [
@@ -954,7 +954,7 @@ class _StoryPageState extends State<StoryPage> {
       ],
     },
     13: {
-      'image': 'assets/images/stories/anxiety/anxiety11.png',
+      'image': 'assets/images/stories/anxiety/anxiety13.png',
       'text':
           "You keep walking.\n\nNot really going anywhere.\n\nJust… not stopping.\n\nLike stopping might catch up to you.",
       'choices': [
@@ -962,7 +962,7 @@ class _StoryPageState extends State<StoryPage> {
       ],
     },
     14: {
-      'image': 'assets/images/stories/anxiety/anxiety12.png',
+      'image': 'assets/images/stories/anxiety/anxiety14.png',
       'text':
           "You reach for your phone.\n\nUnlock it.\n\nDon’t open anything.\n\nLock it again.",
       'choices': [
@@ -971,7 +971,7 @@ class _StoryPageState extends State<StoryPage> {
       ],
     },
     15: {
-      'image': 'assets/images/stories/anxiety/anxiety13a.png',
+      'image': 'assets/images/stories/anxiety/anxiety15.png',
       'text':
           "You open a chat.\n\nScroll up.\n\nLooking for a moment that felt wrong.\n\nYou find one.",
       'choices': [
@@ -979,7 +979,7 @@ class _StoryPageState extends State<StoryPage> {
       ],
     },
     16: {
-      'image': 'assets/images/stories/anxiety/anxiety13b.png',
+      'image': 'assets/images/stories/anxiety/anxiety16.png',
       'text':
           "You keep it in your pocket.\n\nBut your mind fills the gap.\n\nReconstructing things anyway.\n\nWorse than before.",
       'choices': [
@@ -987,7 +987,7 @@ class _StoryPageState extends State<StoryPage> {
       ],
     },
     17: {
-      'image': 'assets/images/stories/anxiety/anxiety14.png',
+      'image': 'assets/images/stories/anxiety/anxiety17.png',
       'text':
           "You’re home now.\n\nThe day is quieter.\n\nBut your head isn’t.\n\nIt’s more focused now.",
       'choices': [
@@ -995,7 +995,7 @@ class _StoryPageState extends State<StoryPage> {
       ],
     },
     18: {
-      'image': 'assets/images/stories/anxiety/anxiety15.png',
+      'image': 'assets/images/stories/anxiety/anxiety18.png',
       'text':
           "You notice your breathing.\n\nThen your heartbeat.\n\nIt feels slightly off.\n\nNow it’s all you can feel.",
       'choices': [
@@ -1003,7 +1003,7 @@ class _StoryPageState extends State<StoryPage> {
       ],
     },
     19: {
-      'image': 'assets/images/stories/anxiety/anxiety16.png',
+      'image': 'assets/images/stories/anxiety/anxiety19.png',
       'text':
           "You lie down.\n\nIt gets louder in the dark.\n\nEvery thought feels unfinished.\n\nLike something needs fixing.",
       'choices': [
@@ -1012,7 +1012,7 @@ class _StoryPageState extends State<StoryPage> {
       ],
     },
     20: {
-      'image': 'assets/images/stories/anxiety/anxiety17a.png',
+      'image': 'assets/images/stories/anxiety/anxiety20.png',
       'text':
           "You close your eyes.\n\nYour body slows down.\n\nYour mind doesn’t.\n\nIt keeps going without you.",
       'choices': [
@@ -1020,7 +1020,7 @@ class _StoryPageState extends State<StoryPage> {
       ],
     },
     21: {
-      'image': 'assets/images/stories/anxiety/anxiety17b.png',
+      'image': 'assets/images/stories/anxiety/anxiety21.png',
       'text':
           "You stay up.\n\nSwitching between thoughts and nothing.\n\nTime passes without moving.\n\nMorning doesn’t feel far.",
       'choices': [
@@ -1442,3 +1442,4 @@ class _EmojiMoodBar extends StatelessWidget {
     );
   }
 }
+

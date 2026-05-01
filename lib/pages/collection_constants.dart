@@ -14,7 +14,7 @@ const List<String> kCollectionTopicLabels = [
   'Music',
   'Memes',
   'Languages',
-  'Superpowers',
+  'Cities',
 ];
 
 
@@ -38,6 +38,12 @@ const String kAnimalsCollectionGridPreviewAsset =
 
 const String kMemesCollectionGridPreviewAsset =
     'assets/collection_images/memes/memes21.jpg';
+const String kMusicCollectionGridPreviewAsset =
+    'assets/collection_images/music/music16.jpg';
+const String kLanguagesCollectionGridPreviewAsset =
+    'assets/collection_images/languages/languages13.jpg';
+const String kCitiesCollectionGridPreviewAsset =
+    'assets/collection_images/city/city19.jpg';
 
 
 const List<String?> kSpaceCollectionImageAssets = <String?>[
@@ -167,6 +173,60 @@ const List<String?> kMemesCollectionImageAssets = <String?>[
   'assets/collection_images/memes/memes20.jpeg',
 ];
 
+const List<String?> kMusicCollectionImageAssets = <String?>[
+  'assets/collection_images/music/music1.jpeg',
+  'assets/collection_images/music/music2.jpeg',
+  'assets/collection_images/music/music3.jpeg',
+  'assets/collection_images/music/music4.jpeg',
+  'assets/collection_images/music/music5.jpeg',
+  'assets/collection_images/music/music6.jpeg',
+  'assets/collection_images/music/music7.jpeg',
+  'assets/collection_images/music/music8.jpeg',
+  'assets/collection_images/music/music9.jpeg',
+  'assets/collection_images/music/music10.jpeg',
+  'assets/collection_images/music/music11.jpeg',
+  'assets/collection_images/music/music12.jpeg',
+  'assets/collection_images/music/music13.jpeg',
+  'assets/collection_images/music/music14.jpeg',
+  'assets/collection_images/music/music15.jpeg',
+];
+
+const List<String?> kLanguagesCollectionImageAssets = <String?>[
+  'assets/collection_images/languages/languages1.jpeg',
+  'assets/collection_images/languages/languages2.jpeg',
+  'assets/collection_images/languages/languages3.jpeg',
+  'assets/collection_images/languages/languages4.jpeg',
+  'assets/collection_images/languages/languages5.jpeg',
+  'assets/collection_images/languages/languages6.jpeg',
+  'assets/collection_images/languages/languages7.jpeg',
+  'assets/collection_images/languages/languages8.jpeg',
+  'assets/collection_images/languages/languages9.jpeg',
+  'assets/collection_images/languages/languages10.jpeg',
+  'assets/collection_images/languages/languages11.jpeg',
+  'assets/collection_images/languages/languages12.jpeg',
+];
+
+const List<String?> kCitiesCollectionImageAssets = <String?>[
+  'assets/collection_images/city/city1.jpg',
+  'assets/collection_images/city/city2.jpg',
+  'assets/collection_images/city/city3.jpg',
+  'assets/collection_images/city/city4.jpg',
+  'assets/collection_images/city/city5.jpg',
+  'assets/collection_images/city/city6.jpg',
+  'assets/collection_images/city/city7.jpg',
+  'assets/collection_images/city/city8.jpg',
+  'assets/collection_images/city/city9.jpg',
+  'assets/collection_images/city/city10.jpg',
+  'assets/collection_images/city/city11.jpg',
+  'assets/collection_images/city/city12.jpg',
+  'assets/collection_images/city/city13.jpg',
+  'assets/collection_images/city/city14.jpg',
+  'assets/collection_images/city/city15.jpg',
+  'assets/collection_images/city/city16.jpg',
+  'assets/collection_images/city/city17.jpg',
+  'assets/collection_images/city/city18.jpg',
+];
+
 
 const List<Color> kOceanPlaceholderTileColors = [
   Color(0xFF3D6B7A),
@@ -213,6 +273,33 @@ const List<Color> kMemesPlaceholderTileColors = [
   Color(0xFFA88772),
   Color(0xFF6B5447),
   Color(0xFF9A745F),
+];
+
+const List<Color> kMusicPlaceholderTileColors = [
+  Color(0xFF7B6BA8),
+  Color(0xFF8A7ABA),
+  Color(0xFF6B5A98),
+  Color(0xFF9A8AC7),
+  Color(0xFF5F528A),
+  Color(0xFF8778B8),
+];
+
+const List<Color> kLanguagesPlaceholderTileColors = [
+  Color(0xFF8A7BA6),
+  Color(0xFF9A8CB8),
+  Color(0xFF75678F),
+  Color(0xFFAA9BC9),
+  Color(0xFF6B5E84),
+  Color(0xFF9687B5),
+];
+
+const List<Color> kCitiesPlaceholderTileColors = [
+  Color(0xFF5C6B9A),
+  Color(0xFF6A79A8),
+  Color(0xFF4E5F8A),
+  Color(0xFF7888B8),
+  Color(0xFF44557C),
+  Color(0xFF6576A6),
 ];
 
 

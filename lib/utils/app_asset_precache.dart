@@ -7,11 +7,8 @@ import '../pages/collection_constants.dart';
 
 
 
-Future<void>? _precacheFuture;
-
 Future<void> precacheStoriumRasterAssets(BuildContext context) async {
-  _precacheFuture ??= _precacheStoriumRasterAssetsImpl(context);
-  await _precacheFuture;
+  await _precacheStoriumRasterAssetsImpl(context);
 }
 
 Future<void> _precacheStoriumRasterAssetsImpl(BuildContext context) async {
@@ -19,6 +16,7 @@ Future<void> _precacheStoriumRasterAssetsImpl(BuildContext context) async {
   final paths = <String>[
     CherryBlossomEffect.assetPath,
     'assets/images/wateringcan.png',
+    'assets/images/plants/soil.png',
     for (final o in GardenPlantOption.choices) ...[
       o.imagePath,
       ...o.images.values,
@@ -41,7 +39,7 @@ Future<void> _precacheStoriumRasterAssetsImpl(BuildContext context) async {
   ];
   final uniquePaths = paths.toSet();
   for (final path in uniquePaths) {
-    if (!context.mounted) return;
+    if (!context.mounted) break;
     try {
       await precacheImage(AssetImage(path), context);
     } catch (e, st) {

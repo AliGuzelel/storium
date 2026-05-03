@@ -299,6 +299,7 @@ class GardenStorage {
 
   
   static Duration randomWaterCooldown(math.Random rng) {
-    return const Duration(seconds: 5);
+    final hours = 4 + rng.nextInt(7);
+    return Duration(hours: hours);
   }
 }

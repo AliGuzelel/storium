@@ -56,7 +56,9 @@ class _StorySelectionPageState extends State<StorySelectionPage>
   }
 
   bool _isStoryCompleted(String storyTitle, String topic) {
-    final finished = _progressData.finishedStories.map((e) => e.toLowerCase()).toSet();
+    final finished = _progressData.finishedStories
+        .map((e) => e.toLowerCase())
+        .toSet();
     final byTitle = storyTitle.toLowerCase();
     final byTopic = topic.toLowerCase();
     return finished.contains(byTitle) || finished.contains(byTopic);
@@ -292,8 +294,10 @@ class _StorySelectionPageState extends State<StorySelectionPage>
                         emoji: '🕊️',
                         desc: 'A quiet story about loss and love.',
                         chips: const ['Reflective', 'Gentle'],
-                        isCompleted:
-                            _isStoryCompleted('The Space You Left', 'Grief'),
+                        isCompleted: _isStoryCompleted(
+                          'The Space You Left',
+                          'Grief',
+                        ),
                       ),
                       const SizedBox(height: 14),
 
@@ -320,7 +324,10 @@ class _StorySelectionPageState extends State<StorySelectionPage>
                         emoji: '🌫️',
                         desc: 'A quiet ache you carry through the night.',
                         chips: const ['Soft', 'Dark'],
-                        isCompleted: _isStoryCompleted('Alone, Again', 'Loneliness'),
+                        isCompleted: _isStoryCompleted(
+                          'Alone, Again',
+                          'Loneliness',
+                        ),
                       ),
                       const SizedBox(height: 14),
 
@@ -332,7 +339,10 @@ class _StorySelectionPageState extends State<StorySelectionPage>
                         emoji: '⏳',
                         desc: 'The quiet pressure of trying to be enough.',
                         chips: const ['Stress', 'Realistic'],
-                        isCompleted: _isStoryCompleted('Almost There', 'Failure'),
+                        isCompleted: _isStoryCompleted(
+                          'Almost There',
+                          'Failure',
+                        ),
                       ),
                       const SizedBox(height: 14),
                       _storyCard(
@@ -341,7 +351,8 @@ class _StorySelectionPageState extends State<StorySelectionPage>
                         topic: 'Anxiety',
                         resumeStoryId: 'too_loud_inside',
                         emoji: '🧠',
-                        desc: "A day where nothing happens, but your mind won't stop.",
+                        desc:
+                            "A day where nothing happens, but your mind won't stop.",
                         chips: const ['Anxiety', 'Overthinking'],
                         isCompleted: _isStoryCompleted(
                           'Too Loud Inside',

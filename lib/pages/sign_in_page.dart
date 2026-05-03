@@ -49,8 +49,14 @@ class _SignInPageState extends State<SignInPage> {
 
   Future<void> _submit() async {
     if (!_formKey.currentState!.validate()) return;
-    final settingsManager = Provider.of<SettingsManager>(context, listen: false);
-    final savedImagesStore = Provider.of<SavedImagesStore>(context, listen: false);
+    final settingsManager = Provider.of<SettingsManager>(
+      context,
+      listen: false,
+    );
+    final savedImagesStore = Provider.of<SavedImagesStore>(
+      context,
+      listen: false,
+    );
 
     setState(() {
       _isLoading = true;
@@ -151,7 +157,9 @@ class _SignInPageState extends State<SignInPage> {
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       Text(
-                        isSignup ? t(context, 'create_account') : t(context, 'sign_in'),
+                        isSignup
+                            ? t(context, 'create_account')
+                            : t(context, 'sign_in'),
                         style: const TextStyle(
                           fontFamily: 'Cinzel',
                           fontSize: 22,
@@ -429,12 +437,14 @@ class _SignInPageState extends State<SignInPage> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(label,
-                      style: const TextStyle(
-                        fontFamily: 'Poppins',
-                        fontSize: 13,
-                        color: Colors.white70,
-                      )),
+                  Text(
+                    label,
+                    style: const TextStyle(
+                      fontFamily: 'Poppins',
+                      fontSize: 13,
+                      color: Colors.white70,
+                    ),
+                  ),
                   const SizedBox(height: 6),
                   Text(
                     text,
@@ -461,7 +471,9 @@ class _SignInPageState extends State<SignInPage> {
       barrierDismissible: false,
       builder: (context) {
         return AlertDialog(
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
           title: const Text(
             'Select Date of Birth',
             style: TextStyle(fontFamily: 'Poppins', fontSize: 16),

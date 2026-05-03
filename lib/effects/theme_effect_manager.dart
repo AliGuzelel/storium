@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../theme/app_themes.dart';
 import 'ash_haze_effect.dart';
 import 'blue_cloud_effect.dart';
 import 'cherry_blossom_effect.dart';
@@ -12,7 +13,7 @@ Widget buildThemeEffect(String themeColor, {bool subtle = false}) =>
 
 class ThemeEffectManager {
   static Widget buildThemeEffect(String themeColor, {bool subtle = false}) {
-    switch (themeColor) {
+    switch (AppThemes.normalizeThemeColor(themeColor)) {
       case 'pink':
         return CherryBlossomEffect(subtle: subtle);
       case 'blue':

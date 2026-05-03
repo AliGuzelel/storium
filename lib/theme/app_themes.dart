@@ -15,7 +15,10 @@ class AppThemes {
 
   static String normalizeThemeColor(String? themeColor) {
     if (themeColor == null) return 'purple';
-    return supportedThemeColors.contains(themeColor) ? themeColor : 'purple';
+    final t = themeColor.trim().toLowerCase();
+    if (t.isEmpty) return 'purple';
+    if (t == 'sakura') return 'pink';
+    return supportedThemeColors.contains(t) ? t : 'purple';
   }
 
   static ThemeData light(String themeColor) {
@@ -42,7 +45,7 @@ class AppThemes {
   static Color secondary(String themeColor) => _palette(themeColor).secondary;
 
   static List<Color> lightGradient(String themeColor) {
-    switch (themeColor) {
+    switch (normalizeThemeColor(themeColor)) {
       case 'blue':
         return const [
           Color(0xFF2948A6),
@@ -96,7 +99,7 @@ class AppThemes {
   }
 
   static List<Color> darkGradient(String themeColor) {
-    switch (themeColor) {
+    switch (normalizeThemeColor(themeColor)) {
       case 'blue':
         return const [
           Color(0xFF142347),

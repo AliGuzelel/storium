@@ -72,7 +72,7 @@ class _StartPageState extends State<StartPage> {
                             text: 'STORIUM',
                             style: TextStyle(
                               fontFamily: 'Cinzel',
-                              fontSize: 56,
+                              fontSize: 72,
                               fontWeight: FontWeight.w400,
                               letterSpacing: 10,
                               color: isDark
@@ -375,10 +375,7 @@ class _StartPageState extends State<StartPage> {
                         padding: const EdgeInsets.fromLTRB(16, 14, 16, 16),
                         child: stories.isEmpty
                             ? _buildEmptyContinueState(dialogContext)
-                            : _buildContinueListContent(
-                                dialogContext,
-                                stories,
-                              ),
+                            : _buildContinueListContent(dialogContext, stories),
                       ),
                     ),
                   ),
@@ -478,7 +475,10 @@ class _StartPageState extends State<StartPage> {
             padding: EdgeInsets.symmetric(horizontal: 6, vertical: 6),
             child: LocalizedText(
               t(context, 'start_new_story'),
-              style: TextStyle(fontFamily: 'Poppins', fontWeight: FontWeight.w600),
+              style: TextStyle(
+                fontFamily: 'Poppins',
+                fontWeight: FontWeight.w600,
+              ),
             ),
           ),
         ),
@@ -620,8 +620,5 @@ class _StoryRouteConfig {
   final String storyTitle;
   final String topic;
 
-  const _StoryRouteConfig({
-    required this.storyTitle,
-    required this.topic,
-  });
+  const _StoryRouteConfig({required this.storyTitle, required this.topic});
 }

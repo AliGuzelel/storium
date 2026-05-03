@@ -167,27 +167,71 @@ void _paintDriftingCloud(
   final rect = Rect.fromLTWH(x, cy, cloudW, cloudH);
 
   final path = _cumulusPath(rect, shapeIndex);
+  final shadowPath = path.shift(const Offset(1.2, 3.2));
+
+  final shadowPaint = Paint()
+    ..color = const Color(0xFF6B7F99).withValues(alpha: spec.opacity * 0.22)
+    ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 5)
+    ..style = PaintingStyle.fill;
+  canvas.drawPath(shadowPath, shadowPaint);
 
   final fill = Paint()
     ..shader = LinearGradient(
-      begin: Alignment.topCenter,
-      end: Alignment.bottomCenter,
+      begin: const Alignment(-0.15, -0.9),
+      end: const Alignment(0.2, 0.95),
       colors: [
-        Colors.white.withValues(alpha: spec.opacity * 0.98),
-        Colors.white.withValues(alpha: spec.opacity * 0.76),
-        Colors.white.withValues(alpha: spec.opacity * 0.30),
+        Colors.white.withValues(alpha: spec.opacity * 1.0),
+        const Color(0xFFF5F8FC).withValues(alpha: spec.opacity * 0.92),
+        const Color(0xFFD6E3F0).withValues(alpha: spec.opacity * 0.62),
+        const Color(0xFFA8BDD4).withValues(alpha: spec.opacity * 0.28),
       ],
-      stops: const [0.0, 0.48, 1.0],
+      stops: const [0.0, 0.35, 0.72, 1.0],
     ).createShader(rect)
     ..style = PaintingStyle.fill;
 
   canvas.drawPath(path, fill);
 
+  final cx = rect.center.dx;
+  final cyR = rect.center.dy;
+  final hiRect = Rect.fromCenter(
+    center: Offset(cx - cloudW * 0.06, cyR - cloudH * 0.12),
+    width: cloudW * 0.62,
+    height: cloudH * 0.38,
+  );
+  final highlight = Paint()
+    ..shader = RadialGradient(
+      center: const Alignment(-0.2, -0.35),
+      radius: 0.95,
+      colors: [
+        Colors.white.withValues(alpha: spec.opacity * 0.42),
+        Colors.white.withValues(alpha: spec.opacity * 0.08),
+        Colors.transparent,
+      ],
+      stops: const [0.0, 0.55, 1.0],
+    ).createShader(hiRect)
+    ..style = PaintingStyle.fill;
+  canvas.save();
+  canvas.clipPath(path);
+  canvas.drawOval(hiRect, highlight);
+  canvas.restore();
+
   final rim = Paint()
-    ..color = Colors.white.withValues(alpha: spec.opacity * 0.20)
+    ..color = Colors.white.withValues(alpha: spec.opacity * 0.26)
     ..style = PaintingStyle.stroke
-    ..strokeWidth = 0.7;
+    ..strokeWidth = 0.85;
   canvas.drawPath(path, rim);
+
+  final backPuff = _cumulusPath(
+    rect.inflate(-cloudW * 0.04).shift(Offset(-cloudW * 0.03, cloudH * 0.02)),
+    (shapeIndex + 1) % 3,
+  );
+  final backPaint = Paint()
+    ..color = Colors.white.withValues(alpha: spec.opacity * 0.14)
+    ..style = PaintingStyle.fill;
+  canvas.save();
+  canvas.clipPath(path);
+  canvas.drawPath(backPuff, backPaint);
+  canvas.restore();
 }
 
 class _BatchCloudPainter extends CustomPainter {

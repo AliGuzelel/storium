@@ -8,12 +8,14 @@ class AppGlass extends StatelessWidget {
   final Widget child;
   final EdgeInsets padding;
   final double radius;
+  final bool showBorder;
 
   const AppGlass({
     super.key,
     required this.child,
     this.padding = const EdgeInsets.all(16),
     this.radius = UiTokens.surfaceRadius,
+    this.showBorder = true,
   });
 
   @override
@@ -30,7 +32,9 @@ class AppGlass extends StatelessWidget {
           decoration: BoxDecoration(
             color: Colors.white.withValues(alpha: UiTokens.glassOpacity),
             borderRadius: BorderRadius.circular(radius),
-            border: Border.fromBorderSide(UiTokens.surfaceBorderSide),
+            border: showBorder
+                ? Border.fromBorderSide(UiTokens.surfaceBorderSide)
+                : null,
           ),
           child: child,
         ),

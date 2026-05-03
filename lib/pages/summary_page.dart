@@ -80,6 +80,7 @@ class _SummaryPageState extends State<SummaryPage> {
                   child: AppGlass(
                     padding: const EdgeInsets.fromLTRB(20, 26, 20, 18),
                     radius: 26,
+                    showBorder: false,
                     child: Column(
                       mainAxisSize: MainAxisSize.min,
                       crossAxisAlignment: CrossAxisAlignment.stretch,

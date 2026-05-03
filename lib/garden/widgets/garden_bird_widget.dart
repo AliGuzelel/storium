@@ -100,6 +100,7 @@ class _BirdsWidgetState extends State<BirdsWidget>
           child: CustomPaint(
             painter: _BirdFlockPainter(
               progress: u,
+              timeSec: sec,
               width: c.maxWidth,
               height: c.maxHeight,
               birdCount: _birdCount,
@@ -117,6 +118,7 @@ class _BirdsWidgetState extends State<BirdsWidget>
 class _BirdFlockPainter extends CustomPainter {
   _BirdFlockPainter({
     required this.progress,
+    required this.timeSec,
     required this.width,
     required this.height,
     required this.birdCount,
@@ -125,26 +127,36 @@ class _BirdFlockPainter extends CustomPainter {
   });
 
   final double? progress;
+  final double timeSec;
   final double width;
   final double height;
   final int birdCount;
   final double baseYFraction;
   final double spacingW;
 
-  void _bird(Canvas canvas, Offset center, double wing, Paint paint) {
+  /// Symmetric “flying V”: wing tips move up/down together (one continuous stroke).
+  void _bird(
+    Canvas canvas,
+    Offset center,
+    double wing,
+    Paint paint,
+    double beat,
+  ) {
+    final tipY = center.dy + wing * 0.16 * beat;
+    final shoulderY = center.dy - wing * 0.07;
     final path = Path()
-      ..moveTo(center.dx - wing * 0.5, center.dy)
+      ..moveTo(center.dx - wing * 0.52, tipY)
       ..quadraticBezierTo(
-        center.dx - wing * 0.12,
-        center.dy - wing * 0.22,
+        center.dx - wing * 0.2,
+        shoulderY,
         center.dx,
-        center.dy - wing * 0.02,
+        center.dy - wing * 0.05,
       )
       ..quadraticBezierTo(
-        center.dx + wing * 0.12,
-        center.dy - wing * 0.22,
-        center.dx + wing * 0.5,
-        center.dy,
+        center.dx + wing * 0.2,
+        shoulderY,
+        center.dx + wing * 0.52,
+        tipY,
       );
     canvas.drawPath(path, paint);
   }
@@ -161,34 +173,41 @@ class _BirdFlockPainter extends CustomPainter {
 
     final baseY = height * baseYFraction;
     final wing = width * 0.028;
+    // ~1.5 full wing cycles per second (calm; use 2.0 for the top of your range).
+    const flapsPerSecond = 1.5;
+    final beat = math.sin(timeSec * math.pi * 2 * flapsPerSecond);
 
-    final paint = Paint()
-      ..color = const Color(0xFF2C3A4A).withValues(alpha: 0.68)
+    final outline = Paint()
+      ..color = const Color(0xFF1E2A38).withValues(alpha: 0.78)
       ..style = PaintingStyle.stroke
-      ..strokeWidth = math.max(1.0, wing * 0.2)
-      ..strokeCap = StrokeCap.round;
+      ..strokeWidth = math.max(1.05, wing * 0.22)
+      ..strokeCap = StrokeCap.round
+      ..strokeJoin = StrokeJoin.round;
 
     if (birdCount >= 3) {
-      _bird(canvas, Offset(x, baseY), wing * 1.05, paint);
+      _bird(canvas, Offset(x, baseY), wing * 1.08, outline, beat);
       _bird(
         canvas,
         Offset(x - width * spacingW, baseY + height * 0.04),
-        wing * 0.9,
-        paint,
+        wing * 0.92,
+        outline,
+        beat,
       );
       _bird(
         canvas,
         Offset(x - width * (spacingW * 1.75), baseY + height * 0.016),
-        wing * 0.85,
-        paint,
+        wing * 0.86,
+        outline,
+        beat,
       );
     } else {
-      _bird(canvas, Offset(x, baseY), wing * 1.05, paint);
+      _bird(canvas, Offset(x, baseY), wing * 1.08, outline, beat);
       _bird(
         canvas,
         Offset(x - width * (spacingW * 1.05), baseY + height * 0.038),
-        wing * 0.88,
-        paint,
+        wing * 0.9,
+        outline,
+        beat,
       );
     }
   }
@@ -196,6 +215,7 @@ class _BirdFlockPainter extends CustomPainter {
   @override
   bool shouldRepaint(covariant _BirdFlockPainter oldDelegate) =>
       oldDelegate.progress != progress ||
+      oldDelegate.timeSec != timeSec ||
       oldDelegate.width != width ||
       oldDelegate.height != height ||
       oldDelegate.birdCount != birdCount ||

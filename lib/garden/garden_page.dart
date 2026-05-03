@@ -15,6 +15,7 @@ import '../widgets/immersive_back_button.dart';
 import '../widgets/localized_text.dart';
 import 'garden_models.dart';
 import 'garden_storage.dart';
+import 'widgets/garden_ground_decorations.dart';
 import 'widgets/garden_plant_page.dart' show PlantPage;
 import 'widgets/garden_sky_layer.dart';
 import 'widgets/garden_sky_theme.dart';
@@ -54,6 +55,7 @@ class _GardenPageState extends State<GardenPage> with TickerProviderStateMixin {
       'Watered. Your plant feels a little stronger.';
 
   late final AnimationController _waterToastOpacity;
+  late final AnimationController _grassWind;
   bool _waterToastShowing = false;
   int _waterToastSeq = 0;
 
@@ -74,6 +76,10 @@ class _GardenPageState extends State<GardenPage> with TickerProviderStateMixin {
       vsync: this,
       duration: const Duration(milliseconds: 240),
     );
+    _grassWind = AnimationController(
+      vsync: this,
+      duration: const Duration(seconds: 9),
+    )..repeat();
     _load();
   }
 
@@ -81,6 +87,7 @@ class _GardenPageState extends State<GardenPage> with TickerProviderStateMixin {
   void dispose() {
     _cooldownTicker?.cancel();
     _waterToastOpacity.dispose();
+    _grassWind.dispose();
     _pageController.dispose();
     super.dispose();
   }
@@ -333,7 +340,7 @@ class _GardenPageState extends State<GardenPage> with TickerProviderStateMixin {
     if (_state.fertilizerCount <= 0) {
       if (!mounted) return;
       ScaffoldMessenger.maybeOf(context)?.showSnackBar(
-        SnackBar(content: Text(t(context, 'no_fertilizer_left'))),
+        SnackBar(content: Text(tRead(context, 'no_fertilizer_left'))),
       );
       return;
     }
@@ -342,7 +349,7 @@ class _GardenPageState extends State<GardenPage> with TickerProviderStateMixin {
     if (slot.isMature || next == null || !now.isBefore(next)) {
       if (!mounted) return;
       ScaffoldMessenger.maybeOf(context)?.showSnackBar(
-        SnackBar(content: Text(t(context, 'no_growth_time_to_reduce'))),
+        SnackBar(content: Text(tRead(context, 'no_growth_time_to_reduce'))),
       );
       return;
     }
@@ -374,7 +381,7 @@ class _GardenPageState extends State<GardenPage> with TickerProviderStateMixin {
     });
     _syncCooldownTicker();
     ScaffoldMessenger.maybeOf(context)?.showSnackBar(
-      SnackBar(content: Text(t(context, 'growth_time_reduced'))),
+      SnackBar(content: Text(tRead(context, 'growth_time_reduced'))),
     );
   }
 
@@ -486,7 +493,6 @@ class _GardenPageState extends State<GardenPage> with TickerProviderStateMixin {
         fit: StackFit.expand,
         children: [
           GardenSkyLayer(
-            themeColor: settings.themeColor,
             brightness: brightness,
           ),
           if (_loading)
@@ -564,64 +570,133 @@ class _GardenPageState extends State<GardenPage> with TickerProviderStateMixin {
                   flex: 28,
                   child: Column(
                     children: [
-                      Container(
-                        width: double.infinity,
-                        height: 6,
-                        decoration: const BoxDecoration(
-                          color: Color(0xFF4E8F58),
-                          boxShadow: [
-                            BoxShadow(
-                              color: Color(0x28000000),
-                              blurRadius: 3,
-                              offset: Offset(0, -1),
+                      SizedBox(
+                        height: 22,
+                        child: Stack(
+                          clipBehavior: Clip.none,
+                          fit: StackFit.expand,
+                          children: [
+                            const DecoratedBox(
+                              decoration: BoxDecoration(
+                                gradient: LinearGradient(
+                                  begin: Alignment.topCenter,
+                                  end: Alignment.bottomCenter,
+                                  colors: [
+                                    Color(0xFF5EB872),
+                                    Color(0xFF429556),
+                                    Color(0xFF357A47),
+                                  ],
+                                  stops: [0.0, 0.52, 1.0],
+                                ),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: Color(0x28000000),
+                                    blurRadius: 3,
+                                    offset: Offset(0, -1),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            Positioned(
+                              left: 0,
+                              right: 0,
+                              top: -48,
+                              height: 72,
+                              child: AnimatedBuilder(
+                                animation: _grassWind,
+                                builder: (context, _) {
+                                  return CustomPaint(
+                                    painter: GardenGrassStripPainter(
+                                      windPhase:
+                                          _grassWind.value * 2 * math.pi,
+                                    ),
+                                  );
+                                },
+                              ),
                             ),
                           ],
                         ),
                       ),
                       Expanded(
-                        child: Container(
-                          width: double.infinity,
-                          color: const Color(0xFF5A3E2B),
-                          child: Padding(
-                            padding: const EdgeInsets.fromLTRB(20, 14, 20, 18),
-                            child: Builder(
-                              builder: (ctx) {
-                                final countdown = _buildCooldownLine(ctx);
-                                return Column(
-                                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                                  children: [
-                                    if (countdown != null) ...[
-                                      countdown,
-                                      const SizedBox(height: 16),
-                                    ],
-                                    LocalizedText(
-                                      _currentPlant.name,
-                                      textAlign: TextAlign.center,
-                                      style: const TextStyle(
-                                        fontFamily: 'Cinzel',
-                                        fontSize: 22,
-                                        color: Color(0xE6FFFFFF),
-                                      ),
-                                    ),
-                                    const SizedBox(height: 8),
-                                    LocalizedText(
-                                      _currentPlant.description,
-                                      textAlign: TextAlign.center,
-                                      style: TextStyle(
-                                        fontFamily: 'Poppins',
-                                        fontSize: 12,
-                                        height: 1.4,
-                                        color: Colors.white
-                                            .withValues(alpha: 0.64),
-                                      ),
-                                    ),
-                                    const Spacer(),
-                                    _buildSoilAction(ctx, glowTint),
-                                  ],
-                                );
-                              },
+                        child: Stack(
+                          fit: StackFit.expand,
+                          children: [
+                            Positioned.fill(
+                              child: DecoratedBox(
+                                decoration: BoxDecoration(
+                                  image: DecorationImage(
+                                    image: AssetImage(kGardenSoilImageAsset),
+                                    fit: BoxFit.cover,
+                                    filterQuality: FilterQuality.medium,
+                                  ),
+                                ),
+                              ),
                             ),
-                          ),
+                            Positioned.fill(
+                              child: DecoratedBox(
+                                decoration: BoxDecoration(
+                                  gradient: LinearGradient(
+                                    begin: Alignment.topCenter,
+                                    end: Alignment.bottomCenter,
+                                    colors: [
+                                      Colors.black.withValues(alpha: 0.28),
+                                      Colors.black.withValues(alpha: 0.12),
+                                      Colors.black.withValues(alpha: 0.22),
+                                    ],
+                                    stops: const [0.0, 0.45, 1.0],
+                                  ),
+                                ),
+                              ),
+                            ),
+                            Positioned.fill(
+                              child: Padding(
+                                padding: const EdgeInsets.fromLTRB(
+                                  20,
+                                  14,
+                                  20,
+                                  18,
+                                ),
+                                child: Builder(
+                                  builder: (ctx) {
+                                    final countdown = _buildCooldownLine(ctx);
+                                    return Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.stretch,
+                                      children: [
+                                        if (countdown != null) ...[
+                                          countdown,
+                                          const SizedBox(height: 16),
+                                        ],
+                                        LocalizedText(
+                                          _currentPlant.name,
+                                          textAlign: TextAlign.center,
+                                          style: const TextStyle(
+                                            fontFamily: 'Cinzel',
+                                            fontSize: 22,
+                                            color: Color(0xE6FFFFFF),
+                                          ),
+                                        ),
+                                        const SizedBox(height: 8),
+                                        LocalizedText(
+                                          _currentPlant.description,
+                                          textAlign: TextAlign.center,
+                                          style: TextStyle(
+                                            fontFamily: 'Poppins',
+                                            fontSize: 12,
+                                            height: 1.4,
+                                            color: Colors.white
+                                                .withValues(alpha: 0.64),
+                                          ),
+                                        ),
+                                        const Spacer(),
+                                        _buildSoilAction(ctx, glowTint),
+                                      ],
+                                    );
+                                  },
+                                ),
+                              ),
+                            ),
+                          ],
                         ),
                       ),
                     ],

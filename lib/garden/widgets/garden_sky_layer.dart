@@ -10,11 +10,9 @@ import 'garden_theme_particles.dart';
 class GardenSkyLayer extends StatelessWidget {
   const GardenSkyLayer({
     super.key,
-    required this.themeColor,
     required this.brightness,
   });
 
-  final String themeColor;
   final Brightness brightness;
 
   static const double _cloudBandHeightFactor = 0.38;

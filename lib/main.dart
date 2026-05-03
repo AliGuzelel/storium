@@ -19,9 +19,7 @@ Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   try {
     await Firebase.initializeApp();
-  } catch (_) {
-    
-  }
+  } catch (_) {}
   _configurePersistentImageCache();
   await UserSession.loadFromStorage();
   final settingsManager = SettingsManager();
@@ -102,17 +100,14 @@ class _MyAppState extends State<MyApp> {
             }
           });
         }
-        return AnimatedSwitcher(
-          duration: const Duration(milliseconds: 250),
-          child: MediaQuery(
-            key: ValueKey(
-              '${settings.textScale}-${settings.themeColor}-${settings.isDarkMode}',
-            ),
-            data: MediaQuery.of(
-              context,
-            ).copyWith(textScaler: TextScaler.linear(settings.textScale)),
-            child: child!,
+        return MediaQuery(
+          key: ValueKey(
+            '${settings.textScale}-${settings.themeColor}-${settings.isDarkMode}',
           ),
+          data: MediaQuery.of(
+            context,
+          ).copyWith(textScaler: TextScaler.linear(settings.textScale)),
+          child: child!,
         );
       },
       theme: _buildTheme(
